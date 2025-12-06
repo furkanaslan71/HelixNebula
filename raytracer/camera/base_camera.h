@@ -1,0 +1,66 @@
+#ifndef BASE_CAMERA_H
+#define BASE_CAMERA_H
+
+#define OUT
+#define IN
+
+
+#include <vector>
+#include "color.h"
+#include "ray.h"
+#include "vec3.h"
+#include "bvh.h"
+#include "parser.hpp"
+#include "../render/rendering_technique.h"
+#include <thread>
+#include "../render/base_ray_tracer.h"
+#include "../light/light.h"
+
+
+class Scene;
+class RenderingTechnique;
+
+class BaseCamera {
+public:
+	int id;
+	std::string image_name;
+	BaseCamera(
+		const Camera_& cam,
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations,
+		int _recursion_depth,
+		int _num_area_lights,
+		std::vector<AreaLight>& _area_lights
+	);
+
+	virtual ~BaseCamera() = default;
+
+	virtual void render(IN const BaseRayTracer& rendering_technique,
+		OUT std::vector<std::vector<Color>>& image) const = 0;
+
+	glm::mat4 composite_transformation_matrix;
+	
+	int num_samples;
+
+protected:
+	Vec3 position, gaze, up;
+	double near_plane[4]; // l, r, b, t
+	double near_distance;
+	int image_width, image_height;
+	Vec3 w, u, v, q, su, sv, m;
+	glm::mat4 calculateCompositeTransformationMatrix(
+		const std::vector<Translation_>& translations,
+		const std::vector<Scaling_>& scalings,
+		const std::vector<Rotation_>& rotations);
+
+	void generatePixelSamples(int i, int j, std::vector<Vec3>& out_samples) const;
+
+	std::vector<std::string> transformations;
+	int recursion_depth;
+	int num_area_lights;
+
+	std::vector<AreaLight>& area_lights;
+};
+
+#endif //BASE_CAMERA_H
