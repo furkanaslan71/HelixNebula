@@ -35,10 +35,10 @@ void PinholeCamera::render(IN const BaseRayTracer& rendering_technique,
 	{
 		threads[threadId] = std::thread([this, threadId, numThreads,
 			&rendering_technique, &image]() {
-				std::vector<Vec3> pixel_samples;
+				std::vector<glm::vec3> pixel_samples;
 				pixel_samples.reserve(num_samples);
 
-				std::vector<std::vector<std::vector<Vec3>>> area_light_samples;
+				std::vector<std::vector<std::vector<glm::vec3>>> area_light_samples;
 				area_light_samples.resize(recursion_depth + 1);
 				for (int l = 0; l < recursion_depth + 1; l++)
 				{
@@ -68,7 +68,7 @@ void PinholeCamera::render(IN const BaseRayTracer& rendering_technique,
 
 						for (int k = 0; k < num_samples; k++)
 						{
-							Vec3 dir = (pixel_samples[k] - position).normalized();
+							glm::vec3 dir = glm::normalize((pixel_samples[k] - position));
 							Ray primary_ray(position, dir, generateRandomFloat(0, 1));
 
 							RenderContext context;

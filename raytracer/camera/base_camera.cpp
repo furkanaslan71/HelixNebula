@@ -22,7 +22,7 @@ BaseCamera::BaseCamera(
 		area_lights(_area_lights)
 {
 
-	gaze.normalize();
+	gaze = glm::normalize(gaze);
 
 	if (cam.transform_matrix.has_value())
 	{
@@ -32,20 +32,21 @@ BaseCamera::BaseCamera(
 		glm::vec4 transformed_gaze = composite_transformation_matrix * glm::vec4(gaze.x, gaze.y, gaze.z, 0.0f);
 		glm::vec4 transformed_up = composite_transformation_matrix * glm::vec4(up.x, up.y, up.z, 0.0f);
 
-		position = Vec3(transformed_position.x, transformed_position.y, transformed_position.z);
-		gaze = Vec3(transformed_gaze.x, transformed_gaze.y, transformed_gaze.z);
-		up = Vec3(transformed_up.x, transformed_up.y, transformed_up.z);
+		position = glm::vec3(transformed_position.x, transformed_position.y, transformed_position.z);
+		gaze = glm::vec3(transformed_gaze.x, transformed_gaze.y, transformed_gaze.z);
+		up = glm::vec3(transformed_up.x, transformed_up.y, transformed_up.z);
 	}
 
 	
-	double zoom_factor = gaze.length();
+	double zoom_factor = glm::length(gaze);
 	if (zoom_factor < 1e-6) zoom_factor = 1.0;
 
 	// 5. Create a new, clean orthonormal basis to prevent distortion.
 	//    This corrects any skew introduced by non-uniform scaling.
-	this->w = gaze.normalize() * -1.0;
-	this->u = up.cross(w).normalize();
-	this->v = w.cross(u); // Already normalized because w and u are orthonormal
+	gaze = glm::normalize(gaze);
+	this->w = -gaze;
+	this->u = glm::normalize(glm::cross(up, w));
+	this->v = glm::cross(w, u); // Already normalized because w and u are orthonormal
 
 	// 6. Proceed with calculating the view plane geometry.
 	near_plane[0] = cam.near_plane.l;
@@ -59,13 +60,14 @@ BaseCamera::BaseCamera(
 	double b = near_plane[2] / zoom_factor;
 	double t = near_plane[3] / zoom_factor;
 
-	Vec3 m = position + (gaze.normalize() * near_distance);
-	q = m + u * l + v * t;
-	su = u * ((r - l) / image_width);
-	sv = v * ((b - t) / image_height);
+	gaze = glm::normalize(gaze);
+	glm::vec3 m = position + (gaze * (float)near_distance);
+	q = m + u * (float)l + v * (float)t;
+	su = u * (float)((r - l) / image_width);
+	sv = v * (float)((b - t) / image_height);
 }
 
-void BaseCamera::generatePixelSamples(int i, int j, std::vector<Vec3>& out_samples) const
+void BaseCamera::generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const
 {
 	std::vector<std::pair<float, float>> samples
 		= generateJitteredSamples(num_samples);
@@ -74,7 +76,7 @@ void BaseCamera::generatePixelSamples(int i, int j, std::vector<Vec3>& out_sampl
 
 	for (const auto& [x, y] : samples)
 	{
-		Vec3 pixel_sample = q + su * (j + x) + sv * (i + y);
+		glm::vec3 pixel_sample = q + su * (j + x) + sv * (i + y);
 		out_samples.emplace_back(pixel_sample);
 	}
 }

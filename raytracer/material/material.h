@@ -14,13 +14,13 @@ public:
 	Material(const Material_& _material);
 	int id;
 	std::string type;
-	Vec3 ambient_reflectance;
-	Vec3 diffuse_reflectance;
-	Vec3 specular_reflectance;
-	Vec3 mirror_reflectance;
+	glm::vec3 ambient_reflectance;
+	glm::vec3 diffuse_reflectance;
+	glm::vec3 specular_reflectance;
+	glm::vec3 mirror_reflectance;
 	float phong_exponent;
 	float refraction_index;
-	Vec3 absorption_coefficient;
+	glm::vec3 absorption_coefficient;
 	float absorption_index;
 	float roughness;
 };

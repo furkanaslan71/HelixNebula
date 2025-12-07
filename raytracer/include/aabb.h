@@ -10,7 +10,7 @@ public:
     Interval x, y, z;
 
     AABB();
-    AABB(const Vec3& p1, const Vec3& p2);
+    AABB(const glm::vec3& p1, const glm::vec3& p2);
     AABB(const AABB& box1, const AABB& box2);
 
     const void thicken();
@@ -18,9 +18,9 @@ public:
     bool hit(const Ray& ray, Interval ray_t) const;
     const Interval& operator[](int axis) const;
 		AABB transformBox(const glm::mat4& matrix) const;
-    void expand(const Vec3& p);
+    void expand(const glm::vec3& p);
     void expand(const AABB& other);
-    Vec3 center() const;
+    glm::vec3 center() const;
     int longest_axis() const;
 };
 

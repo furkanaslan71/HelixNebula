@@ -15,7 +15,7 @@ public:
     g = other.g;
     b = other.b;
   }
-  Color(const Vec3& vec)
+  Color(const glm::vec3& vec)
   {
     r = vec.x;
     g = vec.y;

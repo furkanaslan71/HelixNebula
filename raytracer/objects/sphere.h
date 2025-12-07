@@ -8,25 +8,25 @@
 
 class Sphere : public Hittable {
 public:
-	Vec3 center;
+	glm::vec3 center;
 	double radius;
 
-	Sphere(Vec3 _center, double _radius)
+	Sphere(glm::vec3 _center, double _radius)
 		: 
 		center(_center), 
 		radius(_radius)
 	{
-		bounding_box = AABB(center - Vec3(radius, radius, radius), 
-														center + Vec3(radius, radius, radius));
+		bounding_box = AABB(center - glm::vec3(radius, radius, radius),
+														center + glm::vec3(radius, radius, radius));
 	}
 
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override
 	{
 
-		Vec3 oc = ray.origin - center;
-		double a = ray.direction.dot(ray.direction);
-		double b = oc.dot(ray.direction);
-		double c = oc.dot(oc) - radius * radius;
+		glm::vec3 oc = ray.origin - center;
+		double a = glm::dot(ray.direction, ray.direction);
+		double b = glm::dot(oc, ray.direction);
+		double c = glm::dot(oc, oc) - radius * radius;
 		double discriminant = b * b - a * c;
 
 		// Intersection occurs
@@ -39,8 +39,8 @@ public:
 			{
 				double t = (t1 >= 0) ? t1 : t2;
 
-				Vec3 hitPoint = ray.origin + ray.direction * t;
-				Vec3 normal = (hitPoint - center).normalize();
+				glm::vec3 hitPoint = ray.origin + ray.direction * (float)t;
+				glm::vec3 normal = glm::normalize((hitPoint - center));
 
 				rec.t = t;
 				rec.point = hitPoint;

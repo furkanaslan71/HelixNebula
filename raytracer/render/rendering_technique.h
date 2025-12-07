@@ -22,7 +22,7 @@ typedef struct RendererInfo {
 }RendererInfo;
 
 struct RenderContext {
-	const std::vector<std::vector<std::vector<Vec3>>>* area_light_samples;
+	const std::vector<std::vector<std::vector<glm::vec3>>>* area_light_samples;
 
 	int sample_index;
 };

@@ -33,8 +33,8 @@ public:
     std::vector<std::vector<Color>>& image) const override;
 
 private:
-  void generateApertureSamples(std::vector<Vec3>& out_samples) const;
-  Vec3 calculateDir(const Vec3& pixel_sample, const Vec3& a) const;
+  void generateApertureSamples(std::vector<glm::vec3>& out_samples) const;
+  glm::vec3 calculateDir(const glm::vec3& pixel_sample, const glm::vec3& a) const;
 
 };
 

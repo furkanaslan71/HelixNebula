@@ -9,19 +9,20 @@
 
 struct PointLight {
 	int id;
-	Vec3 position;
+	glm::vec3 position;
 	Color intensity;
 };
 
 struct AreaLight {
 	int id;
-	Vec3 position;
-	Vec3 normal;
+	glm::vec3 position;
+	glm::vec3 normal;
 	float edge;
-	Vec3 radiance;
-	Vec3 u, v;
+	glm::vec3 radiance;
+	glm::vec3 u, v;
+
 	void generateApertureSamples(
-		std::vector<Vec3>& out_samples, int num_samples
+		std::vector<glm::vec3>& out_samples, int num_samples
 	) const
 	{
 		std::vector<std::pair<float, float>> samples
@@ -30,7 +31,7 @@ struct AreaLight {
 		out_samples.clear();
 		for (const auto& [x, y] : samples)
 		{
-			Vec3 area_light_sample
+			glm::vec3 area_light_sample
 				= position + (u * (x - 0.5f) + v * (y - 0.5f)) * edge;
 			out_samples.emplace_back(area_light_sample);
 		}

@@ -11,22 +11,22 @@ Scene::Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& ob
 	for (const auto& raw_light : raw_scene.point_lights) 
 	{
 		light_sources.point_lights.push_back(PointLight(raw_light.id,
-			Vec3(raw_light.position),
+			glm::vec3(raw_light.position),
 			Color(raw_light.intensity.x, raw_light.intensity.y, raw_light.intensity.z)));
 	}
 	for (const auto& raw_light : raw_scene.area_lights)
 	{
-		Vec3 u, v;
+		glm::vec3 u, v;
 
 		Vec3::createONB(raw_light.normal, u, v);
 
 		light_sources.area_lights.push_back(
 			AreaLight(
 				raw_light.id,
-				Vec3(raw_light.position),
-				Vec3(raw_light.normal),
+			glm::vec3(raw_light.position),
+			glm::vec3(raw_light.normal),
 				raw_light.edge,
-				Vec3(raw_light.radiance.x, raw_light.radiance.y, raw_light.radiance.z),
+			glm::vec3(raw_light.radiance.x, raw_light.radiance.y, raw_light.radiance.z),
 				u,
 				v
 			)

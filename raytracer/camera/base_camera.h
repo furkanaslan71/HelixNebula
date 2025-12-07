@@ -40,11 +40,11 @@ public:
 	int id;
 	
 protected:
-	void generatePixelSamples(int i, int j, std::vector<Vec3>& out_samples) const;
+	void generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const;
 
 	std::vector<AreaLight>& area_lights;
-	Vec3 w, u, v, q, su, sv, m;
-	Vec3 position, gaze, up;
+	glm::vec3 w, u, v, q, su, sv, m;
+	glm::vec3 position, gaze, up;
 	double near_plane[4]; // l, r, b, t
 	double near_distance;
 	int image_width, image_height;

@@ -1,5 +1,5 @@
 #include "tlas_box.h"
-
+#define IS_ZERO (motion_blur[world_index].x == 0 && motion_blur[world_index].y == 0 && motion_blur[world_index].z == 0)
 
 TLASBox::TLASBox(
 	int _local_index,
@@ -7,7 +7,7 @@ TLASBox::TLASBox(
 	const std::vector<std::shared_ptr<Hittable>>& _local_space_objects,
 	const std::vector<std::optional<glm::mat4>>& _transform_matrices,
 	const std::vector<int>& _material_ids,
-	const std::vector<Vec3>& _motion_blur
+	const std::vector<glm::vec3>& _motion_blur
 )
 	: 
 	local_index(_local_index), 
@@ -25,11 +25,11 @@ TLASBox::TLASBox(
 		box = box.transformBox(composite_transformation_matrix.value());
 
 	
-	if (!motion_blur[world_index].isZero())
+	if (!IS_ZERO)
 	{
-		Vec3 motion_blur = this->motion_blur[world_index];
+		glm::vec3 motion_blur = this->motion_blur[world_index];
 		glm::mat4 identity = glm::mat4(1.0);
-		glm::mat4 translate = glm::translate(identity, motion_blur.toGlm3());
+		glm::mat4 translate = glm::translate(identity, motion_blur);
 		AABB t_0_pos = box;
 		AABB t_1_pos = t_0_pos.transformBox(translate);
 		box.expand(t_1_pos);
@@ -49,11 +49,11 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 
 	const Hittable& base_object = *local_space_objects[local_index];
 
-	Vec3 motion_offset(0, 0, 0);
+	glm::vec3 motion_offset(0, 0, 0);
 
-	if (!motion_blur.empty() && !motion_blur[world_index].isZero())
+	if (!motion_blur.empty() && !IS_ZERO)
 	{
-		motion_offset = motion_blur[world_index] * ray.time;
+		motion_offset = motion_blur[world_index] * (float) ray.time;
 	}
 	//motion_offset = Vec3(0.0, 0.0, 0.0);
 	if (!composite_transformation_matrix.has_value())
@@ -70,8 +70,8 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 		return hit;
 	}
 
-	const Vec3 world_origin = ray.origin - motion_offset;
-	const Vec3 world_direction = ray.direction;
+	const glm::vec3 world_origin = ray.origin - motion_offset;
+	const glm::vec3 world_direction = ray.direction;
 
 
 	const auto& matrix_val = composite_transformation_matrix.value();
@@ -87,8 +87,8 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 		* glm::vec4(world_direction.x, world_direction.y, world_direction.z, 0.0f);
 
 	Ray local_ray(
-		Vec3(local_origin),
-		Vec3(local_direction),
+		glm::vec3(local_origin),
+		glm::vec3(local_direction),
 		ray.time
 	);
 
@@ -100,15 +100,15 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 
 	glm::vec4 local_hit_point = glm::vec4(rec.point.x, rec.point.y, rec.point.z, 1.0f);
 	glm::vec4 world_hit_point = matrix_val * local_hit_point;
-	rec.point = Vec3(world_hit_point) + motion_offset;
+	rec.point = glm::vec3(world_hit_point) + motion_offset;
 	// Transform normal
 	glm::vec4 local_normal = glm::vec4(rec.normal.x, rec.normal.y, rec.normal.z, 0.0f);
 	glm::mat4 inv_transpose = glm::transpose(inv_transform);
 	glm::vec4 world_normal = inv_transpose * local_normal;
-	rec.normal = Vec3(world_normal).normalize();
+	rec.normal = glm::normalize(glm::vec3(world_normal));
 
 	double local_t = rec.t;
-	double world_t = (rec.point - ray.origin).dot(ray.direction) / (ray.direction.length() * ray.direction.length());
+	double world_t = glm::dot((rec.point - ray.origin), ray.direction) / (glm::length(ray.direction) * glm::length(ray.direction));
 
 
 	if (world_t < ray_t.min || world_t > ray_t.max)

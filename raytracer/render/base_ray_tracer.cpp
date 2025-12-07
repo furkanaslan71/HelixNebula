@@ -1,17 +1,17 @@
 #include "base_ray_tracer.h"
 
-static double getCosTheta(Vec3 v1, Vec3 v2)
+static double getCosTheta(glm::vec3 v1, glm::vec3 v2)
 {
-	v1.normalize();
-	v2.normalize();
-	return v1.dot(v2);
+	v1 = glm::normalize(v1);
+	v2 = glm::normalize(v2);
+	return glm::dot(v1, v2);
 }
 
-static Vec3 reflect(Vec3 wo, Vec3 n)
+static glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
-	wo.normalize();
+	wo = glm::normalize(wo);
 
-	Vec3 wr = (n * (2 * (n.dot(wo)))) - wo;
+	glm::vec3 wr = (n * (2 * (glm::dot(n, wo)))) - wo;
 	return wr;
 }
 
@@ -29,15 +29,15 @@ static bool couldRefract(double cosTheta, double n1, double n2)
 	return (1 - n * n * sinTheta2) >= 0;
 }
 
-static Vec3 snellRefract(Vec3 wo, Vec3 n, double n1, double n2)
+static glm::vec3 snellRefract(glm::vec3 wo, glm::vec3 n, double n1, double n2)
 {
 	double eta = n1 / n2;
-	double cosTheta = std::clamp(wo.dot(n), -1.0, 1.0);
+	double cosTheta = std::clamp(glm::dot(wo, n), -1.0f, 1.0f);
 	double sin2ThetaT = eta  * (1 - cosTheta * cosTheta);
 	if (sin2ThetaT > 1.0)
-		return Vec3(0); // total internal reflection
+		return glm::vec3(0); // total internal reflection
 	double cosThetaT = sqrt(1.0 - sin2ThetaT);
-	return (wo * -1) + n * (eta * cosTheta - cosThetaT) * eta;
+	return -wo + n * (float)(eta * cosTheta - cosThetaT) * (float)eta;
 }
 
 static double r_parallel(double cosTheta, double cosPhi, double n1, double n2)
@@ -109,8 +109,8 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 	if ((mat.type).compare("mirror") == 0)
 	{
-		Vec3 wo = ray.direction * -1;
-		Vec3 wr = (rec.normal * (2 * (rec.normal.dot(wo)))) - wo;
+		glm::vec3 wo = -ray.direction;
+		glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
 		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
 
 		if (mat.roughness != 0)
@@ -122,11 +122,11 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	}
 	else if ((mat.type).compare("conductor") == 0)
 	{
-		Vec3 wo = ray.direction * -1;
-		Vec3 wr = (rec.normal * (2 * (rec.normal.dot(wo)))) - wo;
-		wr.normalize();
-		wo.normalize();
-		double cos_theta = wo.dot(rec.normal);
+		glm::vec3 wo = -ray.direction;
+		glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
+		wr = glm::normalize(wr);
+		wo = glm::normalize(wo);
+		double cos_theta = glm::dot(wo, rec.normal);
 		double k = mat.absorption_index; // Assuming k is the same for r, g, b
 		double n = static_cast<double>(mat.refraction_index);
 		double rs_num = (n * n) + (k * k)
@@ -156,16 +156,16 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	}
 	else if (mat.type == "dielectric")
 	{
-		Vec3 wo = ray.direction * -1;
-		Vec3 normal = rec.normal;
+		glm::vec3 wo = -ray.direction;
+		glm::vec3 normal = rec.normal;
 		double n1, n2;
 		bool entering = rec.front_face;
 
 		if (entering) { n1 = 1.0; n2 = mat.refraction_index; }
-		else { n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1; }
+		else { n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1.0f; }
 
 		double eta = n1 / n2;
-		double cosTheta = std::clamp(wo.dot(normal), -1.0, 1.0);
+		double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
 		double sin2ThetaT = eta * eta * (1 - cosTheta * cosTheta);
 		double F_r = 1.0;
 
@@ -178,7 +178,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		}
 
 		// Reflection
-		Vec3 wr = reflect(wo, normal).normalize();
+		glm::vec3 wr = glm::normalize(reflect(wo, normal));
 
 		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
 
@@ -188,11 +188,12 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		}
 
 		// Refraction
-		Color refractedColor(0);
+		Color refractedColor(0.0, 0.0, 0.0);
 		if (sin2ThetaT <= 1.0)
 		{
-			Vec3 wt = (wo * -1) * eta + normal * (eta * cosTheta - sqrt(1 - sin2ThetaT));
-			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt.normalize(), ray.time);
+			glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - sqrt(1 - sin2ThetaT));
+			wt = glm::normalize(wt);
+			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt, ray.time);
 			if (mat.roughness != 0)
 			{
 				refractedRay.perturb(mat.roughness);
@@ -221,14 +222,14 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 	for (const auto& light : light_sources.point_lights)
 	{
-		Vec3 wi = Vec3(light.position) - rec.point;
-		double distance = wi.length();
-		wi.normalize();
+		glm::vec3 wi = glm::vec3(light.position) - rec.point;
+		double distance = glm::length(wi);
+		wi = glm::normalize(wi);
 		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi, ray.time);
 		Ray shadowRayPlane = Ray(rec.point 
 			+ rec.normal 
-			* static_cast<double>(renderer_info.shadow_ray_epsilon) 
-			* 1e-2
+			* static_cast<float>(renderer_info.shadow_ray_epsilon) 
+			* 1e-2f
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
@@ -236,31 +237,31 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 			// Diffuse
-			double cosTheta = std::max(double(0.0f), rec.normal.dot(wi));
+			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
 			color += Color(mat.diffuse_reflectance) * Color(light.intensity) * (cosTheta / (distance * distance));
 
 			// Specular
-			Vec3 wo = (ray.origin - rec.point);
-			wo.normalize();
-			Vec3 h = (wi + wo);
-			h.normalize();
-			double cosAlpha = std::max(double(0.0f), rec.normal.dot(h));
+			glm::vec3 wo = (ray.origin - rec.point);
+			wo = glm::normalize(wo);
+			glm::vec3 h = (wi + wo);
+			h = glm::normalize(h);
+			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
 			color += Color(mat.specular_reflectance) * Color(light.intensity) * (pow(cosAlpha, mat.phong_exponent) / (distance * distance));
 		}
 	}
 	for (const auto& light : light_sources.area_lights)
 	{
-		Vec3 light_sample_point = (*context.area_light_samples)[depth - 1][light.id][context.sample_index];
+		glm::vec3 light_sample_point = (*context.area_light_samples)[depth - 1][light.id][context.sample_index];
 
 		// Calculate Shadow Ray towards this specific random point
-		Vec3 wi = light_sample_point - rec.point;
-		double distance = wi.length();
-		wi = wi.normalize();
+		glm::vec3 wi = light_sample_point - rec.point;
+		double distance = glm::length(wi);
+		wi = glm::normalize(wi);
 		Ray shadowRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wi, ray.time);
 		Ray shadowRayPlane = Ray(rec.point
 			+ rec.normal
-			* static_cast<double>(renderer_info.shadow_ray_epsilon)
-			* 1e-2
+			* static_cast<float>(renderer_info.shadow_ray_epsilon)
+			* 1e-2f
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
@@ -268,19 +269,19 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 			float area_of_light = light.edge * light.edge;
-			double cos_alpha_light = std::abs((wi * -1.0).dot(light.normal));
+			double cos_alpha_light = std::abs(glm::dot(-wi, light.normal));
 			float distance2 = distance * distance;
 			float attenuation = area_of_light * cos_alpha_light / distance2;
 			// Diffuse
-			double cosTheta = std::max(double(0.0f), rec.normal.dot(wi));
+			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
 			color += Color(mat.diffuse_reflectance) * Color(light.radiance) * attenuation * cosTheta;
 
 			// Specular
-			Vec3 wo = (ray.origin - rec.point);
-			wo.normalize();
-			Vec3 h = (wi + wo);
-			h.normalize();
-			double cosAlpha = std::max(double(0.0f), rec.normal.dot(h));
+			glm::vec3 wo = (ray.origin - rec.point);
+			wo = glm::normalize(wo);
+			glm::vec3 h = (wi + wo);
+			h = glm::normalize(h);
+			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
 			color += Color(mat.specular_reflectance) * Color(light.radiance) *
 				attenuation * pow(cosAlpha, mat.phong_exponent);
 		}

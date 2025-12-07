@@ -2,7 +2,7 @@
 #include "../include/vec3.h"
 
 AABB::AABB() {};
-AABB::AABB(const Vec3& p1, const Vec3& p2)
+AABB::AABB(const glm::vec3& p1, const glm::vec3& p2)
 {
     x = Interval(p1.x, p2.x);
     y = Interval(p1.y, p2.y);
@@ -66,25 +66,25 @@ const Interval& AABB::operator[](int axis) const
 
 AABB AABB::transformBox(const glm::mat4& matrix) const
 {
-   Vec3 corners[8];
-    corners[0] = Vec3(x.min, y.min, z.min);
-    corners[1] = Vec3(x.min, y.min, z.max);
-    corners[2] = Vec3(x.min, y.max, z.min);
-    corners[3] = Vec3(x.min, y.max, z.max);
-    corners[4] = Vec3(x.max, y.min, z.min);
-    corners[5] = Vec3(x.max, y.min, z.max);
-    corners[6] = Vec3(x.max, y.max, z.min);
-    corners[7] = Vec3(x.max, y.max, z.max);
+  glm::vec3 corners[8];
+    corners[0] = glm::vec3(x.min, y.min, z.min);
+    corners[1] = glm::vec3(x.min, y.min, z.max);
+    corners[2] = glm::vec3(x.min, y.max, z.min);
+    corners[3] = glm::vec3(x.min, y.max, z.max);
+    corners[4] = glm::vec3(x.max, y.min, z.min);
+    corners[5] = glm::vec3(x.max, y.min, z.max);
+    corners[6] = glm::vec3(x.max, y.max, z.min);
+    corners[7] = glm::vec3(x.max, y.max, z.max);
     AABB transformedBox;
     for (auto& corner : corners)
     {
-      corner = Vec3(matrix * corner.toGlm4());
+      corner = glm::vec3(matrix * glm::vec4(corner, 1.0));
     }
 
 // The followng section is pure autism by erenjanje35
 // let it stay for the fun of it
 
-#define COMP(axis) [](const Vec3& a, const Vec3& b) {return a.axis < b.axis;}
+#define COMP(axis) [](const glm::vec3& a, const glm::vec3& b) {return a.axis < b.axis;}
 #define FIND(kind, axis) double kind##_##axis = std::kind##_element(corners, corners + 8, COMP(axis))->axis
     FIND(min, x);
     FIND(max, x);
@@ -101,7 +101,7 @@ AABB AABB::transformBox(const glm::mat4& matrix) const
 		return transformedBox;
 }
 
-void AABB::expand(const Vec3& p)
+void AABB::expand(const glm::vec3& p)
 {
   x.min = std::min(x.min, (double)p.x);
   x.max = std::max(x.max, (double)p.x);
@@ -121,9 +121,9 @@ void AABB::expand(const AABB& other)
   z.max = std::max(z.max, other.z.max);
 }
 
-Vec3 AABB::center() const
+glm::vec3 AABB::center() const
 {
-  return Vec3(x.mid(), y.mid(), z.mid());
+  return glm::vec3(x.mid(), y.mid(), z.mid());
 }
 
 int AABB::longest_axis() const

@@ -195,17 +195,17 @@ public:
       return ((x == 0) && (y == 0) && (z == 0));
     }
 
-    static inline void createONB(const Vec3& r, Vec3& u, Vec3& v)
+    static inline void createONB(const  glm::vec3& r, glm::vec3& u, glm::vec3& v)
     {
-      Vec3 w = r.normalized();
+       glm::vec3 w = glm::normalize(r);
 
-      Vec3 helper = (std::abs(w.x) > 0.9f)
-        ? Vec3(0.0f, 1.0f, 0.0f)
-        : Vec3(1.0f, 0.0f, 0.0f);
+       glm::vec3 helper = (std::abs(w.x) > 0.9f)
+        ? glm::vec3(0.0f, 1.0f, 0.0f)
+        : glm::vec3(1.0f, 0.0f, 0.0f);
 
-      u = (helper.cross(w)).normalized();
+      u = glm::normalize(glm::cross(helper, w));
 
-      v = w.cross(u);
+      v = glm::cross(w, u);
     }
 
 };

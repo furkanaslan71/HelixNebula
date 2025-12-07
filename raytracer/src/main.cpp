@@ -17,7 +17,7 @@
 std::vector<std::shared_ptr<Hittable>> local_space_objects;
 std::vector<std::optional<glm::mat4>> transform_matrices;
 std::vector<int> material_ids;
-std::vector<Vec3> motion_blur;
+std::vector<glm::vec3> motion_blur;
 
 int main(int argc, char* argv[])
 {
@@ -46,10 +46,10 @@ for(int i = 0; i < 360; i++)
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/akif_uslu/berserker/two_berserkers.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs2/marching_dragons.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/raven/dragon/dragon_new_right_ply.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
-  //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs3/ramazan_tokay/wine_glass_scene.json";
-  //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs3/tap_water/json/tap_0010.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
 #endif
   Scene_ raw_scene;
   
@@ -79,7 +79,7 @@ for(int i = 0; i < 360; i++)
   {
     const auto& raw_triangle = raw_scene.triangles[i];
     
-    Vec3 indices[3] = { 
+    glm::vec3 indices[3] = {
       vertex_data[raw_triangle.v0_id],
       vertex_data[raw_triangle.v1_id],
       vertex_data[raw_triangle.v2_id]
@@ -93,7 +93,7 @@ for(int i = 0; i < 360; i++)
   for (int i = 0; i < s_size; i++)
   {
     const auto& raw_sphere = raw_scene.spheres[i];
-    Vec3 center = vertex_data[raw_sphere.center_vertex_id];
+    glm::vec3 center = vertex_data[raw_sphere.center_vertex_id];
     local_space_objects.emplace_back(std::make_shared<Sphere>(center, static_cast<double>(raw_sphere.radius)));
     transform_matrices.emplace_back(raw_sphere.transform_matrix);
     material_ids.emplace_back(raw_sphere.material_id);

@@ -1,7 +1,7 @@
 #include "distribution_camera.h"
 
 void DistributionCamera::generateApertureSamples(
-	std::vector<Vec3>& out_samples) const
+	std::vector<glm::vec3>& out_samples) const
 {
 	std::vector<std::pair<float, float>> samples
 		= generateJitteredSamples(num_samples);
@@ -9,19 +9,19 @@ void DistributionCamera::generateApertureSamples(
 	out_samples.clear();
 	for (const auto& [x, y] : samples)
 	{
-		Vec3 aperture_sample = position + (u * (x - 0.5f) + v * (y - 0.5f)) * aperture_size;
+		glm::vec3 aperture_sample = position + (u * (x - 0.5f) + v * (y - 0.5f)) * aperture_size;
 		out_samples.emplace_back(aperture_sample);
 	}
 }
 
-Vec3 DistributionCamera::calculateDir(
-	const Vec3& pixel_sample, const Vec3& a) const
+glm::vec3 DistributionCamera::calculateDir(
+	const glm::vec3& pixel_sample, const glm::vec3& a) const
 {
-	Vec3 e = position;
-	Vec3 dir = pixel_sample - e;
-	float t_fp = focus_distance / dir.dot(w * -1);
-	Vec3 p = e + dir * t_fp;
-	Vec3 d = p - a;
+	glm::vec3 e = position;
+	glm::vec3 dir = pixel_sample - e;
+	float t_fp = focus_distance / glm::dot(dir, -w);
+	glm::vec3 p = e + dir * t_fp;
+	glm::vec3 d = p - a;
 	return d;
 }
 
@@ -61,13 +61,13 @@ void DistributionCamera::render(
 	{
 		threads[threadId] = std::thread([this, threadId, numThreads,
 			&rendering_technique, &image]() {
-				std::vector<Vec3> pixel_samples;
+				std::vector<glm::vec3> pixel_samples;
 				pixel_samples.reserve(num_samples);
 
-				std::vector<Vec3> aperture_samples;
+				std::vector<glm::vec3> aperture_samples;
 				aperture_samples.reserve(num_samples);
 
-				std::vector<std::vector<std::vector<Vec3>>> area_light_samples;
+				std::vector<std::vector<std::vector<glm::vec3>>> area_light_samples;
 				area_light_samples.resize(recursion_depth + 1);
 				for (int l = 0; l < recursion_depth + 1; l++)
 				{
@@ -99,8 +99,8 @@ void DistributionCamera::render(
 
 						for (int k = 0; k < num_samples; k++)
 						{
-							Vec3 a = (aperture_size > 0.0) ? aperture_samples[k] : position;
-							Vec3 dir = calculateDir(pixel_samples[k], a).normalize();
+							glm::vec3 a = (aperture_size > 0.0) ? aperture_samples[k] : position;
+							glm::vec3 dir = glm::normalize(calculateDir(pixel_samples[k], a));
 
 							Ray primary_ray(a, dir, generateRandomFloat(0, 1));
 

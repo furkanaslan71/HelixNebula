@@ -12,9 +12,13 @@
 #include <../external/glm/glm/gtc/matrix_transform.hpp>
 
 
-typedef struct Vec3f_ {
-    float x, y, z;
-} Vec3f_;
+struct Vec3f_ {
+  float x, y, z;
+  operator glm::vec3() const
+  {
+    return glm::vec3(x, y, z);
+  }
+};
 
 typedef struct Vec4f_ {
     float l, r, b, t;

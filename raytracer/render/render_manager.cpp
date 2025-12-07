@@ -64,14 +64,6 @@ void RenderManager::saveImage(const std::string& outputDir,
     {
       Color c = image[y][x];
       c.clamp();
-
-      /*
-      unsigned char r = static_cast<unsigned char>
-        (std::round(std::min(255.0, std::max(0.0, c.r * 255.0))));
-      unsigned char g = static_cast<unsigned char>
-        (std::round(std::min(255.0, std::max(0.0, c.g * 255.0))));
-      unsigned char b = static_cast<unsigned char>
-        (std::round(std::min(255.0, std::max(0.0, c.b * 255.0))));*/
       unsigned char r = static_cast<unsigned char>
 				(std::round(c.r));
 			unsigned char g = static_cast<unsigned char>

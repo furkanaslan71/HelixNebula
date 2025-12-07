@@ -6,14 +6,14 @@
 #include "aabb.h"
 
 typedef struct HitRecord{
-  Vec3 point;
-  Vec3 normal;
+  glm::vec3 point;
+  glm::vec3 normal;
 	bool front_face;
   int material_id;
   double t;
   void set_front_face(const Ray& r)
   {
-    front_face = r.direction.dot(normal) < 0;
+    front_face = glm::dot(r.direction, normal) < 0;
   }
 }HitRecord;
 

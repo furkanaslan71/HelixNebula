@@ -15,14 +15,14 @@ public:
 	Plane(
 		const Plane_& _plane,
 		const std::vector<Vec3f_>& _vertex_data,
-		Vec3 _motion_blur
+		glm::vec3 _motion_blur
 	);
 	bool hit(const Ray& ray, const Interval& interval, HitRecord& rec) const;
 	int id;
 	int material_id;
-	Vec3 point;
-	Vec3 normal;
-	Vec3 motion_blur;
+	glm::vec3 point;
+	glm::vec3 normal;
+	glm::vec3 motion_blur;
 	std::optional<glm::mat4> composite_transformation_matrix;
 };
 #endif // PLANE_H
