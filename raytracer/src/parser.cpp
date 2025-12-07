@@ -1,7 +1,5 @@
 ﻿#include "../include/parser.hpp"
 #include "../external/json.hpp"
-#include <../external/glm/glm/glm.hpp>
-#include <../external/glm/glm/gtc/matrix_transform.hpp>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,17 +17,17 @@ scene.scalings,scene.rotations \
 using json = nlohmann::json;
 
 // Helper functions
-Vec3f_ parseVec3f(const std::string& str) {
-    Vec3f_ vec;
+glm::vec3 parseVec3(const std::string& str) {
+    glm::vec3 vec;
     std::stringstream ss(str);
     ss >> vec.x >> vec.y >> vec.z;
     return vec;
 }
 
-Vec4f_ parseVec4f(const std::string& str) {
-    Vec4f_ vec;
+glm::vec4 parseVec4(const std::string& str) {
+    glm::vec4 vec;
     std::stringstream ss(str);
-    ss >> vec.l >> vec.r >> vec.b >> vec.t;
+    ss >> vec.x >> vec.y >> vec.z >> vec.w;
     return vec;
 }
 
@@ -54,19 +52,9 @@ static uint8_t readUInt8(std::ifstream& f)
   return val;
 }
 
-bool perpendicular(Vec3f_ a, Vec3f_ b)
+bool perpendicular(const glm::vec3& a, const glm::vec3& b)
 {
-  double dot_product = a.x * b.x + a.y * b.y + a.z * b.z;
-  return fabs(dot_product) < 1e-8;
-}
-
-Vec3f_ crossProduct(Vec3f_ a, Vec3f_ b)
-{
-  Vec3f_ result;
-  result.x = a.y * b.z - a.z * b.y;
-  result.y = a.z * b.x - a.x * b.z;
-  result.z = a.x * b.y - a.y * b.x;
-  return result;
+  return fabs(glm::dot(a, b)) < 1e-8;
 }
 
 // --- UNIVERSAL, ROBUST PLY PARSER (ASCII + basic binary) ---
@@ -292,7 +280,7 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
   std::vector<char> binary_buffer(vertex_record_size);
   for (long i = 0; i < num_vertices; ++i)
   {
-    Vec3f_ v;
+    glm::vec3 v;
 
     if (format == ASCII)
     {
@@ -426,7 +414,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
     const auto& scene_json = j["Scene"];
 
     // --- Global Scene Settings ---
-    scene.background_color = parseVec3f(scene_json["BackgroundColor"]);
+    scene.background_color = parseVec3(scene_json["BackgroundColor"]);
 
     if (scene_json.contains("ShadowRayEpsilon"))
         scene.shadow_ray_epsilon = std::stof(scene_json["ShadowRayEpsilon"].get<std::string>());
@@ -455,7 +443,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         if (!translations_json.is_array())
         {
           scene.translations.resize(2);
-          Vec3f_ data = parseVec3f(translations_json["_data"]);
+          glm::vec3 data = parseVec3(translations_json["_data"]);
           scene.translations[1] = Translation_{ data.x, data.y, data.z };
         }
         else
@@ -464,7 +452,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           scene.translations.resize(size + 1);
           for (int i = 1; i < size + 1; i++)
           {
-            Vec3f_ data = parseVec3f(translations_json[i - 1]["_data"]);
+            glm::vec3 data = parseVec3(translations_json[i - 1]["_data"]);
             scene.translations[i] = Translation_{ data.x, data.y, data.z };
           }
         }
@@ -475,7 +463,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         if (!scalings_json.is_array())
         {
           scene.scalings.resize(2);
-          Vec3f_ data = parseVec3f(scalings_json["_data"]);
+          glm::vec3 data = parseVec3(scalings_json["_data"]);
           scene.scalings[1] = Scaling_{ data.x, data.y, data.z };
         }
         else
@@ -484,7 +472,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           scene.scalings.resize(size + 1);
           for (int i = 1; i < size + 1; i++)
           {
-            Vec3f_ data = parseVec3f(scalings_json[i - 1]["_data"]);
+            glm::vec3 data = parseVec3(scalings_json[i - 1]["_data"]);
             scene.scalings[i] = Scaling_{ data.x, data.y, data.z };
           }
         }
@@ -495,8 +483,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
         if (!rotations_json.is_array())
         {
           scene.rotations.resize(2);
-          Vec4f_ data = parseVec4f(rotations_json["_data"]);
-          scene.rotations[1] = Rotation_{ data.l, data.r, data.b , data.t };
+          glm::vec4 data = parseVec4(rotations_json["_data"]);
+          scene.rotations[1] = Rotation_{ data.x, data.y, data.z , data.w };
         }
         else
         {
@@ -504,8 +492,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
           scene.rotations.resize(size + 1);
           for (int i = 1; i < size + 1; i++)
           {
-            Vec4f_ data = parseVec4f(rotations_json[i - 1]["_data"]);
-            scene.rotations[i] = Rotation_{ data.l, data.r, data.b , data.t };
+            glm::vec4 data = parseVec4(rotations_json[i - 1]["_data"]);
+            scene.rotations[i] = Rotation_{ data.x, data.y, data.z , data.w };
           }
         }
       }
@@ -518,8 +506,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
       Camera_ cam;
 
       cam.id = std::stoi(cam_json["_id"].get<std::string>());
-      cam.position = parseVec3f(cam_json["Position"]);
-      cam.up = parseVec3f(cam_json["Up"]);
+      cam.position = parseVec3(cam_json["Position"]);
+      cam.up = parseVec3(cam_json["Up"]);
       cam.near_distance = std::stof(cam_json["NearDistance"].get<std::string>());
       std::stringstream res_ss(cam_json["ImageResolution"].get<std::string>());
       res_ss >> cam.image_width >> cam.image_height;
@@ -553,8 +541,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
       if (cam_json.contains("GazePoint"))
       {
-        Vec3f_ gaze_point = parseVec3f(cam_json["GazePoint"]);
-        Vec3f_ gaze_vec = {
+        glm::vec3 gaze_point = parseVec3(cam_json["GazePoint"]);
+        glm::vec3 gaze_vec = {
             gaze_point.x - cam.position.x,
             gaze_point.y - cam.position.y,
             gaze_point.z - cam.position.z
@@ -577,30 +565,30 @@ void parseScene(const std::string& filename, Scene_& scene) {
         float t = cam.near_distance * std::tan(fov_y_radians / 2.0f);
         float r = t * aspect_ratio;
 
-        cam.near_plane.l = -r;
-        cam.near_plane.r = r;
-        cam.near_plane.b = -t;
-        cam.near_plane.t = t;
+        cam.near_plane.x = -r;
+        cam.near_plane.y = r;
+        cam.near_plane.z = -t;
+        cam.near_plane.w = t;
       }
       else
       {
         // --- TYPE 2: Your original camera format ---
-        cam.gaze = parseVec3f(cam_json["Gaze"]);
-        cam.near_plane = parseVec4f(cam_json["NearPlane"]);
+        cam.gaze = parseVec3(cam_json["Gaze"]);
+        cam.near_plane = parseVec4(cam_json["NearPlane"]);
       }
 
       if (!perpendicular(cam.gaze, cam.up))
       {
 				float len_gaze = std::sqrt(cam.gaze.x * cam.gaze.x + cam.gaze.y * cam.gaze.y + cam.gaze.z * cam.gaze.z);
-				Vec3f_ w = Vec3f_{ -cam.gaze.x / len_gaze,
+				glm::vec3 w = glm::vec3{ -cam.gaze.x / len_gaze,
           -cam.gaze.y / len_gaze,
           -cam.gaze.z / len_gaze };
 				float len_up = std::sqrt(cam.up.x * cam.up.x + cam.up.y * cam.up.y + cam.up.z * cam.up.z);
-        Vec3f_ v_ = Vec3f_{ cam.up.x / len_up,
+        glm::vec3 v_ = glm::vec3{ cam.up.x / len_up,
           cam.up.y / len_up,
 					cam.up.z / len_up };
-        Vec3f_ u = crossProduct(v_, w);
-				Vec3f_ v = crossProduct(w, u);
+        glm::vec3 u = glm::cross(v_, w);
+				glm::vec3 v = glm::cross(w, u);
 				cam.up = v;
       }
 
@@ -618,17 +606,17 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
     // --- Lights ---
     if (scene_json["Lights"].contains("AmbientLight"))
-      scene.ambient_light = parseVec3f(scene_json["Lights"]["AmbientLight"]);
+      scene.ambient_light = parseVec3(scene_json["Lights"]["AmbientLight"]);
     else
-      scene.ambient_light = Vec3f_(0.0, 0.0, 0.0);
+      scene.ambient_light = glm::vec3(0.0, 0.0, 0.0);
     if (scene_json["Lights"].contains("PointLight"))
     {
       const auto& point_lights_json = scene_json["Lights"]["PointLight"];
       auto parse_point_light = [&](const json& pl_json) {
         PointLight_ pl;
         pl.id = std::stoi(pl_json["_id"].get<std::string>());
-        pl.position = parseVec3f(pl_json["Position"]);
-        pl.intensity = parseVec3f(pl_json["Intensity"]);
+        pl.position = parseVec3(pl_json["Position"]);
+        pl.intensity = parseVec3(pl_json["Intensity"]);
         if (pl_json.contains("Transformations"))
         {
           std::vector<std::string> transformations;
@@ -643,7 +631,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
                             pl.position.y,
                             pl.position.z,
                             1.0));
-          pl.position = Vec3f_(new_pos.x, new_pos.y, new_pos.z);
+          pl.position = glm::vec3(new_pos.x, new_pos.y, new_pos.z);
         }
         scene.point_lights.push_back(pl);
         };
@@ -663,9 +651,9 @@ void parseScene(const std::string& filename, Scene_& scene) {
       auto parse_area_light = [&](const json& al_json) {
         AreaLight_ al;
         al.id = std::stoi(al_json["_id"].get<std::string>()) - 1;
-        al.position = parseVec3f(al_json["Position"]);
-        al.radiance = parseVec3f(al_json["Radiance"]);
-        al.normal = parseVec3f(al_json["Normal"]);
+        al.position = parseVec3(al_json["Position"]);
+        al.radiance = parseVec3(al_json["Radiance"]);
+        al.normal = parseVec3(al_json["Normal"]);
         int size = std::stoi(al_json["Size"].get<std::string>());
         al.edge = static_cast<float>(size);
         if (al_json.contains("Transformations"))
@@ -678,13 +666,13 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
           glm::mat4 transform_matrix = COMPOSITE_TRANSFORM;
           glm::vec3 new_pos(transform_matrix* glm::vec4(al.position.x, al.position.y, al.position.z, 1.0));
-          al.position = Vec3f_(new_pos.x, new_pos.y, new_pos.z);
+          al.position = glm::vec3(new_pos.x, new_pos.y, new_pos.z);
 
           glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(transform_matrix)));
           glm::vec3 new_normal = normal_matrix * glm::vec3(al.normal.x, al.normal.y, al.normal.z);
           new_normal = glm::normalize(new_normal);
 
-          al.normal = Vec3f_(new_normal.x, new_normal.y, new_normal.z);
+          al.normal = glm::vec3(new_normal.x, new_normal.y, new_normal.z);
         }
         scene.area_lights.push_back(al);
        };
@@ -703,21 +691,21 @@ void parseScene(const std::string& filename, Scene_& scene) {
     auto parse_material = [&](const json& mat_json) {
         Material_ mat;
         mat.id = std::stoi(mat_json["_id"].get<std::string>()) - 1;
-        if (mat_json.contains("AmbientReflectance")) mat.ambient_reflectance = parseVec3f(mat_json["AmbientReflectance"]);
+        if (mat_json.contains("AmbientReflectance")) mat.ambient_reflectance = parseVec3(mat_json["AmbientReflectance"]);
 				else mat.ambient_reflectance = { 0.0f, 0.0f, 0.0f };
-        if (mat_json.contains("DiffuseReflectance")) mat.diffuse_reflectance = parseVec3f(mat_json["DiffuseReflectance"]);
+        if (mat_json.contains("DiffuseReflectance")) mat.diffuse_reflectance = parseVec3(mat_json["DiffuseReflectance"]);
 				else mat.diffuse_reflectance = { 0.0f, 0.0f, 0.0f };
-        if (mat_json.contains("SpecularReflectance")) mat.specular_reflectance = parseVec3f(mat_json["SpecularReflectance"]);
+        if (mat_json.contains("SpecularReflectance")) mat.specular_reflectance = parseVec3(mat_json["SpecularReflectance"]);
 				else mat.specular_reflectance = { 0.0f, 0.0f, 0.0f };
         if (mat_json.contains("PhongExponent")) mat.phong_exponent = std::stof(mat_json["PhongExponent"].get<std::string>());
 				else mat.phong_exponent = 0.0f;
 				if (mat_json.contains("_type")) mat.type = mat_json["_type"].get<std::string>();
 				else mat.type = "none";
-				if (mat_json.contains("MirrorReflectance")) mat.mirror_reflectance = parseVec3f(mat_json["MirrorReflectance"]);
+				if (mat_json.contains("MirrorReflectance")) mat.mirror_reflectance = parseVec3(mat_json["MirrorReflectance"]);
 				else mat.mirror_reflectance = { 0.0f, 0.0f, 0.0f };
 				if (mat_json.contains("RefractionIndex")) mat.refraction_index = std::stof(mat_json["RefractionIndex"].get<std::string>());
 				else mat.refraction_index = 1.0f;
-				if (mat_json.contains("AbsorptionCoefficient")) mat.absorption_coefficient = parseVec3f(mat_json["AbsorptionCoefficient"]);
+				if (mat_json.contains("AbsorptionCoefficient")) mat.absorption_coefficient = parseVec3(mat_json["AbsorptionCoefficient"]);
 				else mat.absorption_coefficient = { 0.0f, 0.0f, 0.0f };
         if (mat_json.contains("AbsorptionIndex")) mat.absorption_index = std::stof(mat_json["AbsorptionIndex"].get<std::string>());
 				else mat.absorption_index = 0.0f;
@@ -756,11 +744,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
         if (mesh_json.contains("MotionBlur"))
         {
-          mesh.motion_blur = parseVec3f(mesh_json["MotionBlur"]);
+          mesh.motion_blur = parseVec3(mesh_json["MotionBlur"]);
         }
         else
         {
-          mesh.motion_blur = Vec3f_(0.0, 0.0, 0.0);
+          mesh.motion_blur = glm::vec3(0.0, 0.0, 0.0);
         }
 
         if(filename.find("dragon_metal.json") != std::string::npos)
@@ -868,11 +856,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
         if (mi_json.contains("MotionBlur"))
         {
-          mi.motion_blur = parseVec3f(mi_json["MotionBlur"]);
+          mi.motion_blur = parseVec3(mi_json["MotionBlur"]);
         }
         else
         {
-          mi.motion_blur = Vec3f_(0.0, 0.0, 0.0);
+          mi.motion_blur = glm::vec3(0.0, 0.0, 0.0);
         }
 
         if (mi_json.contains("Transformations"))
@@ -998,11 +986,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
             if (tri_json.contains("MotionBlur"))
             {
-              tri.motion_blur = parseVec3f(tri_json["MotionBlur"]);
+              tri.motion_blur = parseVec3(tri_json["MotionBlur"]);
             }
             else
             {
-              tri.motion_blur = Vec3f_(0.0, 0.0, 0.0);
+              tri.motion_blur = glm::vec3(0.0, 0.0, 0.0);
             }
 
             scene.triangles.push_back(tri);
@@ -1026,11 +1014,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
             if (sphere_json.contains("MotionBlur"))
             {
-              sphere.motion_blur = parseVec3f(sphere_json["MotionBlur"]);
+              sphere.motion_blur = parseVec3(sphere_json["MotionBlur"]);
             }
             else
             {
-              sphere.motion_blur = Vec3f_(0.0, 0.0, 0.0);
+              sphere.motion_blur = glm::vec3(0.0, 0.0, 0.0);
             }
 
             if (sphere_json.contains("Transformations"))
@@ -1060,15 +1048,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				plane.id = std::stoi(plane_json["_id"].get<std::string>());
 				plane.material_id = std::stoi(plane_json["Material"].get<std::string>()) - 1;
 				plane.point_vertex_id = std::stoi(plane_json["Point"].get<std::string>()) - 1;
-				plane.normal = parseVec3f(plane_json["Normal"]);
+				plane.normal = parseVec3(plane_json["Normal"]);
 
         if (plane_json.contains("MotionBlur"))
         {
-          plane.motion_blur = parseVec3f(plane_json["MotionBlur"]);
+          plane.motion_blur = parseVec3(plane_json["MotionBlur"]);
         }
         else
         {
-          plane.motion_blur = Vec3f_(0.0, 0.0, 0.0);
+          plane.motion_blur = glm::vec3(0.0, 0.0, 0.0);
         }
 
         if (plane_json.contains("Transformations"))

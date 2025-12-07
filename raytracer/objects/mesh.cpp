@@ -1,7 +1,7 @@
 #include "mesh.h"
 
 Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
-	const std::vector<Vec3f_>& vertex_data)
+	const std::vector<glm::vec3>& vertex_data)
 	: id(_id), smooth_shading(_smooth_shading)
 {
 	if (smooth_shading)

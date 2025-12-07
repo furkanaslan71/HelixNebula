@@ -49,10 +49,10 @@ BaseCamera::BaseCamera(
 	this->v = glm::cross(w, u); // Already normalized because w and u are orthonormal
 
 	// 6. Proceed with calculating the view plane geometry.
-	near_plane[0] = cam.near_plane.l;
-	near_plane[1] = cam.near_plane.r;
-	near_plane[2] = cam.near_plane.b;
-	near_plane[3] = cam.near_plane.t;
+	near_plane[0] = cam.near_plane.x;
+	near_plane[1] = cam.near_plane.y;
+	near_plane[2] = cam.near_plane.z;
+	near_plane[3] = cam.near_plane.w;
 
 	// Divide the plane dimensions by the zoom factor to narrow the field of view.
 	double l = near_plane[0] / zoom_factor;

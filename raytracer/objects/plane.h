@@ -14,7 +14,7 @@ public:
 	Plane();
 	Plane(
 		const Plane_& _plane,
-		const std::vector<Vec3f_>& _vertex_data,
+		const std::vector<glm::vec3>& _vertex_data,
 		glm::vec3 _motion_blur
 	);
 	bool hit(const Ray& ray, const Interval& interval, HitRecord& rec) const;

@@ -11,25 +11,12 @@
 #include <../external/glm/glm/glm.hpp>
 #include <../external/glm/glm/gtc/matrix_transform.hpp>
 
-
-struct Vec3f_ {
-  float x, y, z;
-  operator glm::vec3() const
-  {
-    return glm::vec3(x, y, z);
-  }
-};
-
-typedef struct Vec4f_ {
-    float l, r, b, t;
-} Vec4f_;
-
 typedef struct Camera_ {
     int id;
-    Vec3f_ position;
-    Vec3f_ gaze;
-    Vec3f_ up;
-    Vec4f_ near_plane;
+    glm::vec3 position;
+    glm::vec3 gaze;
+    glm::vec3 up;
+    glm::vec4 near_plane;
     float near_distance;
     int image_width;
     int image_height;
@@ -43,30 +30,30 @@ typedef struct Camera_ {
 
 typedef struct PointLight_ {
     int id;
-    Vec3f_ position;
-    Vec3f_ intensity;
+    glm::vec3 position;
+    glm::vec3 intensity;
 		//std::vector<std::string> transformations;
 } PointLight_;
 
 struct AreaLight_ {
   int id;
-  Vec3f_ position;
-  Vec3f_ normal;
+  glm::vec3 position;
+  glm::vec3 normal;
   float edge;
-  Vec3f_ radiance;
+  glm::vec3 radiance;
   //std::vector<std::string> transformations;
 };
 
 typedef struct Material_ {
     int id;
     std::string type;
-    Vec3f_ ambient_reflectance;
-    Vec3f_ diffuse_reflectance;
-    Vec3f_ specular_reflectance;
-    Vec3f_ mirror_reflectance;
+    glm::vec3 ambient_reflectance;
+    glm::vec3 diffuse_reflectance;
+    glm::vec3 specular_reflectance;
+    glm::vec3 mirror_reflectance;
     float phong_exponent;
     float refraction_index;
-    Vec3f_ absorption_coefficient;
+    glm::vec3 absorption_coefficient;
     float absorption_index;
     float roughness;
 } Material_;
@@ -75,7 +62,7 @@ typedef struct Triangle_ {
     int material_id;
     int v0_id, v1_id, v2_id;
     std::optional<glm::mat4> transform_matrix;
-    Vec3f_ motion_blur;
+    glm::vec3 motion_blur;
 } Triangle_;
 
 typedef struct Mesh_ {
@@ -84,7 +71,7 @@ typedef struct Mesh_ {
 		bool smooth_shading;
     std::vector<Triangle_> faces;
     std::optional<glm::mat4> transform_matrix;
-    Vec3f_ motion_blur;
+    glm::vec3 motion_blur;
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -94,7 +81,7 @@ typedef struct MeshInstance_ {
 	bool smooth_shading;
 	bool reset_transform;
   std::optional<glm::mat4> transform_matrix;
-  Vec3f_ motion_blur;
+  glm::vec3 motion_blur;
 }MeshInstance_;
 
 typedef struct Sphere_ {
@@ -103,16 +90,16 @@ typedef struct Sphere_ {
     int center_vertex_id;
     float radius;
     std::optional<glm::mat4> transform_matrix;
-    Vec3f_ motion_blur;
+    glm::vec3 motion_blur;
 } Sphere_;
 
 typedef struct Plane_ {
     int id;
     int material_id;
     int point_vertex_id;
-    Vec3f_ normal;
+    glm::vec3 normal;
     std::optional<glm::mat4> transform_matrix;
-    Vec3f_ motion_blur;
+    glm::vec3 motion_blur;
 } Plane_;
 
 typedef struct Translation_ {
@@ -130,16 +117,16 @@ typedef struct Rotation_ {
 	
 
 typedef struct Scene_ {
-    Vec3f_ background_color;
+    glm::vec3 background_color;
     float shadow_ray_epsilon;
     float intersection_test_epsilon;
     int max_recursion_depth;         
     std::vector<Camera_> cameras;
-    Vec3f_ ambient_light;
+    glm::vec3 ambient_light;
     std::vector<PointLight_> point_lights;
     std::vector<AreaLight_> area_lights;
     std::vector<Material_> materials;
-    std::vector<Vec3f_> vertex_data;
+    std::vector<glm::vec3> vertex_data;
 		std::vector<Translation_> translations;
 		std::vector<Scaling_> scalings;
 		std::vector<Rotation_> rotations;
@@ -155,13 +142,13 @@ typedef struct Scene_ {
 
 void parseScene(const std::string& filename, Scene_& scene);
 
-inline std::ostream& operator<<(std::ostream& os, const Vec3f_& v) {
+inline std::ostream& operator<<(std::ostream& os, const glm::vec3& v) {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Vec4f_& v) {
-    os << "(l:" << v.l << ", r:" << v.r << ", b:" << v.b << ", t:" << v.t << ")";
+inline std::ostream& operator<<(std::ostream& os, const glm::vec4& v) {
+    os << "(l:" << v.x << ", r:" << v.y << ", b:" << v.z << ", t:" << v.w << ")";
     return os;
 }
 
