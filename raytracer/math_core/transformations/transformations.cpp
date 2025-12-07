@@ -1,7 +1,7 @@
 #include "transformations.h"
 
 
-Mat4 calculateCompositeTransformationMatrix(
+glm::mat4 calculateCompositeTransformationMatrix(
 	const std::vector<std::string> transformations,
 	const std::vector<Translation_>& translations,
 	const std::vector<Scaling_>& scalings,

@@ -2,7 +2,7 @@
 #define AABB_H
 
 #include "interval.h"
-#include "vec3.h"
+#include "../math_core/math_core.h"
 #include "ray.h"
 
 class AABB {

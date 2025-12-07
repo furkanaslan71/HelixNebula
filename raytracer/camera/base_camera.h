@@ -8,7 +8,7 @@
 #include <vector>
 #include "color.h"
 #include "ray.h"
-#include "vec3.h"
+#include "../math_core/math_core.h"
 #include "bvh.h"
 #include "parser.hpp"
 #include "../render/rendering_technique.h"

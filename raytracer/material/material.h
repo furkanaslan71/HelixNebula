@@ -6,7 +6,7 @@
 #include "../include/color.h"
 #include "../include/parser.hpp"
 #include <string>
-#include "../include/vec3.h"
+#include "../math_core/math_core.h"
 
 class Material {
 public:

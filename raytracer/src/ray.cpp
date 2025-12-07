@@ -1,4 +1,5 @@
 #include "../include/ray.h"
+#include "../math_core/math_core.h"
 
 Ray::Ray() {}
 
@@ -15,7 +16,7 @@ Ray::Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time)
 void Ray::perturb(float roughness)
 {
 	glm::vec3 u, v;
-	Vec3::createONB(direction, u, v);
+	createONB(direction, u, v);
 	float psi1 = generateRandomFloat(0, 1);
 	float psi2 = generateRandomFloat(0, 1);
 	//std::cout << psi1 << psi2 << std::endl;

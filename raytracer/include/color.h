@@ -1,6 +1,6 @@
 #ifndef COLOR_H
 #define COLOR_H
-#include "vec3.h"
+#include "../math_core/math_core.h"
 #include "../external/gsl/gsl"
 
 class Color {

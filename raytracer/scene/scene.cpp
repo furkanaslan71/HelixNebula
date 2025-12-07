@@ -1,6 +1,7 @@
 #include "scene.h"
 
 #include "../include/ray.h"
+#include "../math_core/math_core.h"
 
 
 Scene::Scene() {}
@@ -18,7 +19,7 @@ Scene::Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& ob
 	{
 		glm::vec3 u, v;
 
-		Vec3::createONB(raw_light.normal, u, v);
+		createONB(raw_light.normal, u, v);
 
 		light_sources.area_lights.push_back(
 			AreaLight(

@@ -1,5 +1,4 @@
 #include "../include/aabb.h"
-#include "../include/vec3.h"
 
 AABB::AABB() {};
 AABB::AABB(const glm::vec3& p1, const glm::vec3& p2)

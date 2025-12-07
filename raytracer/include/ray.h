@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "vec3.h"
+#include "../math_core/math_core.h"
 #include "../random/my_random.h"
 
 class Ray {

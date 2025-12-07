@@ -3,7 +3,7 @@
 
 
 #include "../include/parser.hpp"
-#include "../include/vec3.h"
+#include "../math_core/math_core.h"
 #include "../include/ray.h"
 #include "../include/hittable.h"
 #include "../include/interval.h"

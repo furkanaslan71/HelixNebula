@@ -4,7 +4,7 @@
 #include <vector>
 #include "../camera/pinhole_camera.h"
 #include "../camera/distribution_camera.h"
-#include "vec3.h"
+#include "../math_core/math_core.h"
 #include "color.h"
 #include "../include/parser.hpp"
 #include "../material/material_manager.h"
