@@ -5,6 +5,8 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include "../math_core/transformations/transformations.h"
+
 #define M_PI 3.14159265358979323846
 #define COMPOSITE_TRANSFORM calculateCompositeTransformationMatrix( \
 transformations, \
@@ -12,51 +14,9 @@ scene.translations, \
 scene.scalings,scene.rotations \
 ) \
 
+
 // For convenience
 using json = nlohmann::json;
-
-inline glm::mat4 calculateCompositeTransformationMatrix(
-  const std::vector<std::string>& transformations,
-  const std::vector<Translation_>& translations,
-  const std::vector<Scaling_>& scalings,
-  const std::vector<Rotation_>& rotations)
-{
-  auto res = glm::mat4(1.0f);
-  for (const auto& transform : transformations)
-  {
-    auto identity = glm::mat4(1.0f);
-    switch (transform[0])
-    {
-      case 't': // translation
-      {
-        int index = std::stoi(transform.substr(1));
-        auto& t = translations[index];
-        glm::vec3 translation = glm::vec3(t.tx, t.ty, t.tz);
-        res = glm::translate(identity, translation) * res;
-        break;
-      }
-      case 's': // scaling
-      {
-        int index = std::stoi(transform.substr(1));
-        auto& s = scalings[index];
-        glm::vec3 scaling = glm::vec3(s.sx, s.sy, s.sz);
-        res = glm::scale(identity, scaling) * res;
-        break;
-      }
-      case 'r': // rotation
-      {
-        int index = std::stoi(transform.substr(1));
-        auto& r = rotations[index];
-        glm::vec3 axis = glm::vec3(r.axis_x, r.axis_y, r.axis_z);
-        res = glm::rotate(identity, glm::radians(r.angle), axis) * res;
-        break;
-      }
-      default:
-        break;
-    }
-  }
-  return res;
-}
 
 // Helper functions
 Vec3f_ parseVec3f(const std::string& str) {
@@ -583,10 +543,12 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
       if(cam_json.contains("Transformations"))
       {
+        std::vector<std::string> transformations;
         std::istringstream iss(cam_json["Transformations"].get<std::string>());
         std::string token;
         while (iss >> token)
-          cam.transformations.push_back(token);
+          transformations.push_back(token);
+        cam.transform_matrix = COMPOSITE_TRANSFORM;
       }
 
       if (cam_json.contains("GazePoint"))
@@ -669,10 +631,19 @@ void parseScene(const std::string& filename, Scene_& scene) {
         pl.intensity = parseVec3f(pl_json["Intensity"]);
         if (pl_json.contains("Transformations"))
         {
+          std::vector<std::string> transformations;
           std::istringstream iss(pl_json["Transformations"].get<std::string>());
           std::string token;
           while (iss >> token)
-            pl.transformations.push_back(token);
+            transformations.push_back(token);
+
+          glm::mat4 transform_matrix = COMPOSITE_TRANSFORM;
+          glm::vec3 new_pos(transform_matrix
+                            * glm::vec4(pl.position.x,
+                            pl.position.y,
+                            pl.position.z,
+                            1.0));
+          pl.position = Vec3f_(new_pos.x, new_pos.y, new_pos.z);
         }
         scene.point_lights.push_back(pl);
         };
@@ -699,10 +670,21 @@ void parseScene(const std::string& filename, Scene_& scene) {
         al.edge = static_cast<float>(size);
         if (al_json.contains("Transformations"))
         {
+          std::vector<std::string> transformations;
           std::istringstream iss(al_json["Transformations"].get<std::string>());
           std::string token;
           while (iss >> token)
-            al.transformations.push_back(token);
+            transformations.push_back(token);
+
+          glm::mat4 transform_matrix = COMPOSITE_TRANSFORM;
+          glm::vec3 new_pos(transform_matrix* glm::vec4(al.position.x, al.position.y, al.position.z, 1.0));
+          al.position = Vec3f_(new_pos.x, new_pos.y, new_pos.z);
+
+          glm::mat3 normal_matrix = glm::transpose(glm::inverse(glm::mat3(transform_matrix)));
+          glm::vec3 new_normal = normal_matrix * glm::vec3(al.normal.x, al.normal.y, al.normal.z);
+          new_normal = glm::normalize(new_normal);
+
+          al.normal = Vec3f_(new_normal.x, new_normal.y, new_normal.z);
         }
         scene.area_lights.push_back(al);
        };

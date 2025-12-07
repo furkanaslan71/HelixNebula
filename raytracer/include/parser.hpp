@@ -11,6 +11,7 @@
 #include <../external/glm/glm/glm.hpp>
 #include <../external/glm/glm/gtc/matrix_transform.hpp>
 
+
 typedef struct Vec3f_ {
     float x, y, z;
 } Vec3f_;
@@ -29,7 +30,8 @@ typedef struct Camera_ {
     int image_width;
     int image_height;
     std::string image_name;
-    std::vector<std::string> transformations;
+    //std::vector<std::string> transformations;
+    std::optional<glm::mat4> transform_matrix;
     int num_samples;
     float aperture_size;
     float focus_distance;
@@ -39,7 +41,7 @@ typedef struct PointLight_ {
     int id;
     Vec3f_ position;
     Vec3f_ intensity;
-		std::vector<std::string> transformations;
+		//std::vector<std::string> transformations;
 } PointLight_;
 
 struct AreaLight_ {
@@ -48,7 +50,7 @@ struct AreaLight_ {
   Vec3f_ normal;
   float edge;
   Vec3f_ radiance;
-  std::vector<std::string> transformations;
+  //std::vector<std::string> transformations;
 };
 
 typedef struct Material_ {

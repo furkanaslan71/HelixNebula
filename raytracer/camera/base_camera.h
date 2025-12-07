@@ -22,8 +22,6 @@ class RenderingTechnique;
 
 class BaseCamera {
 public:
-	int id;
-	std::string image_name;
 	BaseCamera(
 		const Camera_& cam,
 		const std::vector<Translation_>& translations,
@@ -33,34 +31,25 @@ public:
 		int _num_area_lights,
 		std::vector<AreaLight>& _area_lights
 	);
-
 	virtual ~BaseCamera() = default;
-
 	virtual void render(IN const BaseRayTracer& rendering_technique,
 		OUT std::vector<std::vector<Color>>& image) const = 0;
 
-	glm::mat4 composite_transformation_matrix;
-	
+	std::string image_name;
 	int num_samples;
-
+	int id;
+	
 protected:
+	void generatePixelSamples(int i, int j, std::vector<Vec3>& out_samples) const;
+
+	std::vector<AreaLight>& area_lights;
+	Vec3 w, u, v, q, su, sv, m;
 	Vec3 position, gaze, up;
 	double near_plane[4]; // l, r, b, t
 	double near_distance;
 	int image_width, image_height;
-	Vec3 w, u, v, q, su, sv, m;
-	glm::mat4 calculateCompositeTransformationMatrix(
-		const std::vector<Translation_>& translations,
-		const std::vector<Scaling_>& scalings,
-		const std::vector<Rotation_>& rotations);
-
-	void generatePixelSamples(int i, int j, std::vector<Vec3>& out_samples) const;
-
-	std::vector<std::string> transformations;
 	int recursion_depth;
 	int num_area_lights;
-
-	std::vector<AreaLight>& area_lights;
 };
 
 #endif //BASE_CAMERA_H

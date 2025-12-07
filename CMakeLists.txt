@@ -57,7 +57,7 @@ add_executable (HelixNebula
     # "raytracer/camera/pinhole_camera.h" 
     # "raytracer/camera/distribution_camera.h" 
     # "raytracer/include/ray.h"
-)
+ "raytracer/math_core/math_core.h" "raytracer/math_core/definitions.h" "raytracer/math_core/transformations/transformations.h" "raytracer/math_core/transformations/transformations.cpp")
 
 
 # Important: Add include directories so your compiler can find your headers.
