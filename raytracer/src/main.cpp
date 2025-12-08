@@ -48,8 +48,9 @@ for(int i = 0; i < 360; i++)
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs2/marching_dragons.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/raven/dragon/dragon_new_right_ply.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/focusing_dragons.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
 #endif

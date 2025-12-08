@@ -34,18 +34,20 @@ const Interval& AABB::axis(int i) const
 
 bool AABB::hit(const Ray& ray, Interval ray_t) const
 {
-    for (int i = 0; i < 3; i++)
-    {
-        double t0 = (axis(i).min - ray.origin[i]) / ray.direction[i];
-        double t1 = (axis(i).max - ray.origin[i]) / ray.direction[i];
-        if (t0 > t1) std::swap(t0, t1);
+  for (int i = 0; i < 3; i++)
+  {
+    // Cast the Interval struct to a double pointer
+    const double* bounds = reinterpret_cast<const double*>(&axis(i));
 
-        // check whether overlaps
-        if (ray_t.min < t0) ray_t.min = t0;
-        if (ray_t.max > t1) ray_t.max = t1;
+    // Array indexing is pure arithmetic (faster than logic)
+    double t0 = (bounds[ray.sign[i]] - ray.origin[i]) * ray.inv_direction[i];
+    double t1 = (bounds[1 - ray.sign[i]] - ray.origin[i]) * ray.inv_direction[i];
 
-        if (ray_t.max <= ray_t.min) return false; // means no overlap between three axices.
-    }
+    if (t0 > ray_t.min) ray_t.min = t0;
+    if (t1 < ray_t.max) ray_t.max = t1;
+
+    if (ray_t.max <= ray_t.min) return false;
+  }
     return true;
 }
 

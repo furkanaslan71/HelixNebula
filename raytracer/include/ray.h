@@ -8,6 +8,8 @@ class Ray {
 public:
     glm::vec3 origin;
     glm::vec3 direction;
+    glm::vec3 inv_direction;
+    int sign[3];
     double time;
     Ray();
     ~Ray();

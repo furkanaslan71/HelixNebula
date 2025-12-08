@@ -10,7 +10,11 @@ Ray::Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time)
   direction(_direction),
 	time(_time)
 {
-    direction = glm::normalize(direction);
+    //direction = glm::normalize(direction);
+		inv_direction = 1.0f / direction;
+		sign[0] = (inv_direction.x < 0);
+		sign[1] = (inv_direction.y < 0);
+		sign[2] = (inv_direction.z < 0);
 }
 
 void Ray::perturb(float roughness)
