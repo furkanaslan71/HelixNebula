@@ -12,12 +12,16 @@
 #include "../objects/tlas_box.h"
 #include "../objects/mesh.h"
 
+#include "../objects/geometry.h"
+
+
 
 std::vector<ObjectContext> object_contexes;
 std::vector<std::shared_ptr<Hittable>> local_space_objects;
 
 int main(int argc, char* argv[])
 {
+  Geometry sphere(std::in_place_type<Sphere>, glm::vec3{ 0,0,0 }, 1.0);
   // Expect exactly one argument after the executable name
   /*
   if (argc != 2)
