@@ -10,15 +10,9 @@ Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
 		per_vertex_triangles.resize(vertex_data.size());
 		for (const Triangle_& raw_triangle : _faces)
 		{
-			glm::vec3 v0 = glm::vec3(vertex_data[raw_triangle.v0_id].x,
-															 vertex_data[raw_triangle.v0_id].y,
-															 vertex_data[raw_triangle.v0_id].z);
-			glm::vec3 v1 = glm::vec3(vertex_data[raw_triangle.v1_id].x,
-															 vertex_data[raw_triangle.v1_id].y,
-															 vertex_data[raw_triangle.v1_id].z);
-			glm::vec3 v2 = glm::vec3(vertex_data[raw_triangle.v2_id].x,
-															 vertex_data[raw_triangle.v2_id].y,
-															 vertex_data[raw_triangle.v2_id].z);
+			glm::vec3 v0 = glm::vec3(vertex_data[raw_triangle.v0_id]);
+			glm::vec3 v1 = glm::vec3(vertex_data[raw_triangle.v1_id]);
+			glm::vec3 v2 = glm::vec3(vertex_data[raw_triangle.v2_id]);
 			double area = Triangle::getAreaTriangle(v0, v1, v2);
 			glm::vec3 edge1 = v1 - v0;
 			glm::vec3 edge2 = v2 - v0;

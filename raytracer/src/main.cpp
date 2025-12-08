@@ -12,12 +12,9 @@
 #include "../objects/tlas_box.h"
 #include "../objects/mesh.h"
 
-#define GLOBALS local_space_objects, transform_matrices, material_ids, motion_blur
 
+std::vector<ObjectContext> object_contexes;
 std::vector<std::shared_ptr<Hittable>> local_space_objects;
-std::vector<std::optional<glm::mat4>> transform_matrices;
-std::vector<int> material_ids;
-std::vector<glm::vec3> motion_blur;
 
 int main(int argc, char* argv[])
 {
@@ -46,8 +43,9 @@ for(int i = 0; i < 360; i++)
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/akif_uslu/berserker/two_berserkers.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs2/marching_dragons.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/raven/dragon/dragon_new_right_ply.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
 #endif
@@ -58,8 +56,6 @@ for(int i = 0; i < 360; i++)
 #endif
   parseScene(scene_filename, raw_scene);
 
-  //printSceneSummary(scene);
-  //printScene(raw_scene);
   std::vector<std::shared_ptr<Hittable>> tlas_boxes;
 
   int t_size = raw_scene.triangles.size();
@@ -67,10 +63,8 @@ for(int i = 0; i < 360; i++)
   int m_size = raw_scene.meshes.size();
   int mi_size = raw_scene.mesh_instances.size();
 
+  object_contexes.reserve(t_size + s_size + mi_size);
   local_space_objects.reserve(t_size + s_size + m_size);
-  transform_matrices.reserve(t_size + s_size + mi_size);
-  material_ids.reserve(t_size + s_size + mi_size);
-  motion_blur.reserve(t_size + s_size + mi_size);
   tlas_boxes.reserve(t_size + s_size + mi_size);
 
   const auto& vertex_data = raw_scene.vertex_data;
@@ -84,24 +78,27 @@ for(int i = 0; i < 360; i++)
       vertex_data[raw_triangle.v1_id],
       vertex_data[raw_triangle.v2_id]
     };
+    std::optional<glm::mat4> inv_tr;
+
+    if (raw_triangle.transform_matrix.has_value())
+      inv_tr = glm::inverse(raw_triangle.transform_matrix.value());
+
+    object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.material_id);
     local_space_objects.emplace_back(std::make_shared<Triangle>(indices));
-    transform_matrices.emplace_back(raw_triangle.transform_matrix);
-    material_ids.emplace_back(raw_triangle.material_id);
-    motion_blur.emplace_back(raw_triangle.motion_blur);
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>(i, i, GLOBALS));
+    tlas_boxes.emplace_back(std::make_shared<TLASBox>(i, object_contexes, local_space_objects[i]));
   }
   for (int i = 0; i < s_size; i++)
   {
     const auto& raw_sphere = raw_scene.spheres[i];
     glm::vec3 center = vertex_data[raw_sphere.center_vertex_id];
+
+    std::optional<glm::mat4> inv_tr;
+    if (raw_sphere.transform_matrix.has_value())
+      inv_tr = glm::inverse(raw_sphere.transform_matrix.value());
+
+    object_contexes.emplace_back(raw_sphere.transform_matrix, inv_tr, raw_sphere.motion_blur, raw_sphere.material_id);
     local_space_objects.emplace_back(std::make_shared<Sphere>(center, static_cast<double>(raw_sphere.radius)));
-    transform_matrices.emplace_back(raw_sphere.transform_matrix);
-    material_ids.emplace_back(raw_sphere.material_id);
-    motion_blur.emplace_back(raw_sphere.motion_blur);
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>(
-      i + t_size,
-      i + t_size,
-      GLOBALS));
+    tlas_boxes.emplace_back(std::make_shared<TLASBox>(i + t_size, object_contexes, local_space_objects[i + t_size]));
   }
   std::unordered_map<int, size_t> mesh_order;
   size_t index = 0;
@@ -114,13 +111,13 @@ for(int i = 0; i < 360; i++)
   int base = t_size + s_size;
   for (const auto& [id, mi] : raw_scene.mesh_instances)
   {
-    transform_matrices.emplace_back(mi.transform_matrix);
-    material_ids.emplace_back(mi.material_id);
-    motion_blur.emplace_back(mi.motion_blur);
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>(
-      base + mesh_order[mi.base_mesh_id],
-      base + index,
-      GLOBALS));
+    std::optional<glm::mat4> inv_tr;
+    if (mi.transform_matrix.has_value())
+      inv_tr = glm::inverse(mi.transform_matrix.value());
+
+    object_contexes.emplace_back(mi.transform_matrix, inv_tr, mi.motion_blur, mi.material_id);
+    tlas_boxes.emplace_back(std::make_shared<TLASBox>
+                            (base + index, object_contexes, local_space_objects[base + mesh_order[mi.base_mesh_id]]));
     index++;
   }
   

@@ -12,6 +12,11 @@ scene.translations, \
 scene.scalings,scene.rotations \
 ) \
 
+enum class FieldRequirement {
+  MUST,
+  DEFAULTABLE,
+  OPTIONAL
+};
 
 // For convenience
 using json = nlohmann::json;

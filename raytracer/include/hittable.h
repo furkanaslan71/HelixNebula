@@ -17,6 +17,14 @@ typedef struct HitRecord{
   }
 }HitRecord;
 
+struct ObjectContext {
+  std::optional<glm::mat4> transform_matrix;
+  std::optional<glm::mat4> inverse_transform;
+  glm::vec3 motion_blur;
+  int material_id;
+};
+
+
 class Hittable {
 public:
   virtual ~Hittable() = default;

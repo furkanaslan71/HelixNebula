@@ -6,24 +6,19 @@
 
 class TLASBox : public Hittable {
 public:
-	TLASBox(
-		int _local_index,
-		int _world_index, 
-		const std::vector<std::shared_ptr<Hittable>>& _local_space_objects,
-		const std::vector<std::optional<glm::mat4>>& _transform_matrices,
-		const std::vector<int>& _material_ids,
-		const std::vector<glm::vec3>& _motion_blur
-	);
-	const int local_index;
-	const int world_index;
+	TLASBox(int _world_index, 
+					const std::vector<ObjectContext>& _object_contexes,
+					std::shared_ptr<Hittable> _geometry);
+
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override;
 	AABB getAABB() const override;
+
+	const int world_index;
+	
 private:
+	const std::vector<ObjectContext>& object_contexes;
 	AABB bounding_box;
-	const std::vector<std::shared_ptr<Hittable>>& local_space_objects;
-	const std::vector<std::optional<glm::mat4>>& transform_matrices;
-	const std::vector<int>& material_ids;
-	const std::vector<glm::vec3>& motion_blur;
+	const std::shared_ptr<Hittable> geometry;
 };
 
 #endif
