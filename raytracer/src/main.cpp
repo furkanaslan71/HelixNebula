@@ -15,13 +15,13 @@
 #include "../objects/geometry.h"
 
 
-
+std::vector<Geometry> geometries;
 std::vector<ObjectContext> object_contexes;
-std::vector<std::shared_ptr<Hittable>> local_space_objects;
+//std::vector<std::shared_ptr<Hittable>> local_space_objects;
 
 int main(int argc, char* argv[])
 {
-  Geometry sphere(std::in_place_type<Sphere>, glm::vec3{ 0,0,0 }, 1.0);
+  //Geometry sphere(std::in_place_type<Sphere>, glm::vec3{ 0,0,0 }, 1.0);
   // Expect exactly one argument after the executable name
   /*
   if (argc != 2)
@@ -48,8 +48,8 @@ for(int i = 0; i < 360; i++)
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebulaNew/inputs2/marching_dragons.json";
   //std::string scene_filename = "D:/Furkan/repos/raytracer/HelixNebula/inputs2/raven/dragon/dragon_new_right_ply.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
 #endif
@@ -60,7 +60,8 @@ for(int i = 0; i < 360; i++)
 #endif
   parseScene(scene_filename, raw_scene);
 
-  std::vector<std::shared_ptr<Hittable>> tlas_boxes;
+  //std::vector<std::shared_ptr<Hittable>> tlas_boxes;
+  std::vector<TLASBox> tlas_boxes;
 
   int t_size = raw_scene.triangles.size();
   int s_size = raw_scene.spheres.size();
@@ -68,8 +69,9 @@ for(int i = 0; i < 360; i++)
   int mi_size = raw_scene.mesh_instances.size();
 
   object_contexes.reserve(t_size + s_size + mi_size);
-  local_space_objects.reserve(t_size + s_size + m_size);
-  tlas_boxes.reserve(t_size + s_size + mi_size);
+  geometries.reserve(t_size + s_size + m_size);
+  //local_space_objects.reserve(t_size + s_size + m_size);
+  //tlas_boxes.reserve(t_size + s_size + mi_size);
 
   const auto& vertex_data = raw_scene.vertex_data;
 
@@ -88,8 +90,11 @@ for(int i = 0; i < 360; i++)
       inv_tr = glm::inverse(raw_triangle.transform_matrix.value());
 
     object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.material_id);
-    local_space_objects.emplace_back(std::make_shared<Triangle>(indices));
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>(i, object_contexes, local_space_objects[i]));
+    //local_space_objects.emplace_back(std::make_shared<Triangle>(indices));
+    geometries.emplace_back(std::in_place_type<Triangle>, indices);
+    //tlas_boxes.emplace_back(std::make_shared<TLASBox>(i, object_contexes, local_space_objects[i]));
+    tlas_boxes.emplace_back(i, &object_contexes, &geometries[i]);
+
   }
   for (int i = 0; i < s_size; i++)
   {
@@ -101,15 +106,18 @@ for(int i = 0; i < 360; i++)
       inv_tr = glm::inverse(raw_sphere.transform_matrix.value());
 
     object_contexes.emplace_back(raw_sphere.transform_matrix, inv_tr, raw_sphere.motion_blur, raw_sphere.material_id);
-    local_space_objects.emplace_back(std::make_shared<Sphere>(center, static_cast<double>(raw_sphere.radius)));
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>(i + t_size, object_contexes, local_space_objects[i + t_size]));
+    //local_space_objects.emplace_back(std::make_shared<Sphere>(center, static_cast<double>(raw_sphere.radius)));
+    geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius));
+    //tlas_boxes.emplace_back(std::make_shared<TLASBox>(i + t_size, object_contexes, local_space_objects[i + t_size]));
+    tlas_boxes.emplace_back(i + t_size, &object_contexes, &geometries[i + t_size]);
   }
   std::unordered_map<int, size_t> mesh_order;
   size_t index = 0;
   for (const auto& [key, val] : raw_scene.meshes)
   {
     mesh_order[key] = index++;
-    local_space_objects.emplace_back(std::make_shared<Mesh>(val.id, val.smooth_shading, val.faces, vertex_data));
+    //local_space_objects.emplace_back(std::make_shared<Mesh>(val.id, val.smooth_shading, val.faces, vertex_data));
+    geometries.emplace_back(std::in_place_type<Mesh>, val.id, val.smooth_shading, val.faces, vertex_data);
   }
   index = 0;
   int base = t_size + s_size;
@@ -120,8 +128,8 @@ for(int i = 0; i < 360; i++)
       inv_tr = glm::inverse(mi.transform_matrix.value());
 
     object_contexes.emplace_back(mi.transform_matrix, inv_tr, mi.motion_blur, mi.material_id);
-    tlas_boxes.emplace_back(std::make_shared<TLASBox>
-                            (base + index, object_contexes, local_space_objects[base + mesh_order[mi.base_mesh_id]]));
+    //tlas_boxes.emplace_back(std::make_shared<TLASBox>(base + index, object_contexes, local_space_objects[base + mesh_order[mi.base_mesh_id]]));
+    tlas_boxes.emplace_back(base + index, &object_contexes, &geometries[base + mesh_order[mi.base_mesh_id]]);
     index++;
   }
   

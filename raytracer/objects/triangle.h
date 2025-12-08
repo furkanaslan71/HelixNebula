@@ -6,7 +6,7 @@
 #include "../include/aabb.h"
 
 
-class Triangle : public Hittable {
+class Triangle{
 public:
 
 	Triangle(glm::vec3 _indices[3])
@@ -62,7 +62,7 @@ public:
 
 
 
-	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override
+	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
 		glm::vec3 c1 = indices[0] - indices[1];
 		glm::vec3 c2 = indices[0] - indices[2];
@@ -106,7 +106,7 @@ public:
 		
 	}
 
-	AABB getAABB() const override { return bounding_box; }
+	AABB getAABB() const { return bounding_box; }
 
 	static inline double getAreaTriangle(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3)
 	{

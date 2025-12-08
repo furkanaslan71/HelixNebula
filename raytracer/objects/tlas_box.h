@@ -4,21 +4,23 @@
 #include <optional>
 #include <memory>
 
-class TLASBox : public Hittable {
+#include "geometry.h"
+
+class TLASBox{
 public:
 	TLASBox(int _world_index, 
-					const std::vector<ObjectContext>& _object_contexes,
-					std::shared_ptr<Hittable> _geometry);
+					 std::vector<ObjectContext>* _object_contexes,
+					Geometry* _geometry);
 
-	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override;
-	AABB getAABB() const override;
+	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
+	AABB getAABB() const;
 
-	const int world_index;
+	 int world_index;
 	
 private:
-	const std::vector<ObjectContext>& object_contexes;
+	std::vector<ObjectContext>* object_contexes;
 	AABB bounding_box;
-	const std::shared_ptr<Hittable> geometry;
+	Geometry* geometry;
 };
 
 #endif

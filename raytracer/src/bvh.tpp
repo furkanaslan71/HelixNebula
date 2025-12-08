@@ -1,5 +1,3 @@
-#include "../include/bvh.h"
-#include "../external/gsl/gsl"
 
 struct TreeBVHNode {
   AABB bbox;
@@ -10,14 +8,17 @@ struct TreeBVHNode {
   int split_axis = 0;
 };
 
-BVH::BVH(std::vector<std::shared_ptr<Hittable>>& _primitives)
+template <GeometryConcept T>
+BVH<T>::BVH(std::vector<T>& _primitives)
   : primitives_(_primitives) 
 {
   buildBVH();
 }
 
+
+template <GeometryConcept T>
 TreeBVHNode* buildTreeRecursive(
-  std::vector<std::shared_ptr<Hittable>>& objects,
+  std::vector<T>& objects,
   int start,
   int end)
 {
@@ -28,7 +29,7 @@ TreeBVHNode* buildTreeRecursive(
   if (primitive_count == 1)
   {
     //leaf node
-    node->bbox = objects[start]->getAABB();
+    node->bbox = objects[start].getAABB();
     node->primitive_count = primitive_count;
     node->primitives_offset = start;
     return node;
@@ -36,7 +37,7 @@ TreeBVHNode* buildTreeRecursive(
 
   AABB centroid_bbox;
   for (int i = start; i < end; i++)
-    centroid_bbox.expand(objects[i]->getAABB().center());
+    centroid_bbox.expand(objects[i].getAABB().center());
 
   if (centroid_bbox.x.max == centroid_bbox.x.min &&
     centroid_bbox.y.max == centroid_bbox.y.min &&
@@ -46,7 +47,7 @@ TreeBVHNode* buildTreeRecursive(
     // put all of them together in a leaf node
     AABB bbox;
     for (int i = start; i < end; i++)
-      bbox.expand(objects[i]->getAABB());
+      bbox.expand(objects[i].getAABB());
 
     node->bbox = bbox;
     node->primitives_offset = start;
@@ -58,10 +59,9 @@ TreeBVHNode* buildTreeRecursive(
   int mid = (start + end) / 2;
 
   std::nth_element(&objects[start], &objects[mid], &objects[end - 1] + 1,
-    [longest_axis](const std::shared_ptr<Hittable>& a,
-      const std::shared_ptr<Hittable>& b) {
-        return a->getAABB().center()[longest_axis] <
-          b->getAABB().center()[longest_axis];
+    [longest_axis](const T& a, const T& b) {
+        return a.getAABB().center()[longest_axis] <
+          b.getAABB().center()[longest_axis];
     });
 
   node->left = buildTreeRecursive(objects, start, mid);
@@ -72,7 +72,8 @@ TreeBVHNode* buildTreeRecursive(
   return node;
 }
 
-int BVH::buildFlatBVH(TreeBVHNode* node, int& offset)
+template <GeometryConcept T>
+int BVH<T>::buildFlatBVH(TreeBVHNode* node, int& offset)
 {
   Expects(node);
   LinearBVHNode* linear_node = &linear_nodes_[offset];
@@ -95,7 +96,8 @@ int BVH::buildFlatBVH(TreeBVHNode* node, int& offset)
   return current_offset;
 }
 
-void BVH::buildBVH()
+template <GeometryConcept T>
+void BVH<T>::buildBVH()
 {
   Expects(primitives_.size() > 0);
   size_t size = primitives_.size();
@@ -106,7 +108,8 @@ void BVH::buildBVH()
   linear_nodes_.resize(offset);
 }
 
-bool BVH::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
+template <GeometryConcept T>
+bool BVH<T>::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
   if (linear_nodes_.empty()) 
     return false;
@@ -131,7 +134,7 @@ bool BVH::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
         for (int i = 0; i < node->primitive_count; i++)
         {
           // Check intersection
-          if (primitives_[node->primitives_offset + i]->hit(ray, ray_t, rec))
+          if (primitives_[node->primitives_offset + i].hit(ray, ray_t, rec))
           {
             hit_anything = true;
             ray_t.max = rec.t; // CRITICAL: Shrink the ray so we ignore farther objects!
@@ -175,8 +178,10 @@ bool BVH::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
   return hit_anything;
 }
 
-AABB BVH::getAABB() const 
+template <GeometryConcept T>
+AABB BVH<T>::getAABB() const 
 { 
+  Expects(linear_nodes_.size() > 0);
   return linear_nodes_[0].bbox; 
 }
 

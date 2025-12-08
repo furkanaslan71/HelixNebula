@@ -28,7 +28,7 @@ add_executable (HelixNebula
     # Core Source Files
     "raytracer/src/main.cpp"
     "raytracer/src/aabb.cpp" 
-    "raytracer/src/bvh.cpp" 
+    #"raytracer/src/bvh.tpp" 
 
     # Other Source Files
     "raytracer/render/render_manager.cpp"
@@ -57,7 +57,7 @@ add_executable (HelixNebula
     # "raytracer/camera/pinhole_camera.h" 
     # "raytracer/camera/distribution_camera.h" 
     # "raytracer/include/ray.h"
- "raytracer/math_core/math_core.h" "raytracer/math_core/definitions.h" "raytracer/math_core/transformations/transformations.h" "raytracer/math_core/transformations/transformations.cpp" "raytracer/math_core/vector_utility.h" "raytracer/objects/geometry.h")
+ "raytracer/math_core/math_core.h" "raytracer/math_core/definitions.h" "raytracer/math_core/transformations/transformations.h" "raytracer/math_core/transformations/transformations.cpp" "raytracer/math_core/vector_utility.h" "raytracer/objects/geometry.h" "raytracer/objects/geometry_concepts.h")
 
 
 # Important: Add include directories so your compiler can find your headers.

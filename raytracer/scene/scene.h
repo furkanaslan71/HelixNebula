@@ -10,12 +10,13 @@
 #include "../material/material_manager.h"
 #include "bvh.h"
 #include "../light/light.h"
+#include "../objects/tlas_box.h"
 
 
 class Scene{
 public:
 	Scene();
-	Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& objects);
+	Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects);
 	~Scene();
 
 	std::vector<PinholeCamera> pinhole_cameras;
@@ -23,7 +24,7 @@ public:
 
 	Color background_color;
 	LightSources light_sources;
-	std::shared_ptr<BVH> world;
+	std::shared_ptr<BVH<TLASBox>> world;
 };
 
 #endif //SCENE_H

@@ -6,7 +6,7 @@
 
 Scene::Scene() {}
 
-Scene::Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& objects)
+Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects)
 	: background_color(raw_scene.background_color.x, raw_scene.background_color.y, raw_scene.background_color.z)
 {
 	for (const auto& raw_light : raw_scene.point_lights) 
@@ -66,7 +66,7 @@ Scene::Scene(const Scene_& raw_scene, std::vector<std::shared_ptr<Hittable>>& ob
 		}
 	}
 		
-	world = std::make_shared<BVH>(objects);
+	world = std::make_shared<BVH<TLASBox>>(objects);
 }
 
 Scene::~Scene() {}

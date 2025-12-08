@@ -6,6 +6,8 @@
 #include <vector>
 #include <algorithm>
 #include <random>
+#include "../objects/geometry_concepts.h"
+#include "../external/gsl/gsl"
 
 struct alignas(32) LinearBVHNode {
 	AABB bbox;
@@ -20,9 +22,10 @@ struct alignas(32) LinearBVHNode {
 
 struct TreeBVHNode;
 
+template <GeometryConcept T>
 class BVH{
 public:
-	BVH(std::vector<std::shared_ptr<Hittable>>& _primitives);
+	BVH(std::vector<T>& _primitives);
 
 	bool intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 	AABB getAABB() const;
@@ -31,8 +34,10 @@ private:
 	
 	int buildFlatBVH(TreeBVHNode* node, int& offset);
 
-	std::vector<std::shared_ptr<Hittable>>& primitives_;
+	std::vector<T>& primitives_;
 	std::vector<LinearBVHNode> linear_nodes_;
 };
+
+#include "../src/bvh.tpp"
 
 #endif // !BVH_H

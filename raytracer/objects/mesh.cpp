@@ -55,7 +55,7 @@ Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
 				vertex_normals[raw_triangle.v1_id],
 				vertex_normals[raw_triangle.v2_id] };
 
-			faces.push_back(std::make_shared<Triangle>(indices,
+			faces.push_back(Triangle(indices,
 				per_vertex_normals));
 		}
 	}
@@ -67,10 +67,10 @@ Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id],
 				vertex_data[raw_triangle.v2_id] };
 
-			faces.push_back(std::make_shared<Triangle>(indices));
+			faces.push_back(Triangle(indices));
 		}
 	}
-	bvh = std::make_shared<BVH>(faces);
+	bvh = std::make_shared<BVH<Triangle>>(faces);
 }
 
 bool Mesh::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const

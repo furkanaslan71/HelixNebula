@@ -3,8 +3,8 @@
 
 TLASBox::TLASBox(
 	int _world_index,
-	const std::vector<ObjectContext>& _object_contexes,
-	std::shared_ptr<Hittable> _geometry
+	 std::vector<ObjectContext>* _object_contexes,
+	Geometry* _geometry
 )
 	: 
 	world_index(_world_index),
@@ -12,7 +12,7 @@ TLASBox::TLASBox(
 	geometry(_geometry)
 {
 	AABB box = geometry->getAABB();
-	const auto& o_context = object_contexes[world_index];
+	const auto& o_context = (*object_contexes)[world_index];
 	const std::optional<glm::mat4>& composite_transformation_matrix = o_context.transform_matrix;
 	if (composite_transformation_matrix.has_value())
 		box = box.transformBox(composite_transformation_matrix.value());
@@ -36,10 +36,10 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	if (!bounding_box.hit(ray, ray_t))
 		return false;
 
-	const auto& o_context = object_contexes[world_index];
+	const auto& o_context = (*object_contexes)[world_index];
 	const auto& composite_transformation_matrix = o_context.transform_matrix;
 
-	const Hittable& base_object = *geometry;
+	//const Hittable& base_object = *geometry;
 
 	const auto& material_id = o_context.material_id;
 
@@ -54,7 +54,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
 		Ray new_ray = ray;
 		new_ray.origin = new_ray.origin - motion_offset;
-		bool hit = base_object.hit(new_ray, ray_t, rec);
+		bool hit = geometry->hit(new_ray, ray_t, rec);
 		if (hit)
 		{
 			rec.material_id = material_id;
@@ -88,7 +88,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	Interval local_ray_t(1e-8, INFINITY);
 
 
-	if (!base_object.hit(local_ray, local_ray_t, rec))
+	if (!geometry->hit(local_ray, local_ray_t, rec))
 		return false;
 
 	glm::vec4 local_hit_point = glm::vec4(rec.point.x, rec.point.y, rec.point.z, 1.0f);

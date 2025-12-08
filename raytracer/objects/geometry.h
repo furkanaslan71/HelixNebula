@@ -1,26 +1,13 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 #include <variant>
+#include <concepts>
 
+#include "geometry_concepts.h"
 #include "mesh.h"
 #include "triangle.h"
 #include "sphere.h"
-#include "tlas_box.h"
 
-template <typename T>
-concept HasHit = requires(const T & obj, const Ray & ray, Interval ray_t, HitRecord & rec)
-{
-  { obj.hit(ray, ray_t, rec) } -> std::same_as<bool>;
-};
-
-template <typename T>
-concept HasGetAABB = requires(const T & obj)
-{
-  { obj.getAABB() } -> std::same_as<AABB>;
-};
-
-template <typename T>
-concept GeometryConcept = HasHit<T> && HasGetAABB<T>;
 
 template <typename Variant>
 struct validate_variant; // primary template (unspecialized)

@@ -6,7 +6,7 @@
 #include "../include/aabb.h"
 
 
-class Sphere : public Hittable {
+class Sphere{
 public:
 	glm::vec3 center;
 	double radius;
@@ -20,7 +20,7 @@ public:
 														center + glm::vec3(radius, radius, radius));
 	}
 
-	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const override
+	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
 
 		glm::vec3 oc = ray.origin - center;
@@ -52,7 +52,7 @@ public:
 		return false;
 
 	};
-	AABB getAABB() const override
+	AABB getAABB() const
 	{
 		return bounding_box;
 	}

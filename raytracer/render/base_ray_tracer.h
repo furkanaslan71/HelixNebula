@@ -3,13 +3,14 @@
 #include "rendering_technique.h"
 #include "../objects/plane.h"
 #include "../random/my_random.h"
+#include "../objects/tlas_box.h"
 #define OUT
 
 class BaseRayTracer : public RenderingTechnique {
 public:
 	BaseRayTracer( Color& background_color,
 		LightSources& light_sources,
-		std::shared_ptr<BVH> world,
+		std::shared_ptr<BVH<TLASBox>> world,
 		std::vector<Plane>& planes,
 		MaterialManager& material_manager,
 		RendererInfo& renderer_info);
@@ -24,7 +25,7 @@ public:
 
 	Color& background_color;
 	LightSources& light_sources;
-	std::shared_ptr<BVH> world;
+	std::shared_ptr<BVH<TLASBox>> world;
 	std::vector<Plane>& planes;
 	MaterialManager& material_manager;
 	RendererInfo& renderer_info;

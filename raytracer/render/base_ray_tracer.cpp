@@ -58,7 +58,7 @@ static double fresnelReflectance(double r_parallel, double r_perpendicular)
 
 BaseRayTracer::BaseRayTracer(Color& background_color,
 	LightSources& light_sources,
-	std::shared_ptr<BVH> world,
+	std::shared_ptr<BVH<TLASBox>> world,
 	std::vector<Plane>& planes,
 	MaterialManager& material_manager,
 	RendererInfo& renderer_info)
