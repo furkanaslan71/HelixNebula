@@ -7,7 +7,6 @@
 #include "../material/material_manager.h"
 #include "../include/bvh.h"
 
-#define BACKFACE_CULLING 0
 typedef struct RendererInfo {
 	float shadow_ray_epsilon;
 	float intersection_test_epsilon;

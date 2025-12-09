@@ -98,6 +98,10 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 				return Color(0, 0, 0);
 		}
 	}
+#if BACKFACE_CULLING
+	if (!ray.inside && !rec.front_face)
+		return Color(0, 0, 0);
+#endif
 	return applyShading(ray, depth, rec, context);
 }
 
@@ -159,7 +163,8 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		glm::vec3 wo = -ray.direction;
 		glm::vec3 normal = rec.normal;
 		double n1, n2;
-		bool entering = rec.front_face;
+		//bool entering = rec.front_face;
+		bool entering = !ray.inside;
 
 		if (entering) { n1 = 1.0; n2 = mat.refraction_index; }
 		else { n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1.0f; }
@@ -181,6 +186,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		glm::vec3 wr = glm::normalize(reflect(wo, normal));
 
 		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
+		reflectedRay.inside = ray.inside;
 
 		if (mat.roughness != 0)
 		{
@@ -194,6 +200,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - sqrt(1 - sin2ThetaT));
 			wt = glm::normalize(wt);
 			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt, ray.time);
+			refractedRay.inside = !ray.inside;
 			if (mat.roughness != 0)
 			{
 				refractedRay.perturb(mat.roughness);

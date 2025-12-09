@@ -42,6 +42,18 @@
       }
     },
     {
+      "name": "x64-o3",
+      "displayName": "x64 Optimized (O3)",
+      "inherits": "x64-release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "environment": {
+        "CXXFLAGS": "-O3",
+        "CFLAGS": "-O3"
+      }
+    },
+    {
       "name": "x64-release",
       "displayName": "x64 Release",
       "inherits": "x64-debug",
