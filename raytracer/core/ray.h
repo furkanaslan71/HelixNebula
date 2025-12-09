@@ -1,8 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "../math_core/math_core.h"
-#include "../random/my_random.h"
+#include "math_core/math_core.h"
 
 class Ray {
 public:

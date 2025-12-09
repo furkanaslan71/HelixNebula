@@ -1,10 +1,11 @@
 #ifndef BASE_RAY_TRACER_H
 #define BASE_RAY_TRACER_H
+
+#include "external/glm/glm/glm.hpp"
 #include "rendering_technique.h"
-#include "../objects/plane.h"
-#include "../random/my_random.h"
-#include "../objects/tlas_box.h"
-#define OUT
+#include "objects/plane.h"
+#include "math_core/math_core.h"
+#include "objects/tlas_box.h"
 
 class BaseRayTracer : public RenderingTechnique {
 public:

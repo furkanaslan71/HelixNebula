@@ -1,10 +1,11 @@
 #ifndef RENDER_MANAGER_H
 #define RENDER_MANAGER_H
 
-#include "../include/color.h"
-#include "../scene/scene.h"
+#include "core/color.h"
+#include "scene/scene.h"
 #include "base_ray_tracer.h"
-#include "../material/material_manager.h"
+#include "material/material_manager.h"
+#include "parser/parser.hpp"
 
 class RenderManager {
 public:

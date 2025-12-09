@@ -1,5 +1,4 @@
-#include "../include/ray.h"
-#include "../math_core/math_core.h"
+#include "ray.h"
 
 Ray::Ray() {}
 

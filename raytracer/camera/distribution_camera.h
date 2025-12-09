@@ -2,7 +2,6 @@
 #define DISTRIBUTION_CAMERA_H
 
 #include "base_camera.h"
-#include "../random/my_random.h"
 
 class DistributionCamera : public BaseCamera {
 public:

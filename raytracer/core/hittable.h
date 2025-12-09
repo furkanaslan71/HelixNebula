@@ -1,9 +1,9 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
+#include <optional>
 
-#include "../include/ray.h"
-#include "interval.h"
-#include "aabb.h"
+#include "external/glm/glm/glm.hpp"
+#include "core/ray.h"
 
 typedef struct HitRecord{
   glm::vec3 point;

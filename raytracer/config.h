@@ -1,4 +1,5 @@
 #pragma once
+
 #define INSTANCING 1
 #define DEBUG_PIXEL 0
 #define MULTI_THREADING 1

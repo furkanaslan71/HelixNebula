@@ -1,7 +1,8 @@
 #ifndef COLOR_H
 #define COLOR_H
-#include "../math_core/math_core.h"
-#include "../external/gsl/gsl"
+
+#include "external/gsl/gsl"
+#include "external/glm/glm/glm.hpp"
 
 class Color {
 public:

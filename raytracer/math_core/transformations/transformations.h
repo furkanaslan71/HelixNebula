@@ -3,8 +3,7 @@
 #include <vector>
 #include <string>
 
-#include "../definitions.h"
-#include "../include/parser.hpp"
+#include "parser/parser.hpp"
 
 glm::mat4 calculateCompositeTransformationMatrix(
 	const std::vector<std::string> transformations,

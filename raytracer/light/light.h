@@ -1,11 +1,9 @@
 #ifndef LIGHT_H
 #define LIGHT_H
-
 #include <vector>
-#include "../math_core/math_core.h"
-#include "../include/color.h"
-#include "../random/my_random.h"
 
+#include "math_core/math_core.h"
+#include "core/color.h"
 
 struct PointLight {
 	int id;

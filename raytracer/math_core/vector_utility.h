@@ -1,6 +1,6 @@
 #ifndef VECTOR_UTILITY_H
 #define VECTOR_UTILITY_H
-#include <../external/glm/glm/glm.hpp>
+#include "external/glm/glm/glm.hpp"
 
 static inline void createONB(const glm::vec3& r, glm::vec3& u, glm::vec3& v)
 {

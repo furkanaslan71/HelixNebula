@@ -1,13 +1,12 @@
 #ifndef BVH_H
 #define BVH_H
-
-#include "hittable.h"
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <random>
-#include "../objects/geometry_concepts.h"
-#include "../external/gsl/gsl"
+
+#include "core/hittable.h"
+#include "objects/geometry_concepts.h"
+#include "external/gsl/gsl"
 
 struct alignas(32) LinearBVHNode {
 	AABB bbox;
@@ -38,6 +37,6 @@ private:
 	std::vector<LinearBVHNode> linear_nodes_;
 };
 
-#include "../src/bvh.tpp"
+#include "bvh.tpp"
 
 #endif // !BVH_H

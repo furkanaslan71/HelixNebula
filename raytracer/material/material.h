@@ -1,12 +1,12 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
-
-#include "../include/hittable.h"
-#include "../include/ray.h"
-#include "../include/color.h"
-#include "../include/parser.hpp"
 #include <string>
-#include "../math_core/math_core.h"
+
+#include "core/hittable.h"
+#include "core/ray.h"
+#include "core/color.h"
+#include "parser/parser.hpp"
+#include "math_core/math_core.h"
 
 class Material {
 public:

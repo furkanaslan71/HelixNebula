@@ -1,8 +1,5 @@
 #include "scene.h"
 
-#include "../include/ray.h"
-#include "../math_core/math_core.h"
-
 
 Scene::Scene() {}
 

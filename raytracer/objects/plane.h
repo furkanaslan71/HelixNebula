@@ -1,13 +1,14 @@
 #ifndef PLANE_H
 #define PLANE_H
-
-
-#include "../include/parser.hpp"
-#include "../math_core/math_core.h"
-#include "../include/ray.h"
-#include "../include/hittable.h"
-#include "../include/interval.h"
+#include <string>
 #include <optional>
+
+#include "parser/parser.hpp"
+#include "math_core/math_core.h"
+#include "core/ray.h"
+#include "core/hittable.h"
+#include "core/interval.h"
+
 
 class Plane {
 public:

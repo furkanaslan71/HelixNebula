@@ -2,10 +2,10 @@
 #define GEOMETRY_CONCEPTS_H
 #include <concepts>
 
-#include "../include/ray.h"
-#include "../include/interval.h"
-#include "../include/hittable.h"
-#include "../include/aabb.h"
+#include "core/ray.h"
+#include "core/interval.h"
+#include "core/hittable.h"
+#include "core/aabb.h"
 
 template <typename T>
 concept HasHit = requires(const T & obj, const Ray & ray, Interval ray_t, HitRecord & rec)

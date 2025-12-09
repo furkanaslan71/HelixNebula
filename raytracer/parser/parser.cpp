@@ -1,9 +1,10 @@
-﻿#include "../include/parser.hpp"
-#include "../external/json.hpp"
-#include <fstream>
+﻿#include <fstream>
 #include <iostream>
 #include <sstream>
-#include "../math_core/transformations/transformations.h"
+
+#include "parser.hpp"
+#include "external/json.hpp"
+#include "math_core/transformations/transformations.h"
 
 #define M_PI 3.14159265358979323846
 #define COMPOSITE_TRANSFORM calculateCompositeTransformationMatrix( \

@@ -1,11 +1,11 @@
 #ifndef RENDERING_TECHNIQUE_H
 #define RENDERING_TECHNIQUE_H
 
-#include "../include/color.h"
-#include "../include/ray.h"
-#include "../light/light.h"
-#include "../material/material_manager.h"
-#include "../include/bvh.h"
+#include "core/color.h"
+#include "core/ray.h"
+#include "light/light.h"
+#include "material/material_manager.h"
+#include "acceleration/bvh.h"
 
 typedef struct RendererInfo {
 	float shadow_ray_epsilon;

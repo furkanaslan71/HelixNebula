@@ -1,15 +1,15 @@
 #ifndef PARSER_H
 #define PARSER_H
-
 #include <string>
 #include <vector>
 #include <ostream>
 #include <algorithm>
-#include "config.h"
 #include <optional>
 #include <unordered_map>
-#include <../external/glm/glm/glm.hpp>
-#include <../external/glm/glm/gtc/matrix_transform.hpp>
+
+#include "config.h"
+#include "external/glm/glm/glm.hpp"
+#include "external/glm/glm/gtc/matrix_transform.hpp"
 
 typedef struct Camera_ {
     int id;

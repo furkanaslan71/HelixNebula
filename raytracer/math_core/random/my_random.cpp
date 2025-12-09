@@ -1,5 +1,5 @@
 #include "my_random.h"
-#include "../external/gsl/gsl"
+#include "external/gsl/gsl"
 
 std::vector<float> generateNRandomFloats(float start, float end, float N)
 {

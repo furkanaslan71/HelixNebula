@@ -1,8 +1,9 @@
 #ifndef MESH_H
 #define MESH_H
-#include "../include/hittable.h"
-#include "../include/parser.hpp"
-#include "../include/bvh.h"
+
+#include "core/hittable.h"
+#include "parser/parser.hpp"
+#include "acceleration/bvh.h"
 #include "triangle.h"
 
 

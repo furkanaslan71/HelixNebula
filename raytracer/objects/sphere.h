@@ -1,9 +1,9 @@
 #ifndef SPHERE_H
 #define SPHERE_H
 
-#include "../include/hittable.h"
-#include "../include/parser.hpp"
-#include "../include/aabb.h"
+#include "core/hittable.h"
+#include "parser/parser.hpp"
+#include "core/aabb.h"
 
 
 class Sphere{

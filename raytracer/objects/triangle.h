@@ -1,9 +1,10 @@
 #ifndef TRIANGLE_H
 #define TRIANGLE_H
 
-#include "../include/hittable.h"
-#include "../include/parser.hpp"
-#include "../include/aabb.h"
+#include "core/hittable.h"
+#include "parser/parser.hpp"
+#include "core/aabb.h"
+#include "external/glm/glm/glm.hpp"
 
 
 class Triangle{

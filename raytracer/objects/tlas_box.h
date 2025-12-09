@@ -1,10 +1,12 @@
 #ifndef TLAS_BOX_H
 #define TLAS_BOX_H
-#include "../include/hittable.h"
 #include <optional>
 #include <memory>
+#include <vector>
 
 #include "geometry.h"
+#include "core/hittable.h"
+
 
 class TLASBox{
 public:

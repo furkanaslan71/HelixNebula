@@ -1,21 +1,17 @@
 #ifndef BASE_CAMERA_H
 #define BASE_CAMERA_H
-
-#define OUT
-#define IN
-
-
 #include <vector>
-#include "color.h"
-#include "ray.h"
-#include "../math_core/math_core.h"
-#include "bvh.h"
-#include "parser.hpp"
-#include "../render/rendering_technique.h"
 #include <thread>
-#include "../render/base_ray_tracer.h"
-#include "../light/light.h"
-#include "../random/my_random.h"
+
+#include "config.h"
+#include "core/color.h"
+#include "core/ray.h"
+#include "math_core/math_core.h"
+#include "acceleration/bvh.h"
+#include "parser/parser.hpp"
+#include "render/rendering_technique.h"
+#include "render/base_ray_tracer.h"
+#include "light/light.h"
 
 
 class Scene;
@@ -33,8 +29,8 @@ public:
 		std::vector<AreaLight>& _area_lights
 	);
 	virtual ~BaseCamera() = default;
-	virtual void render(IN const BaseRayTracer& rendering_technique,
-		OUT std::vector<std::vector<Color>>& image) const = 0;
+	virtual void render(const BaseRayTracer& rendering_technique,
+		std::vector<std::vector<Color>>& image) const = 0;
 
 	std::string image_name;
 	int num_samples;

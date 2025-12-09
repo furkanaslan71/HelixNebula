@@ -17,8 +17,8 @@ public:
     _num_area_lights, _area_lights)
   {}
 
-	void render(IN const BaseRayTracer& rendering_technique,
-		OUT std::vector<std::vector<Color>>& image) const override;
+	void render(const BaseRayTracer& rendering_technique,
+		std::vector<std::vector<Color>>& image) const override;
 };
 
 

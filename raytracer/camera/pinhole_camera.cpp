@@ -1,8 +1,8 @@
 #include "pinhole_camera.h"
 
 
-void PinholeCamera::render(IN const BaseRayTracer& rendering_technique,
-	OUT std::vector<std::vector<Color>>& image) const
+void PinholeCamera::render(const BaseRayTracer& rendering_technique,
+	std::vector<std::vector<Color>>& image) const
 {
 	image.resize(image_height, std::vector<Color>(image_width, Color(0, 0, 0)));
 

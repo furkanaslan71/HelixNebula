@@ -1,17 +1,16 @@
 #ifndef SCENE_H
 #define SCENE_H
-
 #include <vector>
-#include "../camera/pinhole_camera.h"
-#include "../camera/distribution_camera.h"
-#include "../math_core/math_core.h"
-#include "color.h"
-#include "../include/parser.hpp"
-#include "../material/material_manager.h"
-#include "bvh.h"
-#include "../light/light.h"
-#include "../objects/tlas_box.h"
 
+#include "camera/pinhole_camera.h"
+#include "camera/distribution_camera.h"
+#include "math_core/math_core.h"
+#include "core/color.h"
+#include "parser/parser.hpp"
+#include "material/material_manager.h"
+#include "acceleration/bvh.h"
+#include "light/light.h"
+#include "objects/tlas_box.h"
 
 class Scene{
 public:
