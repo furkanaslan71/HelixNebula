@@ -135,22 +135,12 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		glm::vec3 normal = rec.normal;
 		double n_s[2] = {1.0, mat.refraction_index};
 		double n1, n2;
-		//bool entering = rec.front_face;
+
 		bool entering = !ray.inside;
 
 		n1 = n_s[ray.inside];
 		n2 = n_s[1 - ray.inside];
 		normal = (-2.f * ray.inside + 1.f) * normal;
-
-
-		/*if (entering) 
-		{
-			n1 = 1.0; n2 = mat.refraction_index; 
-		}
-		else 
-		{
-			n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1.0f; 
-		}*/
 
 		double eta = n1 / n2;
 		double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
@@ -166,7 +156,6 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		}
 
 		// Reflection
-		//glm::vec3 wr = glm::normalize(reflect(wo, normal));
 		glm::vec3 wr = reflect(wo, normal);
 
 		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
@@ -198,14 +187,13 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 
 		// Absorption when exiting
-		if (!entering)
+		if (ray.inside)
 		{
 			double d = rec.t; // or track actual thickness
-			L.r *= exp(-mat.absorption_coefficient.x * d);
-			L.g *= exp(-mat.absorption_coefficient.y * d);
-			L.b *= exp(-mat.absorption_coefficient.z * d);
+			L.r *= std::exp(-mat.absorption_coefficient.x * d);
+			L.g *= std::exp(-mat.absorption_coefficient.y * d);
+			L.b *= std::exp(-mat.absorption_coefficient.z * d);
 		}
-		//L = Color(0.0);
 		return color + L;
 	}
 

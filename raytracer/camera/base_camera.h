@@ -15,6 +15,7 @@
 #include <thread>
 #include "../render/base_ray_tracer.h"
 #include "../light/light.h"
+#include "../random/my_random.h"
 
 
 class Scene;

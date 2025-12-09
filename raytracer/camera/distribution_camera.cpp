@@ -1,5 +1,6 @@
 #include "distribution_camera.h"
 
+
 void DistributionCamera::generateApertureSamples(
 	std::vector<glm::vec3>& out_samples) const
 {

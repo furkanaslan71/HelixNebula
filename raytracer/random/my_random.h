@@ -4,7 +4,12 @@
 #include <random>
 #include <vector>
 
-float generateRandomFloat(float start, float end);
+inline float generateRandomFloat(float start, float end)
+{
+  static thread_local std::mt19937 generator(std::random_device{}());
+  std::uniform_real_distribution<float> distribution(start, end);
+  return distribution(generator);
+}
 
 std::vector<float> generateNRandomFloats(float start, float end, float N);
 

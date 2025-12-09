@@ -1,16 +1,10 @@
 #include "my_random.h"
 #include "../external/gsl/gsl"
 
-float generateRandomFloat(float start, float end)
-{
-  static thread_local std::mt19937 generator(std::random_device{}());
-  std::uniform_real_distribution<float> distribution(start, end);
-  return distribution(generator);
-}
-
 std::vector<float> generateNRandomFloats(float start, float end, float N)
 {
-  std::vector<float> result(N);
+  std::vector<float> result;
+  result.reserve(N);
   for (int i = 0; i < N; i++)
   {
     result.push_back(generateRandomFloat(start, end));
