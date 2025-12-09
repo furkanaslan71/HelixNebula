@@ -1,56 +1,24 @@
 #include "base_ray_tracer.h"
 
-static double getCosTheta(glm::vec3 v1, glm::vec3 v2)
+static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
-	v1 = glm::normalize(v1);
-	v2 = glm::normalize(v2);
-	return glm::dot(v1, v2);
-}
-
-static glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
-{
-	wo = glm::normalize(wo);
+	//wo = glm::normalize(wo);
 
 	glm::vec3 wr = (n * (2 * (glm::dot(n, wo)))) - wo;
 	return wr;
 }
 
-static double getCosPhi(double cosTheta, double n1, double n2)
-{
-	double sinTheta2 = 1 - cosTheta * cosTheta;
-	double n = n1 / n2;
-	return sqrt(1 - n * n * sinTheta2);
-}
-
-static bool couldRefract(double cosTheta, double n1, double n2)
-{
-	double sinTheta2 = 1 - cosTheta * cosTheta;
-	double n = n1 / n2;
-	return (1 - n * n * sinTheta2) >= 0;
-}
-
-static glm::vec3 snellRefract(glm::vec3 wo, glm::vec3 n, double n1, double n2)
-{
-	double eta = n1 / n2;
-	double cosTheta = std::clamp(glm::dot(wo, n), -1.0f, 1.0f);
-	double sin2ThetaT = eta  * (1 - cosTheta * cosTheta);
-	if (sin2ThetaT > 1.0)
-		return glm::vec3(0); // total internal reflection
-	double cosThetaT = sqrt(1.0 - sin2ThetaT);
-	return -wo + n * (float)(eta * cosTheta - cosThetaT) * (float)eta;
-}
-
-static double r_parallel(double cosTheta, double cosPhi, double n1, double n2)
+static inline double r_parallel(double cosTheta, double cosPhi, double n1, double n2)
 {
 	return ((n2 * cosTheta) - (n1 * cosPhi)) / ((n2 * cosTheta) + (n1 * cosPhi));
 }
 
-static double r_perpendicular(double cosTheta, double cosPhi, double n1, double n2)
+static inline double r_perpendicular(double cosTheta, double cosPhi, double n1, double n2)
 {
 	return ((n1 * cosTheta) - (n2 * cosPhi)) / ((n1 * cosTheta) + (n2 * cosPhi));
 }
 
-static double fresnelReflectance(double r_parallel, double r_perpendicular)
+static inline double fresnelReflectance(double r_parallel, double r_perpendicular)
 {
 	return (r_parallel * r_parallel + r_perpendicular * r_perpendicular) / 2.0;
 }
@@ -129,25 +97,28 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		glm::vec3 wo = -ray.direction;
 		glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
 		wr = glm::normalize(wr);
-		wo = glm::normalize(wo);
+		//wo = glm::normalize(wo);
 		double cos_theta = glm::dot(wo, rec.normal);
+		double cos2 = cos_theta * cos_theta;
+
 		double k = mat.absorption_index; // Assuming k is the same for r, g, b
+		double k2 = k * k;
+
 		double n = static_cast<double>(mat.refraction_index);
-		double rs_num = (n * n) + (k * k)
-			- (n * cos_theta * static_cast<double>(2.0))
-			+ (cos_theta * cos_theta);
-		double rs_den = (n * n) + (k * k)
-			+ (n * cos_theta * static_cast<double>(2.0))
-			+ (cos_theta * cos_theta);
+		double n2 = n * n;
+
+		double two_n_cos = 2.0 * n * cos_theta;
+
+		double n2_k2 = n2 + k2;
+
+		double rs_num = n2_k2 - two_n_cos + cos2;
+		double rs_den = n2_k2 + two_n_cos + cos2;
 		double rs = rs_num / rs_den;
 
-		double rp_num = ((n * n) + (k * k)) * (cos_theta * cos_theta)
-			- (n * cos_theta * static_cast<double>(2.0))
-			+ 1.0;
-		double rp_den = ((n * n) + (k * k)) * (cos_theta * cos_theta)
-			+ (n * cos_theta * static_cast<double>(2.0))
-			+ 1.0;
+		double rp_num = n2_k2 * cos2 - two_n_cos + 1.0;
+		double rp_den = n2_k2 * cos2 + two_n_cos + 1.0;
 		double rp = rp_num / rp_den;
+
 		double f_r = (rs + rp) * 0.5;
 
 		Ray reflectedRay = Ray(rec.point + rec.normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
@@ -162,12 +133,24 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	{
 		glm::vec3 wo = -ray.direction;
 		glm::vec3 normal = rec.normal;
+		double n_s[2] = {1.0, mat.refraction_index};
 		double n1, n2;
 		//bool entering = rec.front_face;
 		bool entering = !ray.inside;
 
-		if (entering) { n1 = 1.0; n2 = mat.refraction_index; }
-		else { n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1.0f; }
+		n1 = n_s[ray.inside];
+		n2 = n_s[1 - ray.inside];
+		normal = (-2.f * ray.inside + 1.f) * normal;
+
+
+		/*if (entering) 
+		{
+			n1 = 1.0; n2 = mat.refraction_index; 
+		}
+		else 
+		{
+			n1 = mat.refraction_index; n2 = 1.0; normal = normal * -1.0f; 
+		}*/
 
 		double eta = n1 / n2;
 		double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
@@ -176,14 +159,15 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 		if (sin2ThetaT <= 1.0)
 		{
-			double cosThetaT = sqrt(1.0 - sin2ThetaT);
+			double cosThetaT = std::sqrt(1.0 - sin2ThetaT);
 			double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);
 			double r_perp = r_perpendicular(cosTheta, cosThetaT, n1, n2);
 			F_r = fresnelReflectance(r_par, r_perp);
 		}
 
 		// Reflection
-		glm::vec3 wr = glm::normalize(reflect(wo, normal));
+		//glm::vec3 wr = glm::normalize(reflect(wo, normal));
+		glm::vec3 wr = reflect(wo, normal);
 
 		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
 		reflectedRay.inside = ray.inside;
@@ -210,9 +194,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 
 		Color reflectedColor = computeColor(reflectedRay, depth - 1, context);
 		//reflectedColor = Color(0.0);
-		Color L = reflectedColor * F_r
-			+ refractedColor * (1 - F_r)
-			;
+		Color L = reflectedColor * F_r + refractedColor * (1 - F_r);
 
 
 		// Absorption when exiting

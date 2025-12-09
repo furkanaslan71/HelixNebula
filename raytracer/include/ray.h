@@ -11,7 +11,7 @@ public:
     glm::vec3 inv_direction;
     double time;
     int8_t sign[3];
-    bool inside = false;
+    int8_t inside = 0;
     Ray();
     ~Ray();
     Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time);
