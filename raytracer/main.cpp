@@ -18,6 +18,7 @@
 std::vector<Geometry> geometries;
 std::vector<ObjectContext> object_contexes;
 
+
 int main(int argc, char* argv[])
 {
 #if COMMAND_LINE_INPUT
@@ -29,10 +30,10 @@ int main(int argc, char* argv[])
   }
   std::string scene_filename = argv[1];
 #else
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/cornellbox_area.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/focusing_dragons.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/test.json";
@@ -128,12 +129,13 @@ int main(int argc, char* argv[])
 
   RenderManager renderer(scene, material_manager, renderer_info, ray_tracer);
 
+  std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
-  renderer.render();
-  auto end = std::chrono::high_resolution_clock::now();
 
+  renderer.render();
+
+  auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;
 	std::cout << "Rendering completed in " << elapsed.count() << " seconds." << std::endl;
-
   return 0;
 }

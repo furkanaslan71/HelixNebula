@@ -4,7 +4,7 @@
 #include "core/hittable.h"
 #include "parser/parser.hpp"
 #include "core/aabb.h"
-#include "external/glm/glm/glm.hpp"
+#include "glm_config.h"
 
 
 class Triangle{

@@ -1,7 +1,7 @@
 #ifndef BASE_RAY_TRACER_H
 #define BASE_RAY_TRACER_H
 
-#include "external/glm/glm/glm.hpp"
+#include "glm_config.h"
 #include "rendering_technique.h"
 #include "objects/plane.h"
 #include "math_core/math_core.h"

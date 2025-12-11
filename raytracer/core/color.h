@@ -2,7 +2,7 @@
 #define COLOR_H
 
 #include "external/gsl/gsl"
-#include "external/glm/glm/glm.hpp"
+#include "glm_config.h"
 
 class Color {
 public:

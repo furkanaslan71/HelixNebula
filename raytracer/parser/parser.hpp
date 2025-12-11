@@ -8,8 +8,7 @@
 #include <unordered_map>
 
 #include "config.h"
-#include "external/glm/glm/glm.hpp"
-#include "external/glm/glm/gtc/matrix_transform.hpp"
+#include "glm_config.h"
 
 typedef struct Camera_ {
     int id;

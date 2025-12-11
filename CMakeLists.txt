@@ -3,6 +3,8 @@
 # REQUIREMENT: CMake 3.25 or higher is needed for native C++23 support
 cmake_minimum_required (VERSION 3.25)
 
+
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
@@ -43,7 +45,7 @@ add_executable (HelixNebula
     "raytracer/math_core/transformations/transformations.cpp" 
     "raytracer/math_core/vector_utility.h" 
     "raytracer/objects/geometry.h" 
-    "raytracer/objects/geometry_concepts.h")
+    "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h")
 
 
 # Important: Add include directories so your compiler can find your headers.
@@ -51,3 +53,10 @@ add_executable (HelixNebula
 target_include_directories(HelixNebula PRIVATE
     "${CMAKE_SOURCE_DIR}/raytracer"
 )
+target_compile_definitions(HelixNebula PRIVATE 
+    GLM_FORCE_INTRINSICS
+    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
+    GLM_FORCE_AVX2
+)
+
+target_compile_options(HelixNebula PRIVATE /arch:AVX2)

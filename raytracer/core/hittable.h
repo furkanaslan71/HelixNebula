@@ -2,7 +2,7 @@
 #define HITTABLE_H
 #include <optional>
 
-#include "external/glm/glm/glm.hpp"
+#include "glm_config.h"
 #include "core/ray.h"
 
 typedef struct HitRecord{

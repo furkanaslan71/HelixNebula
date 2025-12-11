@@ -51,11 +51,11 @@
     },
     {
       "name": "x64-o3",
-      "displayName": "x64 Optimized (O2 + LTO)",
+      "displayName": "x64 Optimized (O2 + FPFAST)",
       "inherits": "x64-release",
       "cacheVariables": {
-        "CMAKE_C_FLAGS_RELEASE": "/O2 /GL",
-        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /GL"
+        "CMAKE_C_FLAGS_RELEASE": "/O2 /fp:fast",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /fp:fast"
       }
     },
     {
