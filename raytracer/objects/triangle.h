@@ -5,17 +5,8 @@
 #include "parser/parser.hpp"
 #include "core/aabb.h"
 #include "glm_config.h"
+#include "triangle/triangle_base.h"
 
-
-struct TexCoords {
-	glm::vec2 uvs[3];
-	TexCoords(const Triangle_& tri, const std::vector<glm::vec2>& uv_data)
-	{
-		uvs[0] = uv_data[tri.v0_id];
-		uvs[1] = uv_data[tri.v1_id];
-		uvs[2] = uv_data[tri.v2_id];
-	};
-};
 
 class Triangle{
 public:

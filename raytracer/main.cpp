@@ -55,6 +55,8 @@ int main(int argc, char* argv[])
 
   const auto& vertex_data = raw_scene.vertex_data;
   const auto& uv_data = raw_scene.tex_coord_data;
+  TextureLookup tex 
+    = uv_data.empty() ? TextureLookup::NoTexture : TextureLookup::Textured;
 
   for(int i = 0; i < t_size; i++)
   {
@@ -66,17 +68,27 @@ int main(int argc, char* argv[])
       vertex_data[raw_triangle.v2_id]
     };
 
-    std::optional<TexCoords> tex_coords;
-    if (!uv_data.empty())
-      tex_coords = TexCoords(raw_triangle, uv_data);
-
     std::optional<glm::mat4> inv_tr;
 
     if (raw_triangle.transform_matrix.has_value())
       inv_tr = glm::inverse(raw_triangle.transform_matrix.value());
 
     object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.material_id);
-    geometries.emplace_back(std::in_place_type<Triangle>, indices, tex_coords);
+
+    if (tex == TextureLookup::NoTexture)
+    {
+      geometries.emplace_back(std::in_place_type<TriangleNew<Shading::Flat, TextureLookup::NoTexture>>, indices[0], indices[1], indices[2]);
+    }
+    else
+    {
+      geometries.emplace_back(
+        std::in_place_type<
+        TriangleNew<Shading::Flat, TextureLookup::Textured>>,
+        indices[0], indices[1], indices[2],
+        TexCoords(raw_triangle, uv_data)
+      );
+    }
+    
     tlas_boxes.emplace_back(i, &object_contexes, &geometries[i]);
 
   }
@@ -98,7 +110,38 @@ int main(int argc, char* argv[])
   for (const auto& [key, val] : raw_scene.meshes)
   {
     mesh_order[key] = index++;
-    geometries.emplace_back(std::in_place_type<Mesh>, val.id, val.smooth_shading, val.faces, vertex_data, uv_data);
+    if (tex == TextureLookup::NoTexture)
+    {
+      if (val.smooth_shading)
+      {
+        geometries.emplace_back(
+          std::in_place_type<Mesh<Shading::Smooth, TextureLookup::NoTexture>>,
+          val.id, val.faces, vertex_data, uv_data);
+      }
+      else
+      {
+        geometries.emplace_back(
+          std::in_place_type<Mesh<Shading::Flat, TextureLookup::NoTexture>>,
+          val.id, val.faces, vertex_data, uv_data);
+      }
+      
+    }
+    else
+    {
+      if (val.smooth_shading)
+      {
+        geometries.emplace_back(
+          std::in_place_type<Mesh<Shading::Smooth, TextureLookup::Textured>>,
+          val.id, val.faces, vertex_data, uv_data);
+      }
+      else
+      {
+        geometries.emplace_back(
+          std::in_place_type<Mesh<Shading::Flat, TextureLookup::Textured>>,
+          val.id, val.faces, vertex_data, uv_data);
+      }
+    }
+    
   }
   index = 0;
   int base = t_size + s_size;

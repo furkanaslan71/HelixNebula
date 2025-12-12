@@ -7,9 +7,10 @@
 #include "triangle.h"
 
 
+template<Shading mode, TextureLookup tex>
 class Mesh {
 public:
-	Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
+	Mesh(int _id, const std::vector<Triangle_>& _faces,
 			 const std::vector<glm::vec3>& vertex_data, const std::vector<glm::vec2> uv_data);
 
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
@@ -17,11 +18,13 @@ public:
 	AABB getAABB() const;
 
 	int id;
-	bool smooth_shading;
 private:
-	std::vector<Triangle> faces;
-	const AABB bounding_box;
-	std::shared_ptr<BVH<Triangle>> bvh;
+	std::vector<TriangleNew<mode, tex>> faces;
+	AABB bounding_box;
+	std::shared_ptr<BVH<TriangleNew<mode, tex>>> bvh;
 };
+
+#include "mesh.tpp"
+
 
 #endif
