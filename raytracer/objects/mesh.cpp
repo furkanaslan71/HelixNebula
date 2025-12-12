@@ -1,7 +1,7 @@
 #include "mesh.h"
 
 Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
-	const std::vector<glm::vec3>& vertex_data)
+	const std::vector<glm::vec3>& vertex_data, const std::vector<glm::vec2> uv_data)
 	: id(_id), smooth_shading(_smooth_shading)
 {
 	if (smooth_shading)
@@ -50,13 +50,17 @@ Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id],
 				vertex_data[raw_triangle.v2_id] };
 
+			std::optional<TexCoords> tex_coords;
+			if (!uv_data.empty())
+				tex_coords = TexCoords(raw_triangle, uv_data);
+
 			glm::vec3 per_vertex_normals[3] = {
 				vertex_normals[raw_triangle.v0_id],
 				vertex_normals[raw_triangle.v1_id],
 				vertex_normals[raw_triangle.v2_id] };
 
 			faces.push_back(Triangle(indices,
-				per_vertex_normals));
+				per_vertex_normals, tex_coords));
 		}
 	}
 	else
@@ -67,7 +71,11 @@ Mesh::Mesh(int _id, bool _smooth_shading, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id],
 				vertex_data[raw_triangle.v2_id] };
 
-			faces.push_back(Triangle(indices));
+			std::optional<TexCoords> tex_coords;
+			if (!uv_data.empty())
+				tex_coords = TexCoords(raw_triangle, uv_data);
+
+			faces.push_back(Triangle(indices, tex_coords));
 		}
 	}
 	bvh = std::make_shared<BVH<Triangle>>(faces);

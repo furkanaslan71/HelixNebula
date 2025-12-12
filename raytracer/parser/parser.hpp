@@ -62,6 +62,7 @@ typedef struct Triangle_ {
     int v0_id, v1_id, v2_id;
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
+    std::vector<int> textures;
 } Triangle_;
 
 typedef struct Mesh_ {
@@ -71,6 +72,7 @@ typedef struct Mesh_ {
     std::vector<Triangle_> faces;
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
+    std::vector<int> textures;
 } Mesh_;
 
 typedef struct MeshInstance_ {
@@ -81,6 +83,7 @@ typedef struct MeshInstance_ {
 	bool reset_transform;
   std::optional<glm::mat4> transform_matrix;
   glm::vec3 motion_blur;
+  std::vector<int> textures;
 }MeshInstance_;
 
 typedef struct Sphere_ {
@@ -90,6 +93,7 @@ typedef struct Sphere_ {
     float radius;
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
+    std::vector<int> textures;
 } Sphere_;
 
 typedef struct Plane_ {
@@ -99,6 +103,7 @@ typedef struct Plane_ {
     glm::vec3 normal;
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
+    std::vector<int> textures;
 } Plane_;
 
 typedef struct Translation_ {
@@ -113,6 +118,27 @@ typedef struct Rotation_ {
   float angle;
   float axis_x, axis_y, axis_z;
 }Rotation_;
+
+struct Image_ {
+  std::string data;
+  int id;
+};
+
+struct TextureMap_ {
+  int id;
+  std::string type;
+  int image_id;
+  std::string decal_mode;
+  std::string interpolation;
+  float bump_factor;
+  float noise_scale;
+  float noise_conversion;
+  float num_octaves;
+  float scale;
+  float offset;
+  glm::vec3 black_color;
+  glm::vec3 white_color;
+};
 	
 
 typedef struct Scene_ {
@@ -135,6 +161,10 @@ typedef struct Scene_ {
 
     std::unordered_map<int, Mesh_> meshes;
     std::unordered_map<int, MeshInstance_> mesh_instances;
+
+    std::vector<glm::vec2> tex_coord_data;
+    std::vector<Image_> images;
+    std::vector<TextureMap_> texture_maps;
 } Scene_;
 
 // --- Function Declaration ---

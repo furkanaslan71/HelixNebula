@@ -1,6 +1,7 @@
 #ifndef HITTABLE_H
 #define HITTABLE_H
 #include <optional>
+#include <vector>
 
 #include "glm_config.h"
 #include "core/ray.h"
@@ -8,9 +9,12 @@
 typedef struct HitRecord{
   glm::vec3 point;
   glm::vec3 normal;
-	bool front_face;
-  int material_id;
+  std::vector<int> texture_ids;
+  glm::vec2 uv;
   double t;
+  int material_id;
+	bool front_face;
+  
   void set_front_face(const Ray& r)
   {
     front_face = glm::dot(r.direction, normal) < 0;

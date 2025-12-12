@@ -17,7 +17,7 @@ public:
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 	AABB getAABB() const;
 
-	 int world_index;
+	int world_index;
 	
 private:
 	std::vector<ObjectContext>* object_contexes;
