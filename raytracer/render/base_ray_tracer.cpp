@@ -162,7 +162,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		bool can_refract = sin2ThetaT <= 1.0;
 
 		if (can_refract)
-		{.
+		{
 			double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
 
 			double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);

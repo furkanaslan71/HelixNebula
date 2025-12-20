@@ -32,6 +32,7 @@ const Interval& AABB::axis(int i) const
     else return z;
 }
 
+
 bool AABB::hit(const Ray& ray, Interval ray_t) const
 {
   for (int i = 0; i < 3; i++)
@@ -48,6 +49,30 @@ bool AABB::hit(const Ray& ray, Interval ray_t) const
   }
   return true;
 }
+
+//bool AABB::hit(const Ray& ray, Interval ray_t) const
+//{
+//  double tmin = ray_t.min;
+//  double tmax = ray_t.max;
+//
+//  for (int i = 0; i < 3; ++i)
+//  {
+//    const Interval& a = axis(i);
+//
+//    const double bounds[2] = { a.min, a.max };
+//
+//    const double bmin = bounds[ray.sign[i]];
+//    const double bmax = bounds[ray.sign[i] ^ 1];
+//
+//    const double dmin = (bmin - ray.origin[i]) * ray.inv_direction[i];
+//    const double dmax = (bmax - ray.origin[i]) * ray.inv_direction[i];
+//
+//    tmin = std::max(tmin, dmin);
+//    tmax = std::min(tmax, dmax);
+//  }
+//
+//  return tmin < tmax;
+//}
 
 const Interval& AABB::operator[](int axis) const
 {

@@ -425,13 +425,13 @@ void parseScene(const std::string& filename, Scene_& scene) {
     if (scene_json.contains("ShadowRayEpsilon"))
         scene.shadow_ray_epsilon = std::stof(scene_json["ShadowRayEpsilon"].get<std::string>());
     else
-      scene.shadow_ray_epsilon = 1e-6;
+      scene.shadow_ray_epsilon = 1e-3;
 			//scene.shadow_ray_epsilon = 0.0f;
 
     if (scene_json.contains("IntersectionTestEpsilon"))
         scene.intersection_test_epsilon = std::stof(scene_json["IntersectionTestEpsilon"].get<std::string>());
     else
-        scene.intersection_test_epsilon = 1e-3;
+        scene.intersection_test_epsilon = 1e-5;
 
     if (scene_json.contains("MaxRecursionDepth"))
         scene.max_recursion_depth = std::stoi(scene_json["MaxRecursionDepth"].get<std::string>());
