@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
   std::string scene_filename = argv[1];
 #else
   std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/cornellbox_area.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/cornellbox_brushed_metal.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";

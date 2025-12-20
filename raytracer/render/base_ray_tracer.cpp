@@ -132,68 +132,78 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	else if (mat.type == "dielectric")
 	{
 		glm::vec3 wo = -ray.direction;
-		glm::vec3 normal = rec.normal;
-		double n_s[2] = {1.0, mat.refraction_index};
+		glm::vec3 geometric_normal = rec.normal;
+
+		bool entering = glm::dot(ray.direction, geometric_normal) < 0;
+
 		double n1, n2;
+		glm::vec3 normal;
+		double current_ior = (double)mat.refraction_index;
 
-		bool entering = !ray.inside;
-
-		n1 = n_s[ray.inside];
-		n2 = n_s[1 - ray.inside];
-		normal = (-2.f * ray.inside + 1.f) * normal;
+		if (entering)
+		{
+			n1 = 1.0;
+			n2 = current_ior;
+			normal = geometric_normal;
+		}
+		else
+		{
+			n1 = current_ior;
+			n2 = 1.0;
+			normal = -geometric_normal;
+		}
 
 		double eta = n1 / n2;
 		double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
-		double sin2ThetaT = eta * eta * (1 - cosTheta * cosTheta);
+		double sin2ThetaT = eta * eta * (1.0 - cosTheta * cosTheta);
+
 		double F_r = 1.0;
 
-		if (sin2ThetaT <= 1.0)
-		{
-			double cosThetaT = std::sqrt(1.0 - sin2ThetaT);
+		bool can_refract = sin2ThetaT <= 1.0;
+
+		if (can_refract)
+		{.
+			double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
+
 			double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);
 			double r_perp = r_perpendicular(cosTheta, cosThetaT, n1, n2);
 			F_r = fresnelReflectance(r_par, r_perp);
 		}
 
-		// Reflection
 		glm::vec3 wr = reflect(wo, normal);
+		Ray reflectedRay(rec.point + normal * (float)renderer_info.shadow_ray_epsilon, wr, ray.time);
 
-		Ray reflectedRay(rec.point + normal * renderer_info.shadow_ray_epsilon, wr, ray.time);
 		reflectedRay.inside = ray.inside;
 
-		if (mat.roughness != 0)
-		{
-			reflectedRay.perturb(mat.roughness);
-		}
+		if (mat.roughness != 0) reflectedRay.perturb(mat.roughness);
 
-		// Refraction
-		Color refractedColor(0.0, 0.0, 0.0);
-		if (sin2ThetaT <= 1.0)
+		Color refractedColor(0, 0, 0);
+		if (can_refract)
 		{
-			glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - sqrt(1 - sin2ThetaT));
+			double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
+			glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - cosThetaT);
 			wt = glm::normalize(wt);
-			Ray refractedRay(rec.point - normal * renderer_info.shadow_ray_epsilon, wt, ray.time);
-			refractedRay.inside = !ray.inside;
-			if (mat.roughness != 0)
-			{
-				refractedRay.perturb(mat.roughness);
-			}
+
+			Ray refractedRay(rec.point - normal * (float)renderer_info.shadow_ray_epsilon, wt, ray.time);
+
+			refractedRay.inside = entering;
+
+			if (mat.roughness != 0) refractedRay.perturb(mat.roughness);
+
 			refractedColor = computeColor(refractedRay, depth - 1, context);
 		}
 
 		Color reflectedColor = computeColor(reflectedRay, depth - 1, context);
-		//reflectedColor = Color(0.0);
-		Color L = reflectedColor * F_r + refractedColor * (1 - F_r);
+		Color L = reflectedColor * F_r + refractedColor * (1.0 - F_r);
 
-
-		// Absorption when exiting
-		if (ray.inside)
+		if (ray.inside || !entering)
 		{
-			double d = rec.t; // or track actual thickness
+			double d = rec.t;
 			L.r *= std::exp(-mat.absorption_coefficient.x * d);
 			L.g *= std::exp(-mat.absorption_coefficient.y * d);
 			L.b *= std::exp(-mat.absorption_coefficient.z * d);
 		}
+
 		return color + L;
 	}
 
