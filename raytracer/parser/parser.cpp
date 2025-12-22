@@ -736,7 +736,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
     {
       std::stringstream tcdd_ss(scene_json["TexCoordData"]["_data"].get<std::string>());
       float u, v;
-      while (vd_ss >> u >> v)
+      while (tcdd_ss >> u >> v)
       {
         scene.tex_coord_data.push_back({ u, v});
       }
@@ -747,7 +747,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
       const auto& textures_json = scene_json["Textures"];
       if (textures_json.contains("Images"))
       {
-        const auto& images_json = textures_json["Images"];
+        const auto& images_json = textures_json["Images"]["Image"];
         auto parse_image = [&](const json& image_json) {
           Image_ image;
           image.data = image_json["_data"].get<std::string>();
@@ -768,7 +768,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
       if (textures_json.contains("TextureMap"))
       {
-        const auto& texture_maps = textures_json["TextureMap"];
+        const auto& texture_maps_json = textures_json["TextureMap"];
         auto parse_texture_map = [&](const json& texture_map_json) {
           TextureMap_ texture_map;
           texture_map.id = std::stoi(texture_map_json["_id"].get<std::string>()) - 1;
@@ -782,30 +782,36 @@ void parseScene(const std::string& filename, Scene_& scene) {
           if (texture_map_json.contains("Interpolation"))
             texture_map.interpolation = texture_map_json["Interpolation"].get<std::string>();
           else
-            texture_map.interpolation = "none";
+            texture_map.interpolation = "nearest";
+
+          if (texture_maps_json.contains("Normalizer"))
+            texture_map.normalizer = stof(texture_map_json["Normalizer"].get<std::string>());
+          else
+            texture_map.normalizer = 255.f;
+
 
           texture_map.decal_mode = texture_map_json["DecalMode"].get<std::string>();
 
           if(texture_map.decal_mode == "bump_normal")
-            texture_map.bump_factor = std::stoi(texture_map_json["BumpFactor"].get<std::string>());
+            texture_map.bump_factor = std::stof(texture_map_json["BumpFactor"].get<std::string>());
 
           if (texture_map.type == "perlin")
           {
             if (texture_map_json.contains("NoiseScale"))
             {
-              texture_map.noise_scale = std::stoi(texture_map_json["NoiseScale"].get<std::string>());
+              texture_map.noise_scale = std::stof(texture_map_json["NoiseScale"].get<std::string>());
             }
             else
             {
-              texture_map.noise_scale = 0;
+              texture_map.noise_scale = 1;
             }
             if (texture_map_json.contains("NoiseConversion"))
             {
-              texture_map.noise_conversion = std::stoi(texture_map_json["NoiseConversion"].get<std::string>());
+              texture_map.noise_conversion = texture_map_json["NoiseConversion"].get<std::string>();
             }
             else
             {
-              texture_map.noise_conversion = 0;
+              texture_map.noise_conversion = "linear";
             }
             if (texture_map_json.contains("NumOctaves"))
             {
@@ -813,7 +819,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
             }
             else
             {
-              texture_map.num_octaves = 0;
+              texture_map.num_octaves = 1.0;
             }
           }
 
@@ -853,9 +859,17 @@ void parseScene(const std::string& filename, Scene_& scene) {
             }
 
           }
-
+          scene.texture_maps.push_back(texture_map);
 
           };
+        if (texture_maps_json.is_array())
+        {
+          for (const auto& tm_json : texture_maps_json) parse_texture_map(tm_json);
+        }
+        else
+        {
+          parse_texture_map(texture_maps_json);
+        }
       }
     }
 
@@ -906,7 +920,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           std::istringstream textures(mesh_json["Textures"].get<std::string>());
           int texture;
           while (textures >> texture)
-            mesh.textures.push_back(texture);
+            mesh.textures.push_back(texture - 1);
         }
 
 
@@ -1010,7 +1024,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           std::istringstream textures(mi_json["Textures"].get<std::string>());
           int texture;
           while (textures >> texture)
-            mi.textures.push_back(texture);
+            mi.textures.push_back(texture - 1);
         }
 
         if (mi_json.contains("Transformations"))
@@ -1148,7 +1162,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
               std::istringstream textures(tri_json["Textures"].get<std::string>());
               int texture;
               while (textures >> texture)
-                tri.textures.push_back(texture);
+                tri.textures.push_back(texture - 1);
             }
 
             scene.triangles.push_back(tri);
@@ -1195,7 +1209,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
               std::istringstream textures(sphere_json["Textures"].get<std::string>());
               int texture;
               while (textures >> texture)
-                sphere.textures.push_back(texture);
+                sphere.textures.push_back(texture - 1);
             }
 
             scene.spheres.push_back(sphere);

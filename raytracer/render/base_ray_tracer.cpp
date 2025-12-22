@@ -1,5 +1,68 @@
 #include "base_ray_tracer.h"
 
+inline glm::vec3 get_cube_tbn_normal(const glm::vec3& hit_normal, const glm::vec3& rgb_sample)
+{
+	glm::vec3 tangent_normal = (rgb_sample / 127.5f) - glm::vec3(1.0f);
+	tangent_normal = glm::normalize(tangent_normal);
+
+	glm::vec3 T;
+	glm::vec3 abs_N = glm::abs(hit_normal);
+
+
+	if (abs_N.y > 0.9f)
+	{
+		T = glm::vec3(1.0f, 0.0f, 0.0f);
+	}
+	else if (abs_N.z > 0.9f)
+	{
+		T = glm::vec3(1.0f, 0.0f, 0.0f);
+	}
+	else
+	{
+		T = glm::vec3(0.0f, hit_normal.x > 0 ? -1.0f : 1.0f, 0.0f);
+	}
+
+	T = glm::normalize(T);
+
+	glm::vec3 B = glm::normalize(glm::cross(T, hit_normal));
+
+	glm::vec3 res =
+		T * tangent_normal.x
+		+ B * tangent_normal.y
+		+ hit_normal * tangent_normal.z;
+
+	return glm::normalize(res);
+}
+
+inline glm::vec3 get_sphere_tbn_normal(const glm::vec3& hit_normal,
+																			 const glm::vec3& rgb_sample,
+																			 const glm::vec2& uv,
+																			 const glm::vec3& P,
+																			 float r)
+{
+	glm::vec3 tangent_normal = (rgb_sample / 127.5f) - glm::vec3(1.0f);
+	tangent_normal = glm::normalize(tangent_normal);
+	glm::vec3 T, B;
+
+	float pi = glm::pi<float>();
+	float phi = -2.f * uv.x * pi + pi;
+	float theta = uv.y *pi;
+	glm::vec3 center = P - hit_normal * r;
+	glm::vec3 P_C = P - center;
+
+	T = { 2.0f * pi * P_C.z, 0.0f, -2.0f * pi * P_C.x };
+	B = { pi * P_C.y * glm::cos(phi), -pi * r * glm::sin(theta), pi * P_C.y * glm::sin(phi)};
+
+	T = glm::normalize(T);
+	B = glm::normalize(B);
+
+	glm::vec3 res = (T * tangent_normal.x) +
+		(B * tangent_normal.y) +
+		(hit_normal * tangent_normal.z);
+	res = glm::normalize(res);
+	return res;
+}
+
 static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
 	//wo = glm::normalize(wo);
@@ -29,13 +92,15 @@ BaseRayTracer::BaseRayTracer(Color& background_color,
 	std::shared_ptr<BVH<TLASBox>> world,
 	std::vector<Plane>& planes,
 	MaterialManager& material_manager,
-	RendererInfo& renderer_info)
+	RendererInfo& renderer_info,
+	TextureFetcher& texture_fetcher)
 	:background_color(background_color),
 	 light_sources(light_sources),
 		world(world),
 	planes(planes),
 		material_manager(material_manager),
-	renderer_info(renderer_info)
+	renderer_info(renderer_info),
+	texture_fetcher(texture_fetcher)
 {
 }
 
@@ -61,7 +126,10 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 		if (!hit_plane)
 		{
 			if (depth == renderer_info.max_recursion_depth + 1)
-				return Color(background_color);
+				if (renderer_info.background_tex_id != -1)
+					return Color(texture_fetcher.get_lookup_info(rec.uv, renderer_info.background_tex_id, rec.point).tex_val);
+				else
+					return Color(background_color);
 			else
 				return Color(0, 0, 0);
 		}
@@ -77,7 +145,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	int depth, HitRecord& rec, const RenderContext& context) const
 {
 	Material mat = material_manager.getMaterialById(rec.material_id);
-	Color color = Color(mat.ambient_reflectance) * Color(light_sources.ambient_light);
+	Color color(0.0, 0.0, 0.0);
 
 	if ((mat.type).compare("mirror") == 0)
 	{
@@ -207,6 +275,57 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		return color + L;
 	}
 
+	glm::vec3 kd = mat.diffuse_reflectance;
+	glm::vec3 ks = mat.specular_reflectance;
+	glm::vec3 ka = mat.ambient_reflectance;
+	if (!rec.texture_ids.empty())
+	{
+		for (const auto& id : rec.texture_ids)
+		{
+			auto info = texture_fetcher.get_lookup_info(rec.uv, id, rec.point);
+			Expects(info.tex_val.x + 1e-8f > 0.f || info.tex_val.x < 1.f + 1e-8f);
+			Expects(info.tex_val.y + 1e-8f > 0.f || info.tex_val.y < 1.f + 1e-8f);
+			Expects(info.tex_val.z + 1e-8f > 0.f || info.tex_val.z < 1.f + 1e-8f);
+			switch (info.mode)
+			{
+			case DecalMode::replace_kd:
+			{
+				kd = info.tex_val;
+				break;
+			}
+			case DecalMode::replace_ks:
+			{
+				ks = info.tex_val;
+				break;
+			}
+			case DecalMode::blend_kd:
+			{
+				kd = (info.tex_val + kd) * 0.5f;
+				break;
+			}
+			case DecalMode::replace_all:
+			{
+				return Color(info.tex_val * 255.0f);
+			}
+			case DecalMode::replace_normal:
+			{
+				glm::vec3 rgb = info.tex_val * 255.0f;
+				if (rec.sphere_r != -1)
+					rec.normal = get_sphere_tbn_normal(rec.normal, rgb, rec.uv, rec.point, rec.sphere_r);
+				else
+					rec.normal = get_cube_tbn_normal(rec.normal, rgb);
+				break;
+			}
+			default:
+				break;
+
+			}
+
+		}
+	}
+
+	color += Color(ka)* Color(light_sources.ambient_light);
+
 	for (const auto& light : light_sources.point_lights)
 	{
 		glm::vec3 wi = glm::vec3(light.position) - rec.point;
@@ -223,9 +342,10 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 		if (!world->intersect(shadowRay, Interval(renderer_info.intersection_test_epsilon, distance), shadowRec) 
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
+			
 			// Diffuse
 			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
-			color += Color(mat.diffuse_reflectance) * Color(light.intensity) * (cosTheta / (distance * distance));
+			color += Color(kd) * Color(light.intensity) * (cosTheta / (distance * distance));
 
 			// Specular
 			glm::vec3 wo = (ray.origin - rec.point);
@@ -233,7 +353,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			glm::vec3 h = (wi + wo);
 			h = glm::normalize(h);
 			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
-			color += Color(mat.specular_reflectance) * Color(light.intensity) * (pow(cosAlpha, mat.phong_exponent) / (distance * distance));
+			color += Color(ks) * Color(light.intensity) * (pow(cosAlpha, mat.phong_exponent) / (distance * distance));
 		}
 	}
 	for (const auto& light : light_sources.area_lights)
@@ -261,7 +381,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			float attenuation = area_of_light * cos_alpha_light / distance2;
 			// Diffuse
 			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
-			color += Color(mat.diffuse_reflectance) * Color(light.radiance) * attenuation * cosTheta;
+			color += Color(kd) * Color(light.radiance) * attenuation * cosTheta;
 
 			// Specular
 			glm::vec3 wo = (ray.origin - rec.point);
@@ -269,7 +389,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			glm::vec3 h = (wi + wo);
 			h = glm::normalize(h);
 			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
-			color += Color(mat.specular_reflectance) * Color(light.radiance) *
+			color += Color(ks) * Color(light.radiance) *
 				attenuation * pow(cosAlpha, mat.phong_exponent);
 		}
 	}

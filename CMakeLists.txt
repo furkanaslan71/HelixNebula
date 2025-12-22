@@ -45,7 +45,8 @@ add_executable (HelixNebula
     "raytracer/math_core/transformations/transformations.cpp" 
     "raytracer/math_core/vector_utility.h" 
     "raytracer/objects/geometry.h" 
-    "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h" "raytracer/objects/triangle/triangle_base.h")
+    "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h" "raytracer/objects/triangle/triangle_base.h"
+    "raytracer/texture_mapping/texture_fetcher.cpp" "raytracer/texture_mapping/perlin.h")
 
 
 # Important: Add include directories so your compiler can find your headers.

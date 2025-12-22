@@ -52,6 +52,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 		{
 			rec.material_id = o_context.material_id;
 			rec.point += motion_offset;
+			rec.texture_ids = o_context.textures;
 		}
 			
 		return hit;
@@ -78,6 +79,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 
 	rec.set_front_face(ray);
 	rec.material_id = o_context.material_id;
+	rec.texture_ids = o_context.textures;
 	return true;
 }
 

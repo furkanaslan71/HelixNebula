@@ -132,12 +132,13 @@ struct TextureMap_ {
   std::string interpolation;
   float bump_factor;
   float noise_scale;
-  float noise_conversion;
-  float num_octaves;
+  std::string noise_conversion;
+  int num_octaves;
   float scale;
   float offset;
   glm::vec3 black_color;
   glm::vec3 white_color;
+  float normalizer;
 };
 	
 

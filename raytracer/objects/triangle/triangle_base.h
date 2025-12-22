@@ -149,6 +149,7 @@ public:
         rec.uv = tex_coords.uvs[0] * barycentric.x +
           tex_coords.uvs[1] * barycentric.y +
           tex_coords.uvs[2] * barycentric.z;
+        rec.normal = normal;
       }
       else if constexpr (mode == Shading::Smooth && tex == TextureLookup::Textured)
       {
@@ -163,6 +164,7 @@ public:
           tex_coords.uvs[2] * barycentric.z;
       }
       rec.set_front_face(ray);
+      rec.sphere_r = -1;
       return true;      
     }
     return false;

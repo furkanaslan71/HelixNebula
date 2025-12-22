@@ -14,6 +14,7 @@ typedef struct HitRecord{
   double t;
   int material_id;
 	bool front_face;
+  int sphere_r;
   
   void set_front_face(const Ray& r)
   {
@@ -25,6 +26,7 @@ struct ObjectContext {
   std::optional<glm::mat4> transform_matrix;
   std::optional<glm::mat4> inverse_transform;
   glm::vec3 motion_blur;
+  std::vector<int> textures;
   int material_id;
 };
 

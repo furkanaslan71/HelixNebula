@@ -7,5 +7,6 @@
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
 #include "external/glm/glm/glm.hpp"
 #include "external/glm/glm/gtc/matrix_transform.hpp"
+#include "external/glm/glm/gtc/constants.hpp"
 
 #endif // !GLM_CONFIG_H

@@ -17,6 +17,10 @@ std::vector<std::pair<float, float>> generateJitteredSamples(int num_samples)
   Expects(num_samples > 0);
   int n = std::sqrt(num_samples);
   Expects(n * n == num_samples);
+  if (n == 1)
+  {
+    return { { 0.5f, 0.5f } };
+  }
   std::vector<std::pair<float, float>> samples(num_samples);
   int i = 0;
   for (int y = 0; y < n; y ++)
