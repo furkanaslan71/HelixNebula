@@ -150,6 +150,8 @@ public:
           tex_coords.uvs[1] * barycentric.y +
           tex_coords.uvs[2] * barycentric.z;
         rec.normal = normal;
+        rec.tangent_u = u;
+        rec.tangent_v = v;
       }
       else if constexpr (mode == Shading::Smooth && tex == TextureLookup::Textured)
       {
@@ -162,6 +164,8 @@ public:
         rec.uv = tex_coords.uvs[0] * barycentric.x +
           tex_coords.uvs[1] * barycentric.y +
           tex_coords.uvs[2] * barycentric.z;
+        rec.tangent_u = u;
+        rec.tangent_v = v;
       }
       rec.set_front_face(ray);
       rec.sphere_r = -1;
@@ -177,6 +181,7 @@ public:
   glm::vec3 v0, v1, v2;
   glm::vec3 e1, e2;
   glm::vec3 normal;
+  glm::vec3 u, v; //tangent vectors
 
   std::conditional_t<mode == Shading::Smooth,
     PerVertexNormals, std::monostate> per_vertex_normals;
@@ -216,6 +221,17 @@ private:
       per_vertex_normals = std::get<0>(tuple);
       tex_coords = std::get<1>(tuple);
       bary = BarycentricModule(e1, e2);
+
+      auto v1_0 = v1 - v0;
+      auto v2_0 = v2 - v0;
+      auto a = tex_coords.uvs[1].x - tex_coords.uvs[0].x;
+      auto b = tex_coords.uvs[1].y - tex_coords.uvs[0].y;
+      auto c = tex_coords.uvs[2].x - tex_coords.uvs[0].x;
+      auto d = tex_coords.uvs[2].y - tex_coords.uvs[0].y;
+      float inv_det = 1 / (a * d - b * c);
+
+      this->u = inv_det * (d * v1_0 - b * v2_0);
+      this->v = inv_det * (-c * v1_0 + a * v2_0);
     }
     else if constexpr (mode == Shading::Smooth)
     {
@@ -230,6 +246,17 @@ private:
                     "Textured triangles require TexCoords");
       tex_coords = std::get<0>(std::forward_as_tuple(extra...));
       bary = BarycentricModule(e1, e2);
+
+      auto v1_0 = v1 - v0;
+      auto v2_0 = v2 - v0;
+      auto a = tex_coords.uvs[1].x - tex_coords.uvs[0].x;
+      auto b = tex_coords.uvs[1].y - tex_coords.uvs[0].y;
+      auto c = tex_coords.uvs[2].x - tex_coords.uvs[0].x;
+      auto d = tex_coords.uvs[2].y - tex_coords.uvs[0].y;
+      float inv_det = 1 / (a * d - b * c);
+
+      this->u = inv_det * (d * v1_0 - b * v2_0);
+      this->v = inv_det * (-c * v1_0 + a * v2_0);
     }
     else
     {

@@ -15,6 +15,7 @@ typedef struct HitRecord{
   int material_id;
 	bool front_face;
   int sphere_r;
+  glm::vec3 tangent_u, tangent_v;
   
   void set_front_face(const Ray& r)
   {

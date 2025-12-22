@@ -1,37 +1,22 @@
 #include "base_ray_tracer.h"
 
-inline glm::vec3 get_cube_tbn_normal(const glm::vec3& hit_normal, const glm::vec3& rgb_sample)
+
+inline glm::vec3 get_cube_tbn_normal(
+	const glm::vec3& hit_normal,
+	const glm::vec3& rgb_sample,
+	const glm::vec3& tangent_u,
+	const glm::vec3& tangent_v)
 {
-	glm::vec3 tangent_normal = (rgb_sample / 127.5f) - glm::vec3(1.0f);
-	tangent_normal = glm::normalize(tangent_normal);
+	glm::vec3 n_ts = rgb_sample / 127.5f - glm::vec3(1.0f);
+	n_ts = glm::normalize(n_ts);
 
-	glm::vec3 T;
-	glm::vec3 abs_N = glm::abs(hit_normal);
-
-
-	if (abs_N.y > 0.9f)
-	{
-		T = glm::vec3(1.0f, 0.0f, 0.0f);
-	}
-	else if (abs_N.z > 0.9f)
-	{
-		T = glm::vec3(1.0f, 0.0f, 0.0f);
-	}
-	else
-	{
-		T = glm::vec3(0.0f, hit_normal.x > 0 ? -1.0f : 1.0f, 0.0f);
-	}
-
-	T = glm::normalize(T);
-
-	glm::vec3 B = glm::normalize(glm::cross(T, hit_normal));
-
-	glm::vec3 res =
-		T * tangent_normal.x
-		+ B * tangent_normal.y
-		+ hit_normal * tangent_normal.z;
-
+	glm::vec3 T = glm::normalize(tangent_u);
+	glm::vec3 B = glm::normalize(tangent_v);
+	glm::vec3 res = { T * n_ts.x +
+	B * n_ts.y +
+	hit_normal * n_ts.z };
 	return glm::normalize(res);
+	
 }
 
 inline glm::vec3 get_sphere_tbn_normal(const glm::vec3& hit_normal,
@@ -313,7 +298,7 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 				if (rec.sphere_r != -1)
 					rec.normal = get_sphere_tbn_normal(rec.normal, rgb, rec.uv, rec.point, rec.sphere_r);
 				else
-					rec.normal = get_cube_tbn_normal(rec.normal, rgb);
+					rec.normal = get_cube_tbn_normal(rec.normal, rgb, rec.tangent_u, rec.tangent_v);
 				break;
 			}
 			default:
