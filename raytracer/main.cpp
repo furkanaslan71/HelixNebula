@@ -38,7 +38,10 @@ int main(int argc, char* argv[])
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/test.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/cube_wall_normal.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/killeroo_bump_walls.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/dragon/dragon_new_ply.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/veach_ajar/scene.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
 #endif
 
   Scene_ raw_scene;
@@ -119,13 +122,13 @@ int main(int argc, char* argv[])
       {
         geometries.emplace_back(
           std::in_place_type<Mesh<Shading::Smooth, TextureLookup::NoTexture>>,
-          val.id, val.faces, vertex_data, uv_data);
+          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
       }
       else
       {
         geometries.emplace_back(
           std::in_place_type<Mesh<Shading::Flat, TextureLookup::NoTexture>>,
-          val.id, val.faces, vertex_data, uv_data);
+          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
       }
       
     }
@@ -135,13 +138,13 @@ int main(int argc, char* argv[])
       {
         geometries.emplace_back(
           std::in_place_type<Mesh<Shading::Smooth, TextureLookup::Textured>>,
-          val.id, val.faces, vertex_data, uv_data);
+          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
       }
       else
       {
         geometries.emplace_back(
           std::in_place_type<Mesh<Shading::Flat, TextureLookup::Textured>>,
-          val.id, val.faces, vertex_data, uv_data);
+          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
       }
     }
     
@@ -186,7 +189,7 @@ int main(int argc, char* argv[])
   uint8_t replace_background_num = 0;
   for (const auto& tm : raw_scene.texture_maps)
   {
-    if (tm.decal_mode == "replace background")
+    if (tm.decal_mode == "replace_background")
     {
       ++replace_background_num;
       Expects(replace_background_num <= 1);

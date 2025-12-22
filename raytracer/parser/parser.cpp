@@ -420,7 +420,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
     const auto& scene_json = j["Scene"];
 
     // --- Global Scene Settings ---
-    scene.background_color = parseVec3(scene_json["BackgroundColor"]);
+    if (scene_json.contains("BackgroundColor"))
+      scene.background_color = parseVec3(scene_json["BackgroundColor"]);
+    else
+      scene.background_color = glm::vec3(0, 0, 0);
 
     if (scene_json.contains("ShadowRayEpsilon"))
         scene.shadow_ray_epsilon = std::stof(scene_json["ShadowRayEpsilon"].get<std::string>());
@@ -726,11 +729,16 @@ void parseScene(const std::string& filename, Scene_& scene) {
     }
 
     // --- Vertex Data ---
-    std::stringstream vd_ss(scene_json["VertexData"]["_data"].get<std::string>());
-    float x, y, z;
-    while (vd_ss >> x >> y >> z) {
-        scene.vertex_data.push_back({x, y, z});
+    if (scene_json.contains("VertexData"))
+    {
+      std::stringstream vd_ss(scene_json["VertexData"]["_data"].get<std::string>());
+      float x, y, z;
+      while (vd_ss >> x >> y >> z)
+      {
+        scene.vertex_data.push_back({ x, y, z });
+      }
     }
+    
 
     if (scene_json.contains("TexCoordData"))
     {
@@ -792,8 +800,14 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
           texture_map.decal_mode = texture_map_json["DecalMode"].get<std::string>();
 
-          if(texture_map.decal_mode == "bump_normal")
-            texture_map.bump_factor = std::stof(texture_map_json["BumpFactor"].get<std::string>());
+          if (texture_map.decal_mode == "bump_normal")
+          {
+            if (texture_map_json.contains("BumpFactor"))
+              texture_map.bump_factor = std::stof(texture_map_json["BumpFactor"].get<std::string>());
+            else
+              texture_map.bump_factor = 1.0f;
+          }
+            
 
           if (texture_map.type == "perlin")
           {
@@ -926,6 +940,24 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
 
         const auto& faces_json = mesh_json["Faces"];
+
+        if (faces_json.contains("_vertexOffset"))
+        {
+          mesh.vertex_offset = std::stoi(faces_json["_vertexOffset"].get<std::string>());
+        }
+        else
+        {
+          mesh.vertex_offset = 0;
+        }
+        if (faces_json.contains("_textureOffset"))
+        {
+          mesh.texture_offset = std::stoi(faces_json["_textureOffset"].get<std::string>());
+        }
+        else
+        {
+          mesh.texture_offset = 0;
+        }
+
         if (faces_json.contains("_data"))
         {
           std::stringstream faces_ss(faces_json["_data"].get<std::string>());
@@ -1255,7 +1287,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
           std::istringstream textures(plane_json["Textures"].get<std::string>());
           int texture;
           while (textures >> texture)
-            plane.textures.push_back(texture);
+            plane.textures.push_back(texture - 1);
         }
 
 				scene.planes.push_back(plane);

@@ -28,6 +28,64 @@ TextureFetcher::~TextureFetcher()
 	}
 }
 
+float TextureFetcher::height_helper(const ImageData& img, glm::vec2 tex_coord, Interpolation interp) const
+{
+	auto tex_val = getTextureValue(
+		img.data,
+		img.width,
+		img.height,
+		img.channels,
+		tex_coord.x,
+		tex_coord.y,
+		interp
+	);
+	auto res = (tex_val.x + tex_val.y + tex_val.z) / 3.0f;
+	return res / 255.0f;
+}
+
+float TextureFetcher::height_function(glm::vec2 tex_coord, int texture_id, FetchMode mode) const
+{
+	const TextureMap& tex = data_.textures[texture_id];
+	const TextureType type = tex.type;
+	Interpolation interp = tex.interp;
+	float res = 0;
+	glm::vec3 tex_val;
+	switch (type)
+	{
+		case TextureType::image:
+		{
+			const ImageData& img = image_datas_.at(tex.image_id);
+			float h_value = height_helper(img, tex_coord, interp);
+			if (mode == FetchMode::value_u_v)
+			{
+				res = h_value;
+			}
+			else if (mode == FetchMode::derivative_u)
+			{
+				float delta_u = 1.0f / img.width;
+				tex_coord.x += delta_u;
+				tex_coord.x = std::min(tex_coord.x, 1.0f);
+				float h_udeltau = height_helper(img, tex_coord, interp);
+				res = (h_udeltau - h_value) * img.width;
+			}
+			else if (mode == FetchMode::derivative_v)
+			{
+				float delta_v = 1.0f / img.height;
+				tex_coord.y += delta_v;
+				tex_coord.y = std::min(tex_coord.y, 1.0f);
+				float h_vdeltav = height_helper(img, tex_coord, interp);
+				res = (h_vdeltav - h_value) * img.height;
+			}			
+			break;
+		}
+		default:
+			break;
+	}
+	res *= tex.bump_factor;
+	return res;
+}
+
+
 unsigned char* TextureFetcher::loadTexture(const std::string& filepath, int& width, int& height, int& channels)
 {
 	std::string absolute_path = "D:/Furkan/GITHUB/HelixNebula/inputs2/" + filepath;
@@ -116,10 +174,26 @@ LookupInfo TextureFetcher::get_lookup_info(glm::vec2 tex_coord,
 			return LookupInfo(d_mode, tex_val);
 			break;
 		case TextureType::checkerboard:
+		{
+			auto offset = tex.offset;
+			auto scale = tex.scale;
+			bool x = ((int)floor((point.x + offset) * scale)) % 2;
+			bool y = ((int)floor((point.y + offset) * scale)) % 2;
+			bool z = ((int)floor((point.z + offset) * scale)) % 2;
+
+			bool xorXY = x != y;
+			if (xorXY != z)
+				tex_val = tex.black_color;
+			else
+				tex_val = tex.white_color;
 			break;
+
+		}
+			
 		default:
 			break;
 	}
 	tex_val = glm::clamp(tex_val / tex.normalizer, 0.0f, 1.0f);
 	return LookupInfo(d_mode, tex_val);
 }
+

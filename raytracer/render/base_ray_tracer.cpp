@@ -21,25 +21,15 @@ inline glm::vec3 get_cube_tbn_normal(
 
 inline glm::vec3 get_sphere_tbn_normal(const glm::vec3& hit_normal,
 																			 const glm::vec3& rgb_sample,
-																			 const glm::vec2& uv,
-																			 const glm::vec3& P,
-																			 float r)
+																			 const glm::vec3& tangent_u,
+																			 const glm::vec3& tangent_v)
 {
 	glm::vec3 tangent_normal = (rgb_sample / 127.5f) - glm::vec3(1.0f);
 	tangent_normal = glm::normalize(tangent_normal);
 	glm::vec3 T, B;
 
-	float pi = glm::pi<float>();
-	float phi = -2.f * uv.x * pi + pi;
-	float theta = uv.y *pi;
-	glm::vec3 center = P - hit_normal * r;
-	glm::vec3 P_C = P - center;
-
-	T = { 2.0f * pi * P_C.z, 0.0f, -2.0f * pi * P_C.x };
-	B = { pi * P_C.y * glm::cos(phi), -pi * r * glm::sin(theta), pi * P_C.y * glm::sin(phi)};
-
-	T = glm::normalize(T);
-	B = glm::normalize(B);
+	T = tangent_u;
+	B = tangent_v;
 
 	glm::vec3 res = (T * tangent_normal.x) +
 		(B * tangent_normal.y) +
@@ -112,7 +102,10 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 		{
 			if (depth == renderer_info.max_recursion_depth + 1)
 				if (renderer_info.background_tex_id != -1)
-					return Color(texture_fetcher.get_lookup_info(rec.uv, renderer_info.background_tex_id, rec.point).tex_val);
+				{
+					auto color = Color(texture_fetcher.get_lookup_info(rec.uv, renderer_info.background_tex_id, rec.point).tex_val);
+					return color * 255.0f;
+				}			
 				else
 					return Color(background_color);
 			else
@@ -296,10 +289,20 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			{
 				glm::vec3 rgb = info.tex_val * 255.0f;
 				if (rec.sphere_r != -1)
-					rec.normal = get_sphere_tbn_normal(rec.normal, rgb, rec.uv, rec.point, rec.sphere_r);
+					rec.normal = get_sphere_tbn_normal(rec.normal, rgb, rec.tangent_u, rec.tangent_v);
 				else
 					rec.normal = get_cube_tbn_normal(rec.normal, rgb, rec.tangent_u, rec.tangent_v);
 				break;
+			}
+			case DecalMode::bump_normal:
+			{
+				glm::vec3 n_uv = glm::normalize(glm::cross(glm::normalize(rec.tangent_v), glm::normalize(rec.tangent_u)));
+				//glm::vec3 n_uv = rec.normal;
+				//rec.tangent_u = glm::normalize(rec.tangent_u);
+				//rec.tangent_v = glm::normalize(rec.tangent_v);
+				glm::vec3 q_u = rec.tangent_u + texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_u) * n_uv;
+				glm::vec3 q_v = rec.tangent_v + texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_v) * n_uv;
+				rec.normal = glm::normalize(glm::cross(q_v, q_u));
 			}
 			default:
 				break;

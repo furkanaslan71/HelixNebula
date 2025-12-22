@@ -11,7 +11,8 @@ template<Shading mode, TextureLookup tex>
 class Mesh {
 public:
 	Mesh(int _id, const std::vector<Triangle_>& _faces,
-			 const std::vector<glm::vec3>& vertex_data, const std::vector<glm::vec2> uv_data);
+			 const std::vector<glm::vec3>& vertex_data,
+			 const std::vector<glm::vec2> uv_data, int vertex_offset, int texture_offset);
 
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 

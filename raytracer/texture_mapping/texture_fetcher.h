@@ -9,6 +9,12 @@
 #include "glm_config.h"
 #include "perlin.h"
 
+enum class FetchMode : int {
+	value_u_v,
+	derivative_u,
+	derivative_v
+};
+
 struct LookupInfo {
 	DecalMode mode;
 	glm::vec3 tex_val;
@@ -26,8 +32,11 @@ public:
 	TextureFetcher(TextureData& _data);
 	~TextureFetcher();
 	LookupInfo get_lookup_info(glm::vec2 tex_coord, int texture_id, const glm::vec3& point ) const;
+	float height_function(glm::vec2 tex_coord, int texture_id, FetchMode mode) const;
+
 
 private:
+	float height_helper(const ImageData& img, glm::vec2 tex_coord, Interpolation interp) const;
 	unsigned char* loadTexture(const std::string& filepath, int& width, int& height, int& channels);
 	glm::vec3 getTextureValue(unsigned char* textureData, int texWidth,
 														int texHeight, int texChannels, float u,

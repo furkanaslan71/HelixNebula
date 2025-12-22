@@ -1,7 +1,9 @@
 
 template<Shading mode, TextureLookup tex>
 Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
-	const std::vector<glm::vec3>& vertex_data, const std::vector<glm::vec2> uv_data)
+	const std::vector<glm::vec3>& vertex_data,
+  const std::vector<glm::vec2> uv_data,
+	int vertex_offset, int texture_offset)
 	: id(_id)
 {
 	if constexpr (mode == Shading::Smooth)
@@ -10,20 +12,20 @@ Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
 		per_vertex_triangles.resize(vertex_data.size());
 		for (const Triangle_& raw_triangle : _faces)
 		{
-			glm::vec3 v0 = glm::vec3(vertex_data[raw_triangle.v0_id]);
-			glm::vec3 v1 = glm::vec3(vertex_data[raw_triangle.v1_id]);
-			glm::vec3 v2 = glm::vec3(vertex_data[raw_triangle.v2_id]);
+			glm::vec3 v0 = glm::vec3(vertex_data[raw_triangle.v0_id + vertex_offset]);
+			glm::vec3 v1 = glm::vec3(vertex_data[raw_triangle.v1_id + vertex_offset]);
+			glm::vec3 v2 = glm::vec3(vertex_data[raw_triangle.v2_id + vertex_offset]);
 			double area = Triangle::getAreaTriangle(v0, v1, v2);
 			glm::vec3 edge1 = v1 - v0;
 			glm::vec3 edge2 = v2 - v0;
 			glm::vec3 face_normal = glm::normalize(glm::cross(edge1, edge2));
-			per_vertex_triangles[raw_triangle.v0_id].push_back(
+			per_vertex_triangles[raw_triangle.v0_id + vertex_offset].push_back(
 				std::make_pair(face_normal, area)
 			);
-			per_vertex_triangles[raw_triangle.v1_id].push_back(
+			per_vertex_triangles[raw_triangle.v1_id + vertex_offset].push_back(
 				std::make_pair(face_normal, area)
 			);
-			per_vertex_triangles[raw_triangle.v2_id].push_back(
+			per_vertex_triangles[raw_triangle.v2_id + vertex_offset].push_back(
 				std::make_pair(face_normal, area)
 			);
 		}
@@ -46,18 +48,22 @@ Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
 		}
 		for (const Triangle_& raw_triangle : _faces)
 		{
-			glm::vec3 indices[3] = { vertex_data[raw_triangle.v0_id],
-				vertex_data[raw_triangle.v1_id],
-				vertex_data[raw_triangle.v2_id] };
+			glm::vec3 indices[3] = { vertex_data[raw_triangle.v0_id + vertex_offset],
+				vertex_data[raw_triangle.v1_id + vertex_offset],
+				vertex_data[raw_triangle.v2_id + vertex_offset] };
 
 			PerVertexNormals per_vertex_normals = {
-				vertex_normals[raw_triangle.v0_id],
-				vertex_normals[raw_triangle.v1_id],
-				vertex_normals[raw_triangle.v2_id] };
+				vertex_normals[raw_triangle.v0_id + vertex_offset],
+				vertex_normals[raw_triangle.v1_id + vertex_offset],
+				vertex_normals[raw_triangle.v2_id + vertex_offset] };
 
 			if constexpr (tex == TextureLookup::Textured)
 			{
-				auto tex_coords = TexCoords(raw_triangle, uv_data);
+				auto ttri = raw_triangle;
+				ttri.v0_id += texture_offset;
+				ttri.v1_id += texture_offset;
+				ttri.v2_id += texture_offset;
+				auto tex_coords = TexCoords(ttri, uv_data);
 				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2], per_vertex_normals, tex_coords));
 			}
 			else
@@ -70,13 +76,17 @@ Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	{
 		for (const Triangle_& raw_triangle : _faces)
 		{
-			glm::vec3 indices[3] = { vertex_data[raw_triangle.v0_id],
-				vertex_data[raw_triangle.v1_id],
-				vertex_data[raw_triangle.v2_id] };
+			glm::vec3 indices[3] = { vertex_data[raw_triangle.v0_id + vertex_offset],
+				vertex_data[raw_triangle.v1_id + vertex_offset],
+				vertex_data[raw_triangle.v2_id + vertex_offset] };
 
 			if constexpr (tex == TextureLookup::Textured)
 			{
-				auto tex_coords = TexCoords(raw_triangle, uv_data);
+				auto ttri = raw_triangle;
+				ttri.v0_id += texture_offset;
+				ttri.v1_id += texture_offset;
+				ttri.v2_id += texture_offset;
+				auto tex_coords = TexCoords(ttri, uv_data);
 				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2], tex_coords));
 			}
 			else

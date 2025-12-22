@@ -73,6 +73,8 @@ typedef struct Mesh_ {
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
     std::vector<int> textures;
+    int vertex_offset;
+    int texture_offset;
 } Mesh_;
 
 typedef struct MeshInstance_ {
