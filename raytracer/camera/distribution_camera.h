@@ -29,7 +29,7 @@ public:
   float aperture_size;
   float focus_distance;
 
-  void render(const BaseRayTracer& technique,
+  void render(BaseRayTracer& technique,
     std::vector<std::vector<Color>>& image) const override;
 
 private:

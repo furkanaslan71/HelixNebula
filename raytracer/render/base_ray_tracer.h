@@ -8,6 +8,7 @@
 #include "objects/tlas_box.h"
 #include "texture_mapping/texture_fetcher.h"
 
+
 class BaseRayTracer : public RenderingTechnique {
 public:
 	BaseRayTracer( Color& background_color,
@@ -33,6 +34,8 @@ public:
 	MaterialManager& material_manager;
 	RendererInfo& renderer_info;
 	TextureFetcher& texture_fetcher;
+	BackgroundCameraData bgc_data;
+	
 };
 
 #endif // BASE_RAY_TRACER_H

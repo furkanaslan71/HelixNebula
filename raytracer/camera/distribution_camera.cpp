@@ -27,11 +27,12 @@ glm::vec3 DistributionCamera::calculateDir(
 }
 
 void DistributionCamera::render(
-	const BaseRayTracer& rendering_technique,
+	BaseRayTracer& rendering_technique,
 	std::vector<std::vector<Color>>& image) const
 
 {
 	image.resize(image_height, std::vector<Color>(image_width, Color(0, 0, 0)));
+	rendering_technique.bgc_data = data;
 
 #if DEBUG_PIXEL
 	std::vector<glm::vec3> pixel_samples;

@@ -12,7 +12,7 @@ public:
   RenderManager(const Scene& _scene,
     const MaterialManager& _material_manager,
     const RendererInfo _renderer_info,
-    const BaseRayTracer& _rendering_technique);
+    BaseRayTracer& _rendering_technique);
     void render() const;
 
 private:
@@ -22,7 +22,7 @@ private:
   const Scene& scene;
   const MaterialManager& material_manager;
   const RendererInfo renderer_info;
-	const BaseRayTracer& technique;
+	BaseRayTracer& technique;
   
 };
 

@@ -16,6 +16,7 @@
 #include "objects/geometry.h"
 #include "texture_mapping/texture_fetcher.h"
 
+
 std::vector<Geometry> geometries;
 std::vector<ObjectContext> object_contexes;
 
@@ -38,16 +39,18 @@ int main(int argc, char* argv[])
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/test.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/killeroo_bump_walls.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/galactica_dynamic.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/killeroo_bump_walls.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/brickwall_with_normalmap.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/dragon/dragon_new_ply.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/veach_ajar/scene.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
 #endif
 
   Scene_ raw_scene;
   
   parseScene(scene_filename, raw_scene);
-
+  
   std::vector<TLASBox> tlas_boxes;
 
   int t_size = raw_scene.triangles.size();
@@ -186,6 +189,8 @@ int main(int argc, char* argv[])
     data.images[img.id] = Image(img);
   }
 
+  
+
   uint8_t replace_background_num = 0;
   for (const auto& tm : raw_scene.texture_maps)
   {
@@ -197,6 +202,7 @@ int main(int argc, char* argv[])
     }
     data.textures[tm.id] = TextureMap(tm);
   }
+
   
   TextureFetcher tex_fetcher(data);
 

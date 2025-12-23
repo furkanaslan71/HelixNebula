@@ -11,7 +11,7 @@
 RenderManager::RenderManager(const Scene& _scene,
   const MaterialManager& _material_manager,
   const RendererInfo _renderer_info,
-  const BaseRayTracer& _rendering_technique)
+  BaseRayTracer& _rendering_technique)
   : scene(_scene),
   material_manager(_material_manager),
   renderer_info(_renderer_info),

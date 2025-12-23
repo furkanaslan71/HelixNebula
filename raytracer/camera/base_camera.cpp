@@ -65,6 +65,14 @@ BaseCamera::BaseCamera(
 	q = m + u * (float)l + v * (float)t;
 	su = u * (float)((r - l) / image_width);
 	sv = v * (float)((b - t) / image_height);
+
+
+	this->data.cam_forward = -this->w;
+	this->data.cam_right = this->u;
+	this->data.cam_up = this->v;
+
+	this->data.tan_half_fov_x = (float)((r - l) * 0.5 / near_distance);
+	this->data.tan_half_fov_y = (float)((t - b) * 0.5 / near_distance);
 }
 
 void BaseCamera::generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const

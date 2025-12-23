@@ -805,7 +805,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
             if (texture_map_json.contains("BumpFactor"))
               texture_map.bump_factor = std::stof(texture_map_json["BumpFactor"].get<std::string>());
             else
-              texture_map.bump_factor = 1.0f;
+              texture_map.bump_factor = 0.01f;
           }
             
 

@@ -8,6 +8,8 @@
 #include "texture_data.h"
 #include "glm_config.h"
 #include "perlin.h"
+#include "math_core/math_core.h"
+
 
 enum class FetchMode : int {
 	value_u_v,
@@ -33,7 +35,12 @@ public:
 	~TextureFetcher();
 	LookupInfo get_lookup_info(glm::vec2 tex_coord, int texture_id, const glm::vec3& point ) const;
 	float height_function(glm::vec2 tex_coord, int texture_id, FetchMode mode) const;
+	glm::vec3 get_background_texture(glm::vec3 dir, int texture_id, BackgroundCameraData cam) const;
 
+	TextureType getTexType(int texture_id) const;
+
+	glm::vec3 getPerlinGradient(glm::vec3 point, int texture_id) const;
+	TextureData& data_;
 
 private:
 	float height_helper(const ImageData& img, glm::vec2 tex_coord, Interpolation interp) const;
@@ -42,7 +49,9 @@ private:
 														int texHeight, int texChannels, float u,
 														float v, Interpolation interpolation) const;
 
-	TextureData& data_;
+
+
+	
 	std::unordered_map<int, ImageData> image_datas_;
 };
 

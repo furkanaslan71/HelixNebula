@@ -64,17 +64,17 @@ float TextureFetcher::height_function(glm::vec2 tex_coord, int texture_id, Fetch
 			{
 				float delta_u = 1.0f / img.width;
 				tex_coord.x += delta_u;
-				tex_coord.x = std::min(tex_coord.x, 1.0f);
+				//tex_coord.x = std::min(tex_coord.x, 1.0f);
 				float h_udeltau = height_helper(img, tex_coord, interp);
-				res = (h_udeltau - h_value) * img.width;
+				res = (h_udeltau - h_value);
 			}
 			else if (mode == FetchMode::derivative_v)
 			{
 				float delta_v = 1.0f / img.height;
 				tex_coord.y += delta_v;
-				tex_coord.y = std::min(tex_coord.y, 1.0f);
+				//tex_coord.y = std::min(tex_coord.y, 1.0f);
 				float h_vdeltav = height_helper(img, tex_coord, interp);
-				res = (h_vdeltav - h_value) * img.height;
+				res = (h_vdeltav - h_value);
 			}			
 			break;
 		}
@@ -115,8 +115,8 @@ glm::vec3 TextureFetcher::getTextureValue(unsigned char* textureData,
 																					float v,
 																					Interpolation interpolation) const
 {
-	u = std::min(std::max(u, 0.0f), 1.0f);
-	v = std::min(std::max(v, 0.0f), 1.0f);
+	u = u - std::floor(u);
+	v = v - std::floor(v);
 
 	// UV -> pixel
 	float i = u * (texWidth - 1.0f);
@@ -144,6 +144,27 @@ glm::vec3 TextureFetcher::getTextureValue(unsigned char* textureData,
 	
 }
 
+glm::vec3 TextureFetcher::get_background_texture(glm::vec3 dir, int texture_id, BackgroundCameraData cam) const
+{
+	const TextureMap& tex = data_.textures[texture_id];
+	const ImageData& img = image_datas_.at(tex.image_id);
+
+	float cos_theta = glm::dot(dir, cam.cam_forward);
+	if (cos_theta <= 0.0001f) return glm::vec3(0, 0, 0);
+
+	float x = glm::dot(dir, cam.cam_right) / cos_theta;
+	float y = glm::dot(dir, cam.cam_up) / cos_theta;
+
+	float u = (x / (2.0f * cam.tan_half_fov_x)) + 0.5f;
+	float v = (y / (2.0f * cam.tan_half_fov_y)) + 0.5f;
+
+	v = 1.0f - v;
+
+	u = glm::clamp(u, 0.0f, 1.0f);
+	v = glm::clamp(v, 0.0f, 1.0f);
+
+	return getTextureValue(img.data, img.width, img.height, img.channels, u, v, tex.interp);
+}
 LookupInfo TextureFetcher::get_lookup_info(glm::vec2 tex_coord,
 																					 int texture_id,
 																					 const glm::vec3& point) const
@@ -175,19 +196,26 @@ LookupInfo TextureFetcher::get_lookup_info(glm::vec2 tex_coord,
 			break;
 		case TextureType::checkerboard:
 		{
-			auto offset = tex.offset;
-			auto scale = tex.scale;
-			bool x = ((int)floor((point.x + offset) * scale)) % 2;
-			bool y = ((int)floor((point.y + offset) * scale)) % 2;
-			bool z = ((int)floor((point.z + offset) * scale)) % 2;
+			float scale = tex.scale;
+			float offset = tex.offset;
 
-			bool xorXY = x != y;
-			if (xorXY != z)
+			int x = static_cast<int>(std::floor((point.x + offset) * scale));
+			int y = static_cast<int>(std::floor((point.y + offset) * scale));
+			int z = static_cast<int>(std::floor((point.z + offset) * scale));
+
+			bool is_x_even = (x % 2) == 0;
+			bool is_y_even = (y % 2) == 0;
+			bool is_z_even = (z % 2) == 0;
+
+			if ((is_x_even ^ is_y_even) ^ is_z_even)
+			{
 				tex_val = tex.black_color;
+			}
 			else
+			{
 				tex_val = tex.white_color;
+			}
 			break;
-
 		}
 			
 		default:
@@ -195,5 +223,34 @@ LookupInfo TextureFetcher::get_lookup_info(glm::vec2 tex_coord,
 	}
 	tex_val = glm::clamp(tex_val / tex.normalizer, 0.0f, 1.0f);
 	return LookupInfo(d_mode, tex_val);
+}
+
+glm::vec3 TextureFetcher::getPerlinGradient(glm::vec3 point, int texture_id) const
+{
+	const TextureMap& tex = data_.textures[texture_id];
+	float eps = 1e-3f;
+	float x = point.x;
+	float y = point.y;
+	float z = point.z;
+	glm::vec3 x_eps = { eps, 0.0f, 0.0f };
+	glm::vec3 y_eps = { 0.0f, eps, 0.0f };
+	glm::vec3 z_eps = { 0.0f, 0.0f , eps};
+	float h = perlinNoise(point, tex.noise_scale, tex.noise_conversion, tex.num_octaves);
+	float h_x = perlinNoise(point + x_eps, tex.noise_scale, tex.noise_conversion, tex.num_octaves);
+	float h_y = perlinNoise(point + y_eps, tex.noise_scale, tex.noise_conversion, tex.num_octaves);
+	float h_z = perlinNoise(point + z_eps, tex.noise_scale, tex.noise_conversion, tex.num_octaves);
+	//eps = 1;
+	return glm::vec3(
+		(h_x - h) / eps,
+		(h_y - h) / eps,
+		(h_z - h) / eps
+	);
+}
+
+TextureType TextureFetcher::getTexType(int texture_id) const
+{
+	const TextureMap& tex = data_.textures[texture_id];
+	const TextureType type = tex.type;
+	return type;
 }
 

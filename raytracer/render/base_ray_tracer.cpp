@@ -103,9 +103,10 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 			if (depth == renderer_info.max_recursion_depth + 1)
 				if (renderer_info.background_tex_id != -1)
 				{
-					auto color = Color(texture_fetcher.get_lookup_info(rec.uv, renderer_info.background_tex_id, rec.point).tex_val);
-					return color * 255.0f;
-				}			
+					glm::vec3 d = glm::normalize(ray.direction);
+					auto lookup = texture_fetcher.get_background_texture(d, renderer_info.background_tex_id, this->bgc_data);
+					return Color(lookup);
+				}
 				else
 					return Color(background_color);
 			else
@@ -116,6 +117,7 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 	if (!ray.inside && !rec.front_face)
 		return Color(0, 0, 0);
 #endif
+
 	return applyShading(ray, depth, rec, context);
 }
 
@@ -296,13 +298,30 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 			}
 			case DecalMode::bump_normal:
 			{
-				glm::vec3 n_uv = glm::normalize(glm::cross(glm::normalize(rec.tangent_v), glm::normalize(rec.tangent_u)));
-				//glm::vec3 n_uv = rec.normal;
-				//rec.tangent_u = glm::normalize(rec.tangent_u);
-				//rec.tangent_v = glm::normalize(rec.tangent_v);
-				glm::vec3 q_u = rec.tangent_u + texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_u) * n_uv;
-				glm::vec3 q_v = rec.tangent_v + texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_v) * n_uv;
-				rec.normal = glm::normalize(glm::cross(q_v, q_u));
+				if (texture_fetcher.getTexType(id) == TextureType::image)
+				{
+					glm::vec3 n_uv = rec.normal;
+					glm::vec3 p_u = rec.tangent_u;
+					glm::vec3 p_v = rec.tangent_v;
+					float h_u = texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_u);
+					float h_v = texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_v);
+					glm::vec3 grad = h_u * p_u + h_v * p_v;
+					rec.normal = glm::normalize(n_uv - grad);
+				}
+				else
+				{
+					//perlin bump
+					glm::vec3 g = texture_fetcher.getPerlinGradient(rec.point, id);
+
+					// Gradyanýn normale dik olan bileþenini bul (Surface Gradient)
+					glm::vec3 g_parallel = glm::dot(rec.normal, g) * rec.normal;
+					glm::vec3 g_perp = g - g_parallel;
+
+					// Önemli: BumpFactor ile çarparak þiddeti ayarla
+					rec.normal = glm::normalize(rec.normal - (g_perp * texture_fetcher.data_.textures[id].bump_factor));
+				}
+				
+				break;
 			}
 			default:
 				break;
