@@ -310,14 +310,9 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 				}
 				else
 				{
-					//perlin bump
 					glm::vec3 g = texture_fetcher.getPerlinGradient(rec.point, id);
-
-					// Gradyanýn normale dik olan bileþenini bul (Surface Gradient)
 					glm::vec3 g_parallel = glm::dot(rec.normal, g) * rec.normal;
 					glm::vec3 g_perp = g - g_parallel;
-
-					// Önemli: BumpFactor ile çarparak þiddeti ayarla
 					rec.normal = glm::normalize(rec.normal - (g_perp * texture_fetcher.data_.textures[id].bump_factor));
 				}
 				

@@ -40,11 +40,12 @@ int main(int argc, char* argv[])
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/test.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/galactica_dynamic.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/killeroo_bump_walls.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/brickwall_with_normalmap.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/bump_mapping_transformed.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/wood_box_all.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/dragon/dragon_new_ply.json";
   //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/veach_ajar/scene.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
+  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
+  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/tunnel_of_doom/tunnel_of_doom_000.json";
 #endif
 
   Scene_ raw_scene;

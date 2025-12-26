@@ -33,12 +33,6 @@ TLASBox::TLASBox(
 
 bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
-	//if (!bounding_box.hit(ray, ray_t))
-	//{
-	//	return false;
-	//}
-	//	
-
 	const auto& o_context = (*object_contexes)[world_index];
 	const auto& composite_transformation_matrix = o_context.transform_matrix;
 
