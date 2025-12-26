@@ -65,7 +65,7 @@ float TextureFetcher::height_function(glm::vec2 tex_coord, int texture_id, Fetch
 				float delta_u = 1.0f / img.width;
 				tex_coord.x += delta_u;
 				//tex_coord.x = std::min(tex_coord.x, 1.0f);
-				float h_udeltau = height_helper(img, tex_coord, interp);
+				float h_udeltau = height_helper(img, tex_coord, interp); 
 				res = (h_udeltau - h_value);
 			}
 			else if (mode == FetchMode::derivative_v)
