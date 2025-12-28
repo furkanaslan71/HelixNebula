@@ -1,6 +1,7 @@
 #include <iostream>
 #include <memory>
 #include <chrono>
+#include <filesystem>
 
 #include "parser/parser.hpp"
 #include "render/render_manager.h"
@@ -32,7 +33,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_filename = argv[1];
 #else
-  std::string scene_filename = "/media/furkan/Local Disk/repos/HelixNebula/inputs/ellipsoids_texture.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/ellipsoids_texture.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/veach_ajar/scene.json";
   //std::string scene_filename = "/media/furkan/Local Disk/repos/HelixNebula/inputs/dragon_dynamic.json";
 #endif
 

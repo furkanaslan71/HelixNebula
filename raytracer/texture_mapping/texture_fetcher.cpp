@@ -1,4 +1,5 @@
 #include "texture_fetcher.h"
+#include <filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "io/stb_image.h"
@@ -88,7 +89,7 @@ float TextureFetcher::height_function(glm::vec2 tex_coord, int texture_id, Fetch
 
 unsigned char* TextureFetcher::loadTexture(const std::string& filepath, int& width, int& height, int& channels)
 {
-	std::string absolute_path = "/media/furkan/Local Disk/repos/HelixNebula/inputs/" + filepath;
+	std::string absolute_path = FS::absolute(__FILE__).parent_path() / ("../../inputs/" + filepath);
 	unsigned char* data = stbi_load(absolute_path.c_str(), &width, &height, &channels, 0);
 	if (!data)
 	{
@@ -108,12 +109,12 @@ inline glm::vec3 fetch(unsigned char* textureData, int texWidth, int texChannels
 }
 
 glm::vec3 TextureFetcher::getTextureValue(unsigned char* textureData,
-																					int texWidth,
-																					int texHeight,
-																					int texChannels,
-																					float u,
-																					float v,
-																					Interpolation interpolation) const
+										int texWidth,
+										int texHeight,
+										int texChannels,
+										float u,
+										float v,
+										Interpolation interpolation) const
 {
 	u = u - std::floor(u);
 	v = v - std::floor(v);

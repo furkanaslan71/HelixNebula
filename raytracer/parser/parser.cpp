@@ -174,6 +174,7 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
   PlyFaceProperty face_prop;
   size_t vertex_record_size = 0;
   int x_prop_idx = -1, y_prop_idx = -1, z_prop_idx = -1;
+  int u_prop_idx = -1, v_prop_idx = -1;
 
   bool in_vertex_element = false;
   bool in_face_element = false;
@@ -233,6 +234,10 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
         if (p.name == "x") x_prop_idx = vertex_props.size();
         else if (p.name == "y") y_prop_idx = vertex_props.size();
         else if (p.name == "z") z_prop_idx = vertex_props.size();
+        else if (p.name == "u" || p.name == "s")
+          u_prop_idx = vertex_props.size();
+        else if (p.name == "v" || p.name == "t")
+          v_prop_idx = vertex_props.size();
 
         vertex_props.push_back(p);
       }
@@ -286,7 +291,8 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
   std::vector<char> binary_buffer(vertex_record_size);
   for (long i = 0; i < num_vertices; ++i)
   {
-    glm::vec3 v;
+    glm::vec3 v_pos;
+    float u = 0.0f, v = 0.0f;
 
     if (format == ASCII)
     {
@@ -301,9 +307,13 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
       {
         ss >> val; // Read value
         // Assign to correct component if it's x, y, or z
-        if (j == x_prop_idx) v.x = val;
-        else if (j == y_prop_idx) v.y = val;
-        else if (j == z_prop_idx) v.z = val;
+        if (j == x_prop_idx) v_pos.x = val;
+        else if (j == y_prop_idx) v_pos.y = val;
+        else if (j == z_prop_idx) v_pos.z = val;
+        else if (j == u_prop_idx)
+          u = val;
+        else if (j == v_prop_idx)
+          v = val;
       }
     }
     else
@@ -316,17 +326,31 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
       }
 
       const PlyProperty& p_x = vertex_props[x_prop_idx];
-      v.x = extract_float_from_buffer(binary_buffer.data() + p_x.offset, p_x.type, file_is_little_endian);
+      v_pos.x = extract_float_from_buffer(binary_buffer.data() + p_x.offset, p_x.type, file_is_little_endian);
 
       const PlyProperty& p_y = vertex_props[y_prop_idx];
-      v.y = extract_float_from_buffer(binary_buffer.data() + p_y.offset, p_y.type, file_is_little_endian);
+      v_pos.y = extract_float_from_buffer(binary_buffer.data() + p_y.offset, p_y.type, file_is_little_endian);
 
       const PlyProperty& p_z = vertex_props[z_prop_idx];
-      v.z = extract_float_from_buffer(binary_buffer.data() + p_z.offset, p_z.type, file_is_little_endian);
+      v_pos.z = extract_float_from_buffer(binary_buffer.data() + p_z.offset, p_z.type, file_is_little_endian);
+
+      if (u_prop_idx != -1)
+      {
+        const PlyProperty &p_u = vertex_props[u_prop_idx];
+        u = extract_float_from_buffer(binary_buffer.data() + p_u.offset,
+                                      p_u.type, file_is_little_endian);
+      }
+      if (v_prop_idx != -1)
+      {
+        const PlyProperty &p_v = vertex_props[v_prop_idx];
+        v = extract_float_from_buffer(binary_buffer.data() + p_v.offset,
+                                      p_v.type, file_is_little_endian);
+      }
     }
 
     // Add the new vertex to the GLOBAL scene vertex list
-    scene.vertex_data.push_back(v);
+    scene.vertex_data.push_back(v_pos);
+    scene.tex_coord_data.push_back({u, v});
   }
 #if !DAVID_ZOOM
   std::cout << "  Parsing " << num_faces << " faces from " << ply_filename << "..." << std::endl;

@@ -2,7 +2,7 @@
 
 #define INSTANCING 1
 #define DEBUG_PIXEL 0
-#define MULTI_THREADING 1
+#define MULTI_THREADING 0
 #define DAVID_ZOOM 0
 #define INTERSECTION_STACK_SIZE 64
 #define BACKFACE_CULLING 0
@@ -13,3 +13,6 @@
 #define WIDTH 770
 #define HEIGHT 68
 #endif
+
+
+#define FS std::filesystem
