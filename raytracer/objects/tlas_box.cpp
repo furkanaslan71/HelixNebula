@@ -73,8 +73,8 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 
 	rec.set_front_face(ray);
 	rec.material_id = o_context.material_id;
-	if (!o_context.textures.empty())
-		rec.texture_ids = o_context.textures;
+	//if (!o_context.textures.empty())
+	rec.texture_ids = o_context.textures;
 	return true;
 }
 
