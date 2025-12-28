@@ -88,7 +88,7 @@ float TextureFetcher::height_function(glm::vec2 tex_coord, int texture_id, Fetch
 
 unsigned char* TextureFetcher::loadTexture(const std::string& filepath, int& width, int& height, int& channels)
 {
-	std::string absolute_path = "D:/Furkan/GITHUB/HelixNebula/inputs2/" + filepath;
+	std::string absolute_path = "/media/furkan/Local Disk/repos/HelixNebula/inputs/" + filepath;
 	unsigned char* data = stbi_load(absolute_path.c_str(), &width, &height, &channels, 0);
 	if (!data)
 	{

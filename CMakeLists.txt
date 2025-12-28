@@ -54,10 +54,3 @@ add_executable (HelixNebula
 target_include_directories(HelixNebula PRIVATE
     "${CMAKE_SOURCE_DIR}/raytracer"
 )
-target_compile_definitions(HelixNebula PRIVATE 
-    GLM_FORCE_INTRINSICS
-    GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
-    GLM_FORCE_AVX2
-)
-
-target_compile_options(HelixNebula PRIVATE /arch:AVX2)

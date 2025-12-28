@@ -22,7 +22,7 @@ RenderManager::RenderManager(const Scene& _scene,
 
 void RenderManager::render() const
 {
-  std::string saveDir = "D:/Furkan/GITHUB/HelixNebula/outputs";
+  std::string saveDir = "/media/furkan/Local Disk/repos/HelixNebula/outputs";
   for (const auto& cam : scene.pinhole_cameras)
   {
     std::vector<std::vector<Color>> image;

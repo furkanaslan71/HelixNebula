@@ -5,12 +5,13 @@
 
 #include "glm_config.h"
 
+/*
 alignas(16) static const __m128 HALF = _mm_set1_ps(0.5f);
 alignas(16) static const __m128 THREE_HALFS = _mm_set1_ps(1.5f);
 
 static const __m256 half = _mm256_set1_ps(0.5f);
 static const __m256 three_halfs = _mm256_set1_ps(1.5f);
-
+*/
 
 static inline void createONB(const glm::vec3& r, glm::vec3& u, glm::vec3& v)
 {
@@ -30,6 +31,7 @@ inline bool isZero(const glm::vec3& v)
   return (v.x == 0.0f && v.y == 0.0f && v.z == 0.0f);
 }
 
+/*
 inline glm::vec3 fastNormalizeSSE_NR(const glm::vec3& v)
 {
   __m128 x = _mm_set_ps(0, v.z, v.y, v.x);
@@ -44,11 +46,11 @@ inline glm::vec3 fastNormalizeSSE_NR(const glm::vec3& v)
   __m128 out = _mm_mul_ps(x, y);
 
   // Extract components WITHOUT array
-  /*float X = _mm_cvtss_f32(out);
+  float X = _mm_cvtss_f32(out);
   float Y = _mm_cvtss_f32(_mm_shuffle_ps(out, out, 0x55));
   float Z = _mm_cvtss_f32(_mm_shuffle_ps(out, out, 0xAA));
 
-  return { X, Y, Z };*/
+  return { X, Y, Z };
   float result[4];
   _mm_storeu_ps(result, out); // Store the entire __m128 register to memory
   return { result[0], result[1], result[2] };
@@ -177,6 +179,8 @@ inline void printMat4(const glm::mat4& M)
   }
 }
 
+
+
 #ifdef __AVX2__
 inline glm::vec3 fastNormalizeAVX(const glm::vec3& v)
 {
@@ -218,6 +222,8 @@ inline glm::vec3 fastNormalizeAVX(const glm::vec3& v)
 }
 
 #endif
+
+*/
 
 
 #endif //!VECTOR_UTILITY_H

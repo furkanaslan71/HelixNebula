@@ -32,20 +32,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_filename = argv[1];
 #else
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/dragon_dynamic.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/cornellbox_brushed_metal.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/spheres_dof.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/metal_glass_plates.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/tap_water/json/tap_0010.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs/test.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/galactica_dynamic.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/bump_mapping_transformed.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/wood_box_all.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/dragon/dragon_new_ply.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/veach_ajar/scene.json";
-  std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/mytap/mytap_final.json";
-  //std::string scene_filename = "D:/Furkan/GITHUB/HelixNebula/inputs2/tunnel_of_doom/tunnel_of_doom_000.json";
+  std::string scene_filename = "/media/furkan/Local Disk/repos/HelixNebula/inputs/ellipsoids_texture.json";
+  //std::string scene_filename = "/media/furkan/Local Disk/repos/HelixNebula/inputs/dragon_dynamic.json";
 #endif
 
   Scene_ raw_scene;
