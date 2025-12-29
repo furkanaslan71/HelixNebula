@@ -7,7 +7,6 @@
 #include "math_core/math_core.h"
 #include "core/color.h"
 #include "parser/parser.hpp"
-#include "material/material_manager.h"
 #include "acceleration/bvh.h"
 #include "light/light.h"
 #include "objects/tlas_box.h"

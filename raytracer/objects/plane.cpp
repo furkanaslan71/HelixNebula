@@ -1,16 +1,17 @@
 #include "plane.h"
 
 Plane::Plane()
-		: id(-1), material_id(-1), point(glm::vec3(0, 0, 0)), normal(glm::vec3(0, 1, 0))
+		: id(-1), material(nullptr), point(glm::vec3(0, 0, 0)), normal(glm::vec3(0, 1, 0))
 	{
 }
 
 Plane::Plane(
 	const Plane_& _plane,
 	const std::vector<glm::vec3>& _vertex_data,
-	glm::vec3 _motion_blur
+	glm::vec3 _motion_blur,
+	Material* _material
 )
-	: id(_plane.id), material_id(_plane.material_id),
+	: id(_plane.id), material(_material),
 	point(glm::vec3(_vertex_data[_plane.point_vertex_id])),
 	normal(glm::normalize(glm::vec3(_plane.normal))),
 	motion_blur(_motion_blur)
@@ -46,7 +47,7 @@ bool Plane::hit(const Ray& ray, const Interval& interval, HitRecord& rec) const
 			rec.t = t;
 			rec.point = ray.origin + ray.direction * (float)t;
 			rec.normal = normal;
-			rec.material_id = material_id;
+			rec.material = material;
 			rec.set_front_face(ray);
 			return true;
 		}

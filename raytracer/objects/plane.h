@@ -16,11 +16,12 @@ public:
 	Plane(
 		const Plane_& _plane,
 		const std::vector<glm::vec3>& _vertex_data,
-		glm::vec3 _motion_blur
+		glm::vec3 _motion_blur,
+		Material* _material
 	);
 	bool hit(const Ray& ray, const Interval& interval, HitRecord& rec) const;
 	int id;
-	int material_id;
+	Material* material;
 	glm::vec3 point;
 	glm::vec3 normal;
 	glm::vec3 motion_blur;

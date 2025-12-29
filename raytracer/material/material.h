@@ -2,11 +2,7 @@
 #define MATERIAL_H
 #include <string>
 
-#include "core/hittable.h"
-#include "core/ray.h"
-#include "core/color.h"
 #include "parser/parser.hpp"
-#include "math_core/math_core.h"
 
 class Material {
 public:

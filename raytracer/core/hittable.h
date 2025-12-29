@@ -5,12 +5,13 @@
 
 #include "glm_config.h"
 #include "core/ray.h"
+#include "material/material.h"
 
 typedef struct HitRecord{
   glm::vec3 point;
   glm::vec3 normal;
   double t;
-  int material_id;
+  Material* material;
 	bool front_face;
   
   void set_front_face(const Ray& r)
@@ -19,11 +20,6 @@ typedef struct HitRecord{
   }
 }HitRecord;
 
-struct ObjectContext {
-  std::optional<glm::mat4> transform_matrix;
-  std::optional<glm::mat4> inverse_transform;
-  glm::vec3 motion_blur;
-  int material_id;
-};
+
 
 #endif //HITTABLE_H

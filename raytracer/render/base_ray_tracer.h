@@ -1,12 +1,11 @@
 #ifndef BASE_RAY_TRACER_H
 #define BASE_RAY_TRACER_H
 
-#include "glm_config.h"
+#include "config.h"
 #include "rendering_technique.h"
 #include "objects/plane.h"
 #include "math_core/math_core.h"
 #include "objects/tlas_box.h"
-#include "texture_mapping/texture_fetcher.h"
 
 
 class BaseRayTracer : public RenderingTechnique {
@@ -15,7 +14,6 @@ public:
 		LightSources& light_sources,
 		std::shared_ptr<BVH<TLASBox>> world,
 		std::vector<Plane>& planes,
-		MaterialManager& material_manager,
 		RendererInfo& renderer_info);
 
 	Color traceRay(const Ray& ray, const RenderContext& context) const override;
@@ -30,7 +28,6 @@ public:
 	LightSources& light_sources;
 	std::shared_ptr<BVH<TLASBox>> world;
 	std::vector<Plane>& planes;
-	MaterialManager& material_manager;
 	RendererInfo& renderer_info;
 	BackgroundCameraData bgc_data;
 	

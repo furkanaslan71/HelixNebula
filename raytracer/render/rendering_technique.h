@@ -4,7 +4,6 @@
 #include "core/color.h"
 #include "core/ray.h"
 #include "light/light.h"
-#include "material/material_manager.h"
 #include "acceleration/bvh.h"
 
 typedef struct RendererInfo {

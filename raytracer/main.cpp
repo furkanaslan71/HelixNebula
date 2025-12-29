@@ -6,7 +6,6 @@
 #include "parser/parser.hpp"
 #include "render/render_manager.h"
 #include "render/base_ray_tracer.h"
-#include "material/material_manager.h"
 #include "scene/scene.h"
 #include "objects/sphere.h"
 #include "objects/triangle.h"
@@ -17,13 +16,12 @@
 #include "objects/geometry.h"
 #include "texture_mapping/texture_fetcher.h"
 
-
-std::vector<Geometry> geometries;
-std::vector<ObjectContext> object_contexes;
-
-
 int main(int argc, char* argv[])
 {
+  std::vector<Geometry> geometries;
+  std::vector<std::optional<Transformation>> transformations;
+  std::vector<Material> materials;
+
 #if COMMAND_LINE_INPUT
   // Expect exactly one argument after the executable name
   if (argc != 2)
@@ -34,12 +32,18 @@ int main(int argc, char* argv[])
   std::string scene_filename = argv[1];
 #else
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/focusing_dragons.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/dragon_dynamic.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/dragon_dynamic.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cornellbox_brushed_metal.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/metal_glass_plates.json";
 #endif
 
   Scene_ raw_scene;
   
   parseScene(scene_filename, raw_scene);
+
+  materials.reserve(raw_scene.materials.size());
+  for (auto& material : raw_scene.materials)
+    materials.emplace_back(material);
   
   std::vector<TLASBox> tlas_boxes;
 
@@ -48,7 +52,7 @@ int main(int argc, char* argv[])
   int m_size = raw_scene.meshes.size();
   int mi_size = raw_scene.mesh_instances.size();
 
-  object_contexes.reserve(t_size + s_size + mi_size);
+  transformations.reserve(t_size + s_size + mi_size);
   geometries.reserve(t_size + s_size + m_size);
 
   const auto& vertex_data = raw_scene.vertex_data;
@@ -63,29 +67,45 @@ int main(int argc, char* argv[])
       vertex_data[raw_triangle.v2_id]
     };
 
-    std::optional<glm::mat4> inv_tr;
 
     if (raw_triangle.transform_matrix.has_value())
-      inv_tr = glm::inverse(raw_triangle.transform_matrix.value());
+    {
+      transformations.emplace_back(
+          Transformation{
+              raw_triangle.transform_matrix.value(),  // safer than .value()
+              glm::inverse(raw_triangle.transform_matrix.value())
+          }
+      );
+    }
+    else
+    {
+      transformations.emplace_back(std::nullopt);
+    }
 
-    object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.material_id);
     geometries.emplace_back(std::in_place_type<Triangle>, indices);
-    tlas_boxes.emplace_back(i, &object_contexes, &geometries[i]);
+    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_triangle.material_id], &transformations.back(), raw_triangle.motion_blur);
 
   }
   for (int i = 0; i < s_size; i++)
   {
     const auto& raw_sphere = raw_scene.spheres[i];
-    bool tex = !raw_sphere.textures.empty();
     glm::vec3 center = vertex_data[raw_sphere.center_vertex_id];
 
-    std::optional<glm::mat4> inv_tr;
     if (raw_sphere.transform_matrix.has_value())
-      inv_tr = glm::inverse(raw_sphere.transform_matrix.value());
-
-    object_contexes.emplace_back(raw_sphere.transform_matrix, inv_tr, raw_sphere.motion_blur, raw_sphere.material_id);
-    geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius), tex);
-    tlas_boxes.emplace_back(i + t_size, &object_contexes, &geometries[i + t_size]);
+    {
+      transformations.emplace_back(
+          Transformation{
+              raw_sphere.transform_matrix.value(),  // safer than .value()
+              glm::inverse(raw_sphere.transform_matrix.value())
+          }
+      );
+    }
+    else
+    {
+      transformations.emplace_back(std::nullopt);
+    }
+    geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius));
+    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_sphere.material_id], &transformations.back(), raw_sphere.motion_blur);
   }
   std::unordered_map<int, size_t> mesh_order;
   size_t index = 0;
@@ -104,8 +124,21 @@ int main(int argc, char* argv[])
     if (mi.transform_matrix.has_value())
       inv_tr = glm::inverse(mi.transform_matrix.value());
 
-    object_contexes.emplace_back(mi.transform_matrix, inv_tr, mi.motion_blur, mi.material_id);
-    tlas_boxes.emplace_back(base + index, &object_contexes, &geometries[base + mesh_order[mi.base_mesh_id]]);
+    if (mi.transform_matrix.has_value())
+    {
+      transformations.emplace_back(
+          Transformation{
+              mi.transform_matrix.value(),  // safer than .value()
+              glm::inverse(mi.transform_matrix.value())
+          }
+      );
+    }
+    else
+    {
+      transformations.emplace_back(std::nullopt);
+    }
+
+    tlas_boxes.emplace_back(&geometries[base + mesh_order[mi.base_mesh_id]], &materials[mi.material_id], &transformations.back(), mi.motion_blur);
     index++;
   }
   
@@ -115,10 +148,8 @@ int main(int argc, char* argv[])
   {
     //planes are transformed
     planes.push_back(
-            Plane(raw_plane, raw_scene.vertex_data,raw_plane.motion_blur));
+            Plane(raw_plane, raw_scene.vertex_data,raw_plane.motion_blur, &materials[raw_plane.material_id]));
   }
-
-	MaterialManager material_manager(raw_scene.materials);
 
   Scene scene(raw_scene, tlas_boxes);
 
@@ -128,9 +159,9 @@ int main(int argc, char* argv[])
 
 
   BaseRayTracer ray_tracer(scene.background_color, scene.light_sources, 
-    scene.world, planes, material_manager, renderer_info);
+    scene.world, planes, renderer_info);
 
-  RenderManager renderer(scene, material_manager, renderer_info, ray_tracer);
+  RenderManager renderer(scene, renderer_info, ray_tracer);
 
   std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
   auto start = std::chrono::high_resolution_clock::now();

@@ -10,13 +10,11 @@ class Sphere{
 public:
 	glm::vec3 center;
 	double radius;
-	bool texture;
 
-	Sphere(glm::vec3 _center, double _radius, bool _texture = false)
+	Sphere(glm::vec3 _center, double _radius)
 		: 
 		center(_center), 
-		radius(_radius),
-		texture(_texture)
+		radius(_radius)
 	{
 		bounding_box = AABB(center - glm::vec3(radius, radius, radius),
 														center + glm::vec3(radius, radius, radius));

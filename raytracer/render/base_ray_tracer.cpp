@@ -28,13 +28,11 @@ BaseRayTracer::BaseRayTracer(Color& background_color,
 	LightSources& light_sources,
 	std::shared_ptr<BVH<TLASBox>> world,
 	std::vector<Plane>& planes,
-	MaterialManager& material_manager,
 	RendererInfo& renderer_info)
 	:background_color(background_color),
 	 light_sources(light_sources),
 		world(world),
 	planes(planes),
-		material_manager(material_manager),
 	renderer_info(renderer_info)
 {
 }
@@ -77,7 +75,7 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 Color BaseRayTracer::applyShading(const Ray& ray, 
 	int depth, HitRecord& rec, const RenderContext& context) const
 {
-	Material mat = material_manager.getMaterialById(rec.material_id);
+	Material mat = *rec.material;
 	Color color(0.0, 0.0, 0.0);
 
 	if ((mat.type).compare("mirror") == 0)
