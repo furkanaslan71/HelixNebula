@@ -29,8 +29,6 @@ public:
   float aperture_size;
   float focus_distance;
 
-  void render(BaseRayTracer& technique,
-    std::vector<std::vector<Color>>& image) const override;
 
 private:
   void generateApertureSamples(std::vector<glm::vec3>& out_samples) const;

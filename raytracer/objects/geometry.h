@@ -1,8 +1,6 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 #include <variant>
-#include <concepts>
-
 #include "geometry_concepts.h"
 #include "mesh.h"
 #include "triangle.h"
@@ -56,27 +54,6 @@ private:
 
 };
 
-template <GeometryConcept T>
-class GeometryTemplated {
-public:
-  template <typename... Args>
-  explicit GeometryTemplated(Args&&... args)
-    : data(std::forward<Args>(args)...)
-  { }
-
-  bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
-  {
-    return data.hit(ray, ray_t, rec);
-  }
-
-  AABB getAABB() const
-  {
-    return data.getAABB();
-  }
-
-private:
-  T data;
-};
 
 
 

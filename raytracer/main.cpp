@@ -4,8 +4,6 @@
 #include <filesystem>
 
 #include "parser/parser.hpp"
-#include "render/render_manager.h"
-#include "render/base_ray_tracer.h"
 #include "scene/scene.h"
 #include "objects/sphere.h"
 #include "objects/triangle.h"
@@ -14,6 +12,7 @@
 #include "objects/tlas_box.h"
 #include "objects/mesh.h"
 #include "objects/geometry.h"
+#include "render/raytracer.h"
 #include "texture_mapping/texture_fetcher.h"
 
 int main(int argc, char* argv[])
@@ -32,8 +31,8 @@ int main(int argc, char* argv[])
   std::string scene_filename = argv[1];
 #else
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/focusing_dragons.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/dragon_dynamic.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cornellbox_brushed_metal.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cornellbox_boxes_dynamic.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/metal_glass_plates.json";
 #endif
 
@@ -151,22 +150,19 @@ int main(int argc, char* argv[])
             Plane(raw_plane, raw_scene.vertex_data,raw_plane.motion_blur, &materials[raw_plane.material_id]));
   }
 
-  Scene scene(raw_scene, tlas_boxes);
+  //Scene scene(raw_scene, tlas_boxes, planes);
 
-  RendererInfo renderer_info(raw_scene.shadow_ray_epsilon, 
+  RenderContext render_context(Color(raw_scene.background_color),
+    raw_scene.shadow_ray_epsilon,
     raw_scene.intersection_test_epsilon, 
     raw_scene.max_recursion_depth);
 
-
-  BaseRayTracer ray_tracer(scene.background_color, scene.light_sources, 
-    scene.world, planes, renderer_info);
-
-  RenderManager renderer(scene, renderer_info, ray_tracer);
+  Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes), render_context);
 
   std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 
-  renderer.render();
+  raytracer.renderScene();
 
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double> elapsed = end - start;

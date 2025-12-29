@@ -3,7 +3,7 @@
 
 Scene::Scene() {}
 
-Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects)
+Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::vector<Plane>& _planes)
 	: background_color(raw_scene.background_color.x, raw_scene.background_color.y, raw_scene.background_color.z)
 {
 	for (const auto& raw_light : raw_scene.point_lights) 
@@ -42,27 +42,28 @@ Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects)
 	{
 		if (raw_camera.aperture_size == 0)
 		{
-			pinhole_cameras.emplace_back(raw_camera,
+			cameras.emplace_back(std::make_shared<PinholeCamera>(raw_camera,
 				raw_scene.translations,
 				raw_scene.scalings,
 				raw_scene.rotations,
 				recursion_depth,
 				num_area_lights,
 				this->light_sources.area_lights
-				);
+				));
 		}
 		else
 		{
-			distribution_cameras.emplace_back(raw_camera,
+			cameras.emplace_back(std::make_shared<DistributionCamera>(raw_camera,
 				raw_scene.translations,
 				raw_scene.scalings,
 				raw_scene.rotations,
 				recursion_depth,
 				num_area_lights,
-				this->light_sources.area_lights);
+				this->light_sources.area_lights));
 		}
 	}
-		
+
+	planes = _planes;
 	world = std::make_shared<BVH<TLASBox>>(objects);
 }
 

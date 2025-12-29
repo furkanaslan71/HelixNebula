@@ -19,7 +19,7 @@ struct AreaLight {
 	glm::vec3 radiance;
 	glm::vec3 u, v;
 
-	void generateApertureSamples(
+	void generateAreaLightSamples(
 		std::vector<glm::vec3>& out_samples, int num_samples
 	) const
 	{

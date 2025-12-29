@@ -9,8 +9,6 @@
 #include "math_core/math_core.h"
 #include "acceleration/bvh.h"
 #include "parser/parser.hpp"
-#include "render/rendering_technique.h"
-#include "render/base_ray_tracer.h"
 #include "light/light.h"
 
 
@@ -29,16 +27,12 @@ public:
 		std::vector<AreaLight>& _area_lights
 	);
 	virtual ~BaseCamera() = default;
-	virtual void render(BaseRayTracer& rendering_technique,
-		std::vector<std::vector<Color>>& image) const = 0;
 
 	std::string image_name;
 	int num_samples;
 	int id;
 
-	
-	
-protected:
+
 	void generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const;
 
 	std::vector<AreaLight>& area_lights;

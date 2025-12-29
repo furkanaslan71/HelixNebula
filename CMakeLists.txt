@@ -27,25 +27,25 @@ add_executable (HelixNebula
     # I'll assume it should be in 'src' like other .cpp files unless proven otherwise.
     "raytracer/parser/parser.cpp" 
     "raytracer/main.cpp"
-    "raytracer/core/aabb.cpp" 
-    "raytracer/render/render_manager.cpp"
-        "raytracer/render/base_ray_tracer.cpp"
-    "raytracer/scene/scene.cpp" 
+    "raytracer/core/aabb.cpp"
+        "raytracer/scene/scene.cpp"
     "raytracer/material/material.cpp" 
     "raytracer/objects/plane.cpp" 
     "raytracer/objects/tlas_box.cpp" 
     "raytracer/objects/mesh.cpp"
-    "raytracer/camera/base_camera.cpp" 
-    "raytracer/camera/distribution_camera.cpp" 
-    "raytracer/core/ray.cpp" 
+    "raytracer/camera/base_camera.cpp"
+        "raytracer/core/ray.cpp"
     "raytracer/math_core/random/my_random.cpp"
-    "raytracer/camera/pinhole_camera.cpp" 
-    "raytracer/math_core/transformations/transformations.h" 
+        "raytracer/math_core/transformations/transformations.h"
     "raytracer/math_core/transformations/transformations.cpp" 
     "raytracer/math_core/vector_utility.h" 
     "raytracer/objects/geometry.h" 
     "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h"
-    "raytracer/texture_mapping/texture_fetcher.cpp" "raytracer/texture_mapping/perlin.h")
+    "raytracer/texture_mapping/texture_fetcher.cpp" "raytracer/texture_mapping/perlin.h"
+        raytracer/render/raytracer.h
+        raytracer/render/raytracer.cpp
+        raytracer/io/save_image.h
+        raytracer/io/save_image.cpp)
 
 
 # Important: Add include directories so your compiler can find your headers.
