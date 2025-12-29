@@ -1,8 +1,8 @@
 #ifndef INTERVAL_H
 #define INTERVAL_H
 
-#define INFINITY 2147483647
 #include <algorithm>
+#include <cmath>
 
 class Interval {
 public:

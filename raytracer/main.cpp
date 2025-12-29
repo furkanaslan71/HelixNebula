@@ -33,9 +33,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_filename = argv[1];
 #else
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/ellipsoids_texture.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/veach_ajar/scene.json";
-  //std::string scene_filename = "/media/furkan/Local Disk/repos/HelixNebula/inputs/dragon_dynamic.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/focusing_dragons.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/dragon_dynamic.json";
 #endif
 
   Scene_ raw_scene;
@@ -53,9 +52,6 @@ int main(int argc, char* argv[])
   geometries.reserve(t_size + s_size + m_size);
 
   const auto& vertex_data = raw_scene.vertex_data;
-  const auto& uv_data = raw_scene.tex_coord_data;
-  TextureLookup tex 
-    = uv_data.empty() ? TextureLookup::NoTexture : TextureLookup::Textured;
 
   for(int i = 0; i < t_size; i++)
   {
@@ -72,22 +68,8 @@ int main(int argc, char* argv[])
     if (raw_triangle.transform_matrix.has_value())
       inv_tr = glm::inverse(raw_triangle.transform_matrix.value());
 
-    object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.textures, raw_triangle.material_id);
-
-    if (tex == TextureLookup::NoTexture)
-    {
-      geometries.emplace_back(std::in_place_type<TriangleNew<Shading::Flat, TextureLookup::NoTexture>>, indices[0], indices[1], indices[2]);
-    }
-    else
-    {
-      geometries.emplace_back(
-        std::in_place_type<
-        TriangleNew<Shading::Flat, TextureLookup::Textured>>,
-        indices[0], indices[1], indices[2],
-        TexCoords(raw_triangle, uv_data)
-      );
-    }
-    
+    object_contexes.emplace_back(raw_triangle.transform_matrix, inv_tr, raw_triangle.motion_blur, raw_triangle.material_id);
+    geometries.emplace_back(std::in_place_type<Triangle>, indices);
     tlas_boxes.emplace_back(i, &object_contexes, &geometries[i]);
 
   }
@@ -101,7 +83,7 @@ int main(int argc, char* argv[])
     if (raw_sphere.transform_matrix.has_value())
       inv_tr = glm::inverse(raw_sphere.transform_matrix.value());
 
-    object_contexes.emplace_back(raw_sphere.transform_matrix, inv_tr, raw_sphere.motion_blur, raw_sphere.textures, raw_sphere.material_id);
+    object_contexes.emplace_back(raw_sphere.transform_matrix, inv_tr, raw_sphere.motion_blur, raw_sphere.material_id);
     geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius), tex);
     tlas_boxes.emplace_back(i + t_size, &object_contexes, &geometries[i + t_size]);
   }
@@ -110,38 +92,9 @@ int main(int argc, char* argv[])
   for (const auto& [key, val] : raw_scene.meshes)
   {
     mesh_order[key] = index++;
-    if (tex == TextureLookup::NoTexture)
-    {
-      if (val.smooth_shading)
-      {
-        geometries.emplace_back(
-          std::in_place_type<Mesh<Shading::Smooth, TextureLookup::NoTexture>>,
-          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
-      }
-      else
-      {
-        geometries.emplace_back(
-          std::in_place_type<Mesh<Shading::Flat, TextureLookup::NoTexture>>,
-          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
-      }
-      
-    }
-    else
-    {
-      if (val.smooth_shading)
-      {
-        geometries.emplace_back(
-          std::in_place_type<Mesh<Shading::Smooth, TextureLookup::Textured>>,
-          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
-      }
-      else
-      {
-        geometries.emplace_back(
-          std::in_place_type<Mesh<Shading::Flat, TextureLookup::Textured>>,
-          val.id, val.faces, vertex_data, uv_data, val.vertex_offset, val.texture_offset);
-      }
-    }
-    
+    geometries.emplace_back(
+      std::in_place_type<Mesh>,
+      val.id, val.faces, vertex_data, val.vertex_offset, val.texture_offset, val.smooth_shading);
   }
   index = 0;
   int base = t_size + s_size;
@@ -151,7 +104,7 @@ int main(int argc, char* argv[])
     if (mi.transform_matrix.has_value())
       inv_tr = glm::inverse(mi.transform_matrix.value());
 
-    object_contexes.emplace_back(mi.transform_matrix, inv_tr, mi.motion_blur, mi.textures, mi.material_id);
+    object_contexes.emplace_back(mi.transform_matrix, inv_tr, mi.motion_blur, mi.material_id);
     tlas_boxes.emplace_back(base + index, &object_contexes, &geometries[base + mesh_order[mi.base_mesh_id]]);
     index++;
   }
@@ -173,32 +126,9 @@ int main(int argc, char* argv[])
     raw_scene.intersection_test_epsilon, 
     raw_scene.max_recursion_depth);
 
-  TextureData data;
-
-  for (const auto& img : raw_scene.images)
-  {
-    data.images[img.id] = Image(img);
-  }
-
-  
-
-  uint8_t replace_background_num = 0;
-  for (const auto& tm : raw_scene.texture_maps)
-  {
-    if (tm.decal_mode == "replace_background")
-    {
-      ++replace_background_num;
-      Expects(replace_background_num <= 1);
-      renderer_info.background_tex_id  = tm.id;
-    }
-    data.textures[tm.id] = TextureMap(tm);
-  }
-
-  
-  TextureFetcher tex_fetcher(data);
 
   BaseRayTracer ray_tracer(scene.background_color, scene.light_sources, 
-    scene.world, planes, material_manager, renderer_info, tex_fetcher);
+    scene.world, planes, material_manager, renderer_info);
 
   RenderManager renderer(scene, material_manager, renderer_info, ray_tracer);
 

@@ -11,7 +11,6 @@ typedef struct RendererInfo {
 	float shadow_ray_epsilon;
 	float intersection_test_epsilon;
 	int max_recursion_depth;
-	int background_tex_id = -1;
 	RendererInfo(float s, float i, int d)
 	{
 		shadow_ray_epsilon = s;

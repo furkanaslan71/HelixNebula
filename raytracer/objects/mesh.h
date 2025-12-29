@@ -6,13 +6,11 @@
 #include "acceleration/bvh.h"
 #include "triangle.h"
 
-
-template<Shading mode, TextureLookup tex>
 class Mesh {
 public:
 	Mesh(int _id, const std::vector<Triangle_>& _faces,
 			 const std::vector<glm::vec3>& vertex_data,
-			 const std::vector<glm::vec2> uv_data, int vertex_offset, int texture_offset);
+			 int vertex_offset, int texture_offset, bool is_smooth);
 
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 
@@ -20,12 +18,10 @@ public:
 
 	int id;
 private:
-	std::vector<TriangleNew<mode, tex>> faces;
+	std::vector<Triangle> faces;
 	AABB bounding_box;
-	std::shared_ptr<BVH<TriangleNew<mode, tex>>> bvh;
+	std::shared_ptr<BVH<Triangle>> bvh;
 };
-
-#include "mesh.tpp"
 
 
 #endif

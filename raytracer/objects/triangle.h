@@ -5,15 +5,13 @@
 #include "parser/parser.hpp"
 #include "core/aabb.h"
 #include "glm_config.h"
-#include "triangle/triangle_base.h"
 
 
 class Triangle{
 public:
 
-	Triangle(glm::vec3 _indices[3], std::optional<TexCoords> _tex_coords)
-		: indices{_indices[0], _indices[1], _indices[2]},
-		tex_coords(_tex_coords)
+	Triangle(glm::vec3 _indices[3])
+		: indices{_indices[0], _indices[1], _indices[2]}
 	{
 		glm::vec3 min = indices[0];
 		glm::vec3 max = indices[0];
@@ -34,7 +32,7 @@ public:
 		this->normal = vec1;
 	}
 
-	Triangle(glm::vec3 _indices[3], glm::vec3 _per_vertex_normals[3], std::optional<TexCoords> _tex_coords)
+	Triangle(glm::vec3 _indices[3], glm::vec3 _per_vertex_normals[3])
 		: 
 		indices{ _indices[0], _indices[1], _indices[2] },
 		smooth_shading(true), 
@@ -42,8 +40,7 @@ public:
 			_per_vertex_normals[0], 
 			_per_vertex_normals[1],
 			_per_vertex_normals[2] 
-		},
-		tex_coords(_tex_coords)
+		}
 	{
 		glm::vec3 min = indices[0];
 		glm::vec3 max = indices[0];
@@ -104,14 +101,6 @@ public:
 				rec.normal = this->normal;
 			}
 
-			if (tex_coords.has_value())
-			{
-				glm::vec3 barycentric_coords = barycentricCoefficients(rec.point);
-				rec.uv = (tex_coords.value()).uvs[0] * barycentric_coords.x +
-					(tex_coords.value()).uvs[1] * barycentric_coords.y +
-					(tex_coords.value()).uvs[2] * barycentric_coords.z;
-			}
-
 			rec.set_front_face(ray);
 			return true;
 		}
@@ -133,7 +122,6 @@ public:
 private:
 	glm::vec3 normal;
 	glm::vec3 indices[3];
-	std::optional<TexCoords> tex_coords;
 	AABB bounding_box;
 	bool smooth_shading = false;
 	glm::vec3 per_vertex_normals[3];

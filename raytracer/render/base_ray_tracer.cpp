@@ -1,43 +1,5 @@
 #include "base_ray_tracer.h"
 
-
-inline glm::vec3 get_cube_tbn_normal(
-	const glm::vec3& hit_normal,
-	const glm::vec3& rgb_sample,
-	const glm::vec3& tangent_u,
-	const glm::vec3& tangent_v)
-{
-	glm::vec3 n_ts = rgb_sample / 127.5f - glm::vec3(1.0f);
-	n_ts = glm::normalize(n_ts);
-
-	glm::vec3 T = glm::normalize(tangent_u);
-	glm::vec3 B = glm::normalize(tangent_v);
-	glm::vec3 res = { T * n_ts.x +
-	B * n_ts.y +
-	hit_normal * n_ts.z };
-	return glm::normalize(res);
-	
-}
-
-inline glm::vec3 get_sphere_tbn_normal(const glm::vec3& hit_normal,
-																			 const glm::vec3& rgb_sample,
-																			 const glm::vec3& tangent_u,
-																			 const glm::vec3& tangent_v)
-{
-	glm::vec3 tangent_normal = (rgb_sample / 127.5f) - glm::vec3(1.0f);
-	tangent_normal = glm::normalize(tangent_normal);
-	glm::vec3 T, B;
-
-	T = tangent_u;
-	B = tangent_v;
-
-	glm::vec3 res = (T * tangent_normal.x) +
-		(B * tangent_normal.y) +
-		(hit_normal * tangent_normal.z);
-	res = glm::normalize(res);
-	return res;
-}
-
 static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
 	//wo = glm::normalize(wo);
@@ -67,15 +29,13 @@ BaseRayTracer::BaseRayTracer(Color& background_color,
 	std::shared_ptr<BVH<TLASBox>> world,
 	std::vector<Plane>& planes,
 	MaterialManager& material_manager,
-	RendererInfo& renderer_info,
-	TextureFetcher& texture_fetcher)
+	RendererInfo& renderer_info)
 	:background_color(background_color),
 	 light_sources(light_sources),
 		world(world),
 	planes(planes),
 		material_manager(material_manager),
-	renderer_info(renderer_info),
-	texture_fetcher(texture_fetcher)
+	renderer_info(renderer_info)
 {
 }
 
@@ -101,14 +61,7 @@ Color BaseRayTracer::computeColor(const Ray& ray, int depth, const RenderContext
 		if (!hit_plane)
 		{
 			if (depth == renderer_info.max_recursion_depth + 1)
-				if (renderer_info.background_tex_id != -1)
-				{
-					glm::vec3 d = glm::normalize(ray.direction);
-					auto lookup = texture_fetcher.get_background_texture(d, renderer_info.background_tex_id, this->bgc_data);
-					return Color(lookup);
-				}
-				else
-					return Color(background_color);
+				return Color(background_color);
 			else
 				return Color(0, 0, 0);
 		}
@@ -258,73 +211,6 @@ Color BaseRayTracer::applyShading(const Ray& ray,
 	glm::vec3 kd = mat.diffuse_reflectance;
 	glm::vec3 ks = mat.specular_reflectance;
 	glm::vec3 ka = mat.ambient_reflectance;
-	if (!rec.texture_ids.empty())
-	{
-		for (const auto& id : rec.texture_ids)
-		{
-			auto info = texture_fetcher.get_lookup_info(rec.uv, id, rec.point);
-			Expects(info.tex_val.x + 1e-8f > 0.f || info.tex_val.x < 1.f + 1e-8f);
-			Expects(info.tex_val.y + 1e-8f > 0.f || info.tex_val.y < 1.f + 1e-8f);
-			Expects(info.tex_val.z + 1e-8f > 0.f || info.tex_val.z < 1.f + 1e-8f);
-			switch (info.mode)
-			{
-			case DecalMode::replace_kd:
-			{
-				kd = info.tex_val;
-				break;
-			}
-			case DecalMode::replace_ks:
-			{
-				ks = info.tex_val;
-				break;
-			}
-			case DecalMode::blend_kd:
-			{
-				kd = (info.tex_val + kd) * 0.5f;
-				break;
-			}
-			case DecalMode::replace_all:
-			{
-				return Color(info.tex_val * 255.0f);
-			}
-			case DecalMode::replace_normal:
-			{
-				glm::vec3 rgb = info.tex_val * 255.0f;
-				if (rec.sphere_r != -1)
-					rec.normal = get_sphere_tbn_normal(rec.normal, rgb, rec.tangent_u, rec.tangent_v);
-				else
-					rec.normal = get_cube_tbn_normal(rec.normal, rgb, rec.tangent_u, rec.tangent_v);
-				break;
-			}
-			case DecalMode::bump_normal:
-			{
-				if (texture_fetcher.getTexType(id) == TextureType::image)
-				{
-					glm::vec3 n_uv = rec.normal;
-					glm::vec3 p_u = rec.tangent_u;
-					glm::vec3 p_v = rec.tangent_v;
-					float h_u = texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_u);
-					float h_v = texture_fetcher.height_function(rec.uv, id, FetchMode::derivative_v);
-					glm::vec3 grad = h_u * p_u + h_v * p_v;
-					rec.normal = glm::normalize(n_uv - grad);
-				}
-				else
-				{
-					glm::vec3 g = texture_fetcher.getPerlinGradient(rec.point, id);
-					glm::vec3 g_parallel = glm::dot(rec.normal, g) * rec.normal;
-					glm::vec3 g_perp = g - g_parallel;
-					rec.normal = glm::normalize(rec.normal - (g_perp * texture_fetcher.data_.textures[id].bump_factor));
-				}
-				
-				break;
-			}
-			default:
-				break;
-
-			}
-
-		}
-	}
 
 	color += Color(ka)* Color(light_sources.ambient_light);
 

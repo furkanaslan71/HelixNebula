@@ -59,33 +59,10 @@ public:
 				rec.point = hitPoint;
 				rec.normal = normal;
 				rec.set_front_face(ray);
-				if (texture)
-				{
-					float u, v;
-					getSphereUV(rec.point, u, v);
-					rec.uv = { u, v };
-
-					glm::vec3 T, B;
-
-					float pi = glm::pi<float>();
-					float phi = -2.f * u * pi + pi;
-					float theta = v * pi;
-					glm::vec3 P_C = hitPoint - center;
-
-					T = { 2.0f * pi * P_C.z, 0.0f, -2.0f * pi * P_C.x };
-					B = { pi * P_C.y * glm::cos(phi), -pi * radius * glm::sin(theta), pi * P_C.y * glm::sin(phi) };
-
-					T = glm::normalize(T);
-					B = glm::normalize(B);
-					rec.tangent_u = T;
-					rec.tangent_v = B;
-				}
-				rec.sphere_r = radius;
 				return true;
 			}
 		}
 		return false;
-
 	};
 	AABB getAABB() const
 	{

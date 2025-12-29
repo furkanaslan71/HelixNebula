@@ -21,17 +21,7 @@ struct validate_variant<std::variant<Ts...>> { // specialization for std::varian
 
 class Geometry {
 public:
-	using Variant = std::variant<
-    TriangleNew<Shading::Flat, TextureLookup::NoTexture>,
-    TriangleNew<Shading::Flat, TextureLookup::Textured>, 
-    TriangleNew<Shading::Smooth, TextureLookup::NoTexture>, 
-    TriangleNew<Shading::Smooth, TextureLookup::Textured>,
-    Sphere,
-    Mesh<Shading::Flat, TextureLookup::NoTexture>,
-    Mesh<Shading::Flat, TextureLookup::Textured>,
-    Mesh<Shading::Smooth, TextureLookup::NoTexture>,
-    Mesh<Shading::Smooth, TextureLookup::Textured>
-  >;
+	using Variant = std::variant<Triangle, Sphere, Mesh>;
 
   static validate_variant<Variant> _check;
 

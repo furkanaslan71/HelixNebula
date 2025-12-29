@@ -35,7 +35,7 @@ add_executable (HelixNebula
     "raytracer/material/material.cpp" 
     "raytracer/objects/plane.cpp" 
     "raytracer/objects/tlas_box.cpp" 
-    "raytracer/objects/mesh.tpp" 
+    "raytracer/objects/mesh.cpp"
     "raytracer/camera/base_camera.cpp" 
     "raytracer/camera/distribution_camera.cpp" 
     "raytracer/core/ray.cpp" 
@@ -45,7 +45,7 @@ add_executable (HelixNebula
     "raytracer/math_core/transformations/transformations.cpp" 
     "raytracer/math_core/vector_utility.h" 
     "raytracer/objects/geometry.h" 
-    "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h" "raytracer/objects/triangle/triangle_base.h"
+    "raytracer/objects/geometry_concepts.h" "raytracer/glm_config.h"
     "raytracer/texture_mapping/texture_fetcher.cpp" "raytracer/texture_mapping/perlin.h")
 
 

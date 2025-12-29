@@ -16,8 +16,7 @@ public:
 		std::shared_ptr<BVH<TLASBox>> world,
 		std::vector<Plane>& planes,
 		MaterialManager& material_manager,
-		RendererInfo& renderer_info,
-		TextureFetcher& texture_fetcher);
+		RendererInfo& renderer_info);
 
 	Color traceRay(const Ray& ray, const RenderContext& context) const override;
 
@@ -33,7 +32,6 @@ public:
 	std::vector<Plane>& planes;
 	MaterialManager& material_manager;
 	RendererInfo& renderer_info;
-	TextureFetcher& texture_fetcher;
 	BackgroundCameraData bgc_data;
 	
 };

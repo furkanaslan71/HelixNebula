@@ -9,13 +9,9 @@
 typedef struct HitRecord{
   glm::vec3 point;
   glm::vec3 normal;
-  std::vector<int> texture_ids;
-  glm::vec2 uv;
   double t;
   int material_id;
 	bool front_face;
-  int sphere_r;
-  glm::vec3 tangent_u, tangent_v;
   
   void set_front_face(const Ray& r)
   {
@@ -27,16 +23,7 @@ struct ObjectContext {
   std::optional<glm::mat4> transform_matrix;
   std::optional<glm::mat4> inverse_transform;
   glm::vec3 motion_blur;
-  std::vector<int> textures;
   int material_id;
 };
-
-
-//class Hittable {
-//public:
-//  virtual ~Hittable() = default;
-//  virtual bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const = 0;
-//  virtual AABB getAABB() const = 0;
-//};
 
 #endif //HITTABLE_H

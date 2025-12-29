@@ -284,9 +284,6 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
   int vertex_base_index = scene.vertex_data.size();
   bool file_is_little_endian = (format == BINARY_LITTLE_ENDIAN);
 
-#if !DAVID_ZOOM
-  std::cout << "  Parsing " << num_vertices << " vertices from " << ply_filename << "..." << std::endl;
-#endif
   // 1. Read Vertices
   std::vector<char> binary_buffer(vertex_record_size);
   for (long i = 0; i < num_vertices; ++i)
@@ -352,9 +349,6 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
     scene.vertex_data.push_back(v_pos);
     scene.tex_coord_data.push_back({u, v});
   }
-#if !DAVID_ZOOM
-  std::cout << "  Parsing " << num_faces << " faces from " << ply_filename << "..." << std::endl;
-#endif
 
   // 2. Read Faces
   std::vector<char> count_buffer(face_prop.count_size);
@@ -424,9 +418,6 @@ void parsePlyFile(const std::string& ply_filename, Mesh_& mesh, Scene_& scene)
       mesh.faces.push_back({ mesh.material_id, v0_global, v1_global, v2_global });
     }
   }
-#if !DAVID_ZOOM
-  std::cout << "  Finished parsing PLY file. Total vertices in scene: " << scene.vertex_data.size() << std::endl;
-#endif
   file.close();
 }
 

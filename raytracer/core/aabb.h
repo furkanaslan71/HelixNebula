@@ -12,6 +12,7 @@ public:
     AABB();
     AABB(const glm::vec3& p1, const glm::vec3& p2);
     AABB(const AABB& box1, const AABB& box2);
+    AABB(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2);
 
     const void thicken();
     const Interval& axis(int i) const;

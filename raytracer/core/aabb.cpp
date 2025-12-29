@@ -17,6 +17,20 @@ AABB::AABB(const AABB& box1, const AABB& box2)
     thicken();
 }
 
+AABB::AABB(const glm::vec3& v0, const glm::vec3& v1, const glm::vec3& v2)
+{
+    x.min = std::min({v0.x, v1.x, v2.x});
+    x.max = std::max({v0.x, v1.x, v2.x});
+
+    y.min = std::min({v0.y, v1.y, v2.y});
+    y.max = std::max({v0.y, v1.y, v2.y});
+
+    z.min = std::min({v0.z, v1.z, v2.z});
+    z.max = std::max({v0.z, v1.z, v2.z});
+
+    thicken();
+}
+
 
 const void AABB::thicken()
 {

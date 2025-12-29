@@ -1,12 +1,12 @@
+#include "mesh.h"
 
-template<Shading mode, TextureLookup tex>
-Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
+
+Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	const std::vector<glm::vec3>& vertex_data,
-  const std::vector<glm::vec2> uv_data,
-	int vertex_offset, int texture_offset)
+	int vertex_offset, int texture_offset, bool is_smooth)
 	: id(_id)
 {
-	if constexpr (mode == Shading::Smooth)
+	if (is_smooth)
 	{
 		std::vector<std::vector<std::pair<glm::vec3, double>>> per_vertex_triangles; // pair<triangle_normal, area> for each vertex
 		per_vertex_triangles.resize(vertex_data.size());
@@ -52,24 +52,12 @@ Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id + vertex_offset],
 				vertex_data[raw_triangle.v2_id + vertex_offset] };
 
-			PerVertexNormals per_vertex_normals = {
+			glm::vec3 per_vertex_normals[3] = {
 				vertex_normals[raw_triangle.v0_id + vertex_offset],
 				vertex_normals[raw_triangle.v1_id + vertex_offset],
 				vertex_normals[raw_triangle.v2_id + vertex_offset] };
 
-			if constexpr (tex == TextureLookup::Textured)
-			{
-				auto ttri = raw_triangle;
-				ttri.v0_id += texture_offset;
-				ttri.v1_id += texture_offset;
-				ttri.v2_id += texture_offset;
-				auto tex_coords = TexCoords(ttri, uv_data);
-				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2], per_vertex_normals, tex_coords));
-			}
-			else
-			{
-				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2], per_vertex_normals));
-			}
+			faces.push_back(Triangle(indices, per_vertex_normals));
 		}
 	}
 	else
@@ -80,32 +68,19 @@ Mesh<mode, tex>::Mesh(int _id, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id + vertex_offset],
 				vertex_data[raw_triangle.v2_id + vertex_offset] };
 
-			if constexpr (tex == TextureLookup::Textured)
-			{
-				auto ttri = raw_triangle;
-				ttri.v0_id += texture_offset;
-				ttri.v1_id += texture_offset;
-				ttri.v2_id += texture_offset;
-				auto tex_coords = TexCoords(ttri, uv_data);
-				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2], tex_coords));
-			}
-			else
-			{
-				faces.push_back(TriangleNew<mode, tex>(indices[0], indices[1], indices[2]));
-			}
+			faces.push_back(Triangle(indices));
 		}
 	}
-	bvh = std::make_shared<BVH<TriangleNew<mode, tex>>>(faces);
+	bvh = std::make_shared<BVH<Triangle>>(faces);
 	bounding_box = bvh->getAABB();
 }
 
-template<Shading mode, TextureLookup tex>
-bool Mesh<mode, tex>::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
+bool Mesh::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
 	return bvh->intersect(ray, ray_t, rec);
 }
-template<Shading mode, TextureLookup tex>
-AABB Mesh<mode, tex>::getAABB() const
+
+AABB Mesh::getAABB() const
 {
 	return bounding_box;
 }
