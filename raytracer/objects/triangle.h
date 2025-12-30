@@ -62,7 +62,7 @@ public:
 	}
 
 
-
+	template<bool occlusion_only>
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
 		glm::vec3 c1 = indices[0] - indices[1];
@@ -83,6 +83,7 @@ public:
 		double t = det(c1, c2, c3) / detA;
 
 		if (t < ray_t.min + 0.00000001 || 0.00000001 + t > ray_t.max) return false;
+		if constexpr (occlusion_only) return true;
 
 		if (beta + gamma <= 1 && beta + 0.00000001 >= 0 && gamma + 0.00000001 >= 0)
 		{

@@ -16,6 +16,8 @@ struct Transformation {
 class TLASBox{
 public:
 	TLASBox(Geometry* _geometry, Material* _material, std::optional<Transformation>* _transformation, glm::vec3 _motion_blur);
+
+	template <bool occlusion_only>
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 	AABB getAABB() const;
 

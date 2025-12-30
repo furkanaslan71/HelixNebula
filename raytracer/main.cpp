@@ -26,11 +26,12 @@ int main(int argc, char* argv[])
   }
   std::string scene_filename = argv[1];
 #else
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/focusing_dragons.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/dragon_dynamic.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/focusing_dragons.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/sphere_perlin_scale.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/tunnel_of_doom/tunnel_of_doom_000.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/metal_glass_plates.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/tunnel_of_doom/tunnel_of_doom_000.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/metal_glass_plates.json";
 #endif
 
   Scene_ raw_scene;

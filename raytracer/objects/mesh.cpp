@@ -1,5 +1,7 @@
 #include "mesh.h"
 
+template bool Mesh::hit<true>(const Ray&, Interval, HitRecord&) const;
+template bool Mesh::hit<false>(const Ray&, Interval, HitRecord&) const;
 
 Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	const std::vector<glm::vec3>& vertex_data,
@@ -75,9 +77,10 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	bounding_box = bvh->getAABB();
 }
 
+template <bool occlusion_only>
 bool Mesh::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
-	return bvh->intersect(ray, ray_t, rec);
+	return bvh->intersect<occlusion_only>(ray, ray_t, rec);
 }
 
 AABB Mesh::getAABB() const

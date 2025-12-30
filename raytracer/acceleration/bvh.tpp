@@ -109,6 +109,7 @@ void BVH<T>::buildBVH()
 }
 
 template <GeometryConcept T>
+template<bool occlusion_only>
 bool BVH<T>::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
   if (linear_nodes_.empty()) 
@@ -134,8 +135,9 @@ bool BVH<T>::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
         for (int i = 0; i < node->primitive_count; i++)
         {
           // Check intersection
-          if (primitives_[node->primitives_offset + i].hit(ray, ray_t, rec))
+          if (primitives_[node->primitives_offset + i].template hit<occlusion_only>(ray, ray_t, rec))
           {
+            if constexpr (occlusion_only) return true;
             hit_anything = true;
             ray_t.max = rec.t; // CRITICAL: Shrink the ray so we ignore farther objects!
           }

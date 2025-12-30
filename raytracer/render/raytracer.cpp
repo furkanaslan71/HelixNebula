@@ -172,7 +172,7 @@ Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& 
 
 	double closest_t = hit_plane ? rec.t : INFINITY;
 
-	if (!scene->world->intersect(ray, Interval(render_context.intersection_test_epsilon, closest_t), rec))
+	if (!scene->world->intersect<false>(ray, Interval(render_context.intersection_test_epsilon, closest_t), rec))
 	{
 		if (!hit_plane)
 		{
@@ -342,7 +342,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!scene->world->intersect(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
+		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 
@@ -375,7 +375,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!scene->world->intersect(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
+		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 			float area_of_light = light.edge * light.edge;

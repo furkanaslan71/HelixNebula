@@ -31,6 +31,7 @@ public:
 		v = theta / pi;
 	}
 
+	template<bool occlusion_only>
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	{
 
@@ -48,6 +49,7 @@ public:
 
 			if (t1 >= 0 || t2 >= 0)
 			{
+				if constexpr (occlusion_only) return true;
 				double t = (t1 >= 0) ? t1 : t2;
 
 				glm::vec3 hitPoint = ray.origin + ray.direction * (float)t;

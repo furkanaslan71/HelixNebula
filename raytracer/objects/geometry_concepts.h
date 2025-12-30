@@ -10,7 +10,8 @@
 template <typename T>
 concept HasHit = requires(const T & obj, const Ray & ray, Interval ray_t, HitRecord & rec)
 {
-  { obj.hit(ray, ray_t, rec) } -> std::same_as<bool>;
+  { obj.template hit<false>(ray, ray_t, rec) } -> std::same_as<bool>;
+  { obj.template hit<true>(ray, ray_t, rec) } -> std::same_as<bool>;
 };
 
 template <typename T>

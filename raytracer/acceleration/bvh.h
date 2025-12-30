@@ -26,6 +26,7 @@ class BVH{
 public:
 	BVH(std::vector<T>& _primitives);
 
+	template<bool occlusion_only>
 	bool intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 	AABB getAABB() const;
 	void buildBVH();

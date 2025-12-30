@@ -1,6 +1,9 @@
 #include "tlas_box.h"
 #define IS_ZERO (motion_blur[world_index].x == 0 && motion_blur[world_index].y == 0 && motion_blur[world_index].z == 0)
 
+template bool TLASBox::hit<true>(const Ray&, Interval, HitRecord&) const;
+template bool TLASBox::hit<false>(const Ray&, Interval, HitRecord&) const;
+
 TLASBox::TLASBox(Geometry* _geometry,
 	Material* _material,
 	std::optional<Transformation>* _transformation,
@@ -27,6 +30,7 @@ TLASBox::TLASBox(Geometry* _geometry,
 	bounding_box = box;
 }
 
+template <bool occlusion_only>
 bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
 	glm::vec3 motion_offset = motion_blur * static_cast<float>(ray.time);
@@ -34,9 +38,10 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	if (!transformation->has_value())
 	{
 		Ray new_ray(ray.origin - motion_offset, ray.direction, ray.time);
-		bool hit = geometry->hit(new_ray, ray_t, rec);
+		bool hit = geometry->hit<occlusion_only>(new_ray, ray_t, rec);
 		if (hit)
 		{
+			if constexpr (occlusion_only) return true;
 			rec.material = material;
 			rec.point += motion_offset;
 		}
@@ -51,8 +56,9 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 	Ray local_ray(glm::vec3(local_origin), glm::vec3(local_direction),ray.time);
 
 
-	if (!geometry->hit(local_ray, ray_t, rec))
+	if (!geometry->hit<occlusion_only>(local_ray, ray_t, rec))
 		return false;
+	if constexpr (occlusion_only) return true;
 
 	const auto& matrix_val = transformation->value().transform_matrix;
 

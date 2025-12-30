@@ -12,6 +12,7 @@ public:
 			 const std::vector<glm::vec3>& vertex_data,
 			 int vertex_offset, int texture_offset, bool is_smooth);
 
+	template <bool occlusion_only>
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 
 	AABB getAABB() const;

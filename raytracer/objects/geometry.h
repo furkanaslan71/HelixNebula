@@ -35,10 +35,11 @@ public:
     return data.emplace<T>(std::forward<Args>(args)...);
   }*/
 
+  template <bool occlusion_only>
   bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
   {
     return std::visit([&](auto const& obj) -> bool {
-      return obj.hit(ray, ray_t, rec);
+      return obj.template hit<occlusion_only>(ray, ray_t, rec);
                       }, data);
   }
 
