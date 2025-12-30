@@ -6,18 +6,6 @@
 
 #define SET(x) x = tm.x
 
-
-template <typename EnumT>
-inline EnumT getEnum(const std::vector<std::string>& types, const std::string& target)
-{
-    for (size_t i = 0; i < types.size(); i++)
-    {
-        if (types[i] == target)
-            return static_cast<EnumT>(i);
-    }
-    return static_cast<EnumT>(-1); // or handle error differently
-}
-
 enum class TextureType : int {
 	image = 0,
 	perlin = 1,
@@ -40,62 +28,68 @@ enum class DecalMode : int {
 	replace_all
 };
 
-struct Image {
-	int id;
-	std::string file_path;
-	Image() = default;
-	Image(Image_ img)
-	{
-		id = img.id;
-		file_path = img.data;
-	}
+enum class NoiseConversion : bool {
+	linear,
+	absval
 };
 
-struct TextureMap {
-	int id;
-	int image_id;
+struct Image {
+	explicit Image(const std::string& absolute_path);
+	Image() = default;
+
+	unsigned char* data;
+	int width;
+	int height;
+	int channels;
+};
+
+struct Texture {
+	explicit Texture(const TextureMap_& tm);
+	Texture() = default;
+	void make_image(Image* _image, float _normalizer);
+	void make_perlin(NoiseConversion _noise_conversion,
+		float _noise_scale, int _num_octaves);
+	void make_bump_image(Image* _image, float _normalizer, float _bump_factor);
+	void make_bump_perlin(NoiseConversion _noise_conversion,
+		float _bump_factor, float _noise_scale, int _num_octaves);
+	void make_checkerboard(const glm::vec3& _black_color,
+		const glm::vec3& _white_color, float _scale, float _offset);
+
 	TextureType type;
 	Interpolation interp;
 	DecalMode d_mode;
-	float bump_factor;
-	float noise_scale;
-	std::string noise_conversion;
-	int num_octaves;
-	float scale;
-	float offset;
-	glm::vec3 black_color;
-	glm::vec3 white_color;
-	float normalizer;
-	TextureMap() = default;
-	TextureMap(TextureMap_ tm)
-	{
-		id = tm.id;
-		std::vector<std::string> texture_types = { "image", "perlin", "checkerboard" };
-		type = getEnum<TextureType>(texture_types, tm.type);
-		std::vector<std::string> interpolations = { "nearest", "bilinear", "trilinear" };
-		interp = getEnum<Interpolation>(interpolations, tm.interpolation);
-		std::vector<std::string> decal_modes = { "replace_kd", "blend_kd",
-			"replace_ks", "replace_background", "replace_normal", "bump_normal", "replace_all" };
-		d_mode = getEnum<DecalMode>(decal_modes, tm.decal_mode);
-		SET(image_id);
-		SET(bump_factor);
-		SET(noise_scale);
-		SET(noise_conversion);
-		SET(num_octaves);
-		SET(scale);
-		SET(offset);
-		SET(black_color);
-		SET(white_color);
-		SET(normalizer);
-	}
+
+	union {
+		struct {
+			Image* image;
+			float normalizer;
+		}image;
+		struct {
+			NoiseConversion noise_conversion;
+			float noise_scale;
+			int num_octaves;
+		}perlin;
+		struct {
+			Image* image;
+			float normalizer;
+			float bump_factor;
+		}bump_image;
+		struct {
+			NoiseConversion noise_conversion;
+			float bump_factor;
+			float noise_scale;
+			int num_octaves;
+		}bump_perlin;
+		struct {
+			glm::vec3 black_color;
+			glm::vec3 white_color;
+			float scale;
+			float offset;
+		}checkerboard;
+	} texture_data;
+
+	static_assert(std::is_trivially_destructible_v<decltype(texture_data)>);
+
 };
-
-
-struct TextureData {
-	std::unordered_map<int, Image> images;
-	std::unordered_map<int, TextureMap> textures;
-};
-
-
 
 #endif // !TEXTURE_DATA_H

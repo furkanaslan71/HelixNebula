@@ -13,14 +13,10 @@
 #include "objects/mesh.h"
 #include "objects/geometry.h"
 #include "render/raytracer.h"
-#include "texture_mapping/texture_fetcher.h"
+#include "texture_mapping/texture_data.h"
 
 int main(int argc, char* argv[])
 {
-  std::vector<Geometry> geometries;
-  std::vector<std::optional<Transformation>> transformations;
-  std::vector<Material> materials;
-
 #if COMMAND_LINE_INPUT
   // Expect exactly one argument after the executable name
   if (argc != 2)
@@ -31,14 +27,61 @@ int main(int argc, char* argv[])
   std::string scene_filename = argv[1];
 #else
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/focusing_dragons.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cornellbox_boxes_dynamic.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/sphere_perlin_scale.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/tunnel_of_doom/tunnel_of_doom_000.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/metal_glass_plates.json";
 #endif
 
   Scene_ raw_scene;
-  
   parseScene(scene_filename, raw_scene);
+
+  std::vector<Geometry> geometries;
+  std::vector<std::optional<Transformation>> transformations;
+  std::vector<Material> materials;
+  std::vector<Texture> textures;
+  std::vector<Image> images;
+
+  images.resize(raw_scene.images.size());
+  for (const auto& img : raw_scene.images)
+  {
+    std::string absolute_path = FS::absolute(__FILE__).parent_path() / ("../inputs/" + img.data);
+    images[img.id] = Image(absolute_path);
+  }
+
+  textures.resize(raw_scene.texture_maps.size());
+  for (const auto& tm : raw_scene.texture_maps)
+  {
+    textures[tm.id] = Texture(tm);
+    auto& texture = textures[tm.id];
+    if (texture.type == TextureType::image)
+    {
+      if (texture.d_mode == DecalMode::bump_normal)
+      {
+        texture.make_image(&images[tm.image_id], tm.normalizer);
+        continue;
+      }
+      texture.make_bump_image(&images[tm.image_id], tm.normalizer, tm.bump_factor);
+    }
+    else if (texture.type == TextureType::perlin)
+    {
+      NoiseConversion nc = tm.noise_conversion == "linear" ? NoiseConversion::linear : NoiseConversion::absval;
+      if (texture.d_mode == DecalMode::bump_normal)
+      {
+        texture.make_bump_perlin(nc, tm.bump_factor, tm.noise_scale, tm.num_octaves);
+        continue;
+      }
+      texture.make_perlin(nc, tm.noise_scale, tm.num_octaves);
+    }
+    else if (texture.type == TextureType::checkerboard)
+    {
+      texture.make_checkerboard(tm.black_color, tm.white_color, tm.scale, tm.offset);
+    }
+    else
+    {
+      throw std::runtime_error("Wrong parsing");
+    }
+  }
 
   materials.reserve(raw_scene.materials.size());
   for (auto& material : raw_scene.materials)
