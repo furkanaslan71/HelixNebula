@@ -46,7 +46,9 @@ add_executable (HelixNebula
         raytracer/render/raytracer.cpp
         raytracer/io/save_image.h
         raytracer/io/save_image.cpp
-        raytracer/texture_mapping/texture_data.cpp)
+        raytracer/texture_mapping/texture_data.cpp
+        raytracer/texture_mapping/texture_lookup.h
+        raytracer/texture_mapping/texture_lookup.cpp)
 
 
 # Important: Add include directories so your compiler can find your headers.

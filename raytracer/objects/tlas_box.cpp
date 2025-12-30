@@ -7,13 +7,19 @@ template bool TLASBox::hit<false>(const Ray&, Interval, HitRecord&) const;
 TLASBox::TLASBox(Geometry* _geometry,
 	Material* _material,
 	std::optional<Transformation>* _transformation,
-	glm::vec3 _motion_blur)
+	glm::vec3 _motion_blur,
+	std::vector<Texture*> _textures)
 		:
 	geometry(_geometry),
 	material(_material),
 	transformation(_transformation),
 	motion_blur(_motion_blur)
 {
+	for (const auto tex_ptr : _textures)
+	{
+		Expects(tex_ptr);
+		textures.emplace_back(tex_ptr);
+	}
 	AABB box = geometry->getAABB();
 
 	if (transformation->has_value())
@@ -44,6 +50,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 			if constexpr (occlusion_only) return true;
 			rec.material = material;
 			rec.point += motion_offset;
+			rec.textures = this->textures;
 		}
 		return hit;
 	}
@@ -70,6 +77,7 @@ bool TLASBox::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 
 	rec.set_front_face(ray);
 	rec.material = material;
+	rec.textures = this->textures;
 	return true;
 }
 

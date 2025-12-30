@@ -1,6 +1,8 @@
 #include "raytracer.h"
 #include <typeinfo>
 
+#include "texture_mapping/texture_lookup.h"
+
 
 void generateRaySamples(std::shared_ptr<BaseCamera> camera, int i, int j,
                         std::vector<std::pair<glm::vec3, glm::vec3>>& out_samples,
@@ -326,6 +328,52 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 	glm::vec3 kd = mat.diffuse_reflectance;
 	glm::vec3 ks = mat.specular_reflectance;
 	glm::vec3 ka = mat.ambient_reflectance;
+
+	if (!rec.textures.empty())
+	{
+		//texture_mapping
+		for (Texture* tex : rec.textures)
+		{
+			switch (tex->d_mode)
+			{
+				case (DecalMode::replace_kd):
+				{
+					kd = lookupTexture(tex, rec.uv);
+					break;
+				}
+				case (DecalMode::blend_kd):
+				{
+					kd = (lookupTexture(tex, rec.uv) + kd) / 2.0f;
+					break;
+				}
+				case (DecalMode::replace_ks):
+				{
+					ks = lookupTexture(tex, rec.uv);
+					break;
+				}
+				case (DecalMode::replace_normal):
+				{
+					rec.normal = lookupNormalMap(tex, rec);
+					break;
+				}
+				case (DecalMode::bump_normal):
+				{
+					rec.normal = lookupBumpMap(tex, rec);
+					break;
+				}
+
+				case (DecalMode::replace_all):
+				{
+					return lookupTexture(tex, rec.uv) * 255.0f;
+				}
+
+				default:
+				{
+					throw std::runtime_error("Invalid decal mode");
+				}
+			}
+		}
+	}
 
 	color += Color(ka)* Color(scene->light_sources.ambient_light);
 

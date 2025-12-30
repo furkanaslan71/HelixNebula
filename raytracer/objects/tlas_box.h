@@ -7,6 +7,7 @@
 
 #include "geometry.h"
 #include "core/hittable.h"
+#include "texture_mapping/texture_data.h"
 
 struct Transformation {
 	glm::mat4 transform_matrix;
@@ -15,7 +16,11 @@ struct Transformation {
 
 class TLASBox{
 public:
-	TLASBox(Geometry* _geometry, Material* _material, std::optional<Transformation>* _transformation, glm::vec3 _motion_blur);
+	TLASBox(Geometry* _geometry,
+		Material* _material,
+		std::optional<Transformation>* _transformation,
+		glm::vec3 _motion_blur,
+		std::vector<Texture*> _textures);
 
 	template <bool occlusion_only>
 	bool hit(const Ray& ray, Interval ray_t, HitRecord& rec) const;
@@ -27,6 +32,7 @@ private:
 	Geometry* geometry;
 	Material* material;
 	std::optional<Transformation>* transformation;
+	std::vector<Texture*> textures;
 };
 
 #endif

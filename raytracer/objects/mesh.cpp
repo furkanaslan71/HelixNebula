@@ -5,7 +5,8 @@ template bool Mesh::hit<false>(const Ray&, Interval, HitRecord&) const;
 
 Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	const std::vector<glm::vec3>& vertex_data,
-	int vertex_offset, int texture_offset, bool is_smooth)
+	int vertex_offset, int texture_offset, bool is_smooth,
+	const std::vector<glm::vec2>& tex_data)
 	: id(_id)
 {
 	if (is_smooth)
@@ -50,16 +51,33 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 		}
 		for (const Triangle_& raw_triangle : _faces)
 		{
-			glm::vec3 indices[3] = { vertex_data[raw_triangle.v0_id + vertex_offset],
+			glm::vec3 indices[3] = {
+				vertex_data[raw_triangle.v0_id + vertex_offset],
 				vertex_data[raw_triangle.v1_id + vertex_offset],
-				vertex_data[raw_triangle.v2_id + vertex_offset] };
+				vertex_data[raw_triangle.v2_id + vertex_offset]
+			};
 
 			glm::vec3 per_vertex_normals[3] = {
 				vertex_normals[raw_triangle.v0_id + vertex_offset],
 				vertex_normals[raw_triangle.v1_id + vertex_offset],
-				vertex_normals[raw_triangle.v2_id + vertex_offset] };
+				vertex_normals[raw_triangle.v2_id + vertex_offset]
+			};
 
-			faces.push_back(Triangle(indices, per_vertex_normals));
+			glm::vec2 tex_coords[3];
+			if (!tex_data.empty())
+			{
+				tex_coords[0] = tex_data[raw_triangle.v0_id + texture_offset];
+				tex_coords[1] = tex_data[raw_triangle.v1_id + texture_offset];
+				tex_coords[2] = tex_data[raw_triangle.v2_id + texture_offset];
+			}
+			else
+			{
+				tex_coords[0] = {0.f, 0.f};
+				tex_coords[1] = {0.f, 0.f};
+				tex_coords[2] = {0.f, 0.f};
+			}
+
+			faces.push_back(Triangle(indices, per_vertex_normals, tex_coords));
 		}
 	}
 	else
@@ -70,7 +88,21 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 				vertex_data[raw_triangle.v1_id + vertex_offset],
 				vertex_data[raw_triangle.v2_id + vertex_offset] };
 
-			faces.push_back(Triangle(indices));
+			glm::vec2 tex_coords[3];
+			if (!tex_data.empty())
+			{
+				tex_coords[0] = tex_data[raw_triangle.v0_id + texture_offset];
+				tex_coords[1] = tex_data[raw_triangle.v1_id + texture_offset];
+				tex_coords[2] = tex_data[raw_triangle.v2_id + texture_offset];
+			}
+			else
+			{
+				tex_coords[0] = {0.f, 0.f};
+				tex_coords[1] = {0.f, 0.f};
+				tex_coords[2] = {0.f, 0.f};
+			}
+
+			faces.push_back(Triangle(indices, tex_coords));
 		}
 	}
 	bvh = std::make_shared<BVH<Triangle>>(faces);

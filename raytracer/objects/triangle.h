@@ -6,12 +6,18 @@
 #include "core/aabb.h"
 #include "glm_config.h"
 
+struct TexCoords {
+	glm::vec2 uv0;
+	glm::vec2 uv1;
+	glm::vec2 uv2;
+};
 
 class Triangle{
 public:
 
-	Triangle(glm::vec3 _indices[3])
-		: indices{_indices[0], _indices[1], _indices[2]}
+	Triangle(glm::vec3 _indices[3], glm::vec2 _tex_coords[3])
+		: indices{_indices[0], _indices[1], _indices[2]},
+	tex_coords(_tex_coords[0], _tex_coords[1], _tex_coords[2])
 	{
 		glm::vec3 min = indices[0];
 		glm::vec3 max = indices[0];
@@ -30,9 +36,22 @@ public:
 		vec1 = glm::cross(vec1, vec2);
 		vec1 = glm::normalize(vec1);
 		this->normal = vec1;
+
+
+		auto v1_0 = indices[1] - indices[0];
+		auto v2_0 = indices[2] - indices[0];
+		auto a = tex_coords.uv1.x - tex_coords.uv0.x;
+		auto b = tex_coords.uv1.y - tex_coords.uv0.y;
+		auto c = tex_coords.uv2.x - tex_coords.uv0.x;
+		auto d = tex_coords.uv2.y - tex_coords.uv0.y;
+		float inv_det = 1 / (a * d - b * c);
+
+		tangents.u = glm::normalize(inv_det * (d * v1_0 - b * v2_0));
+		tangents.v = glm::normalize(inv_det * (-c * v1_0 + a * v2_0));
+
 	}
 
-	Triangle(glm::vec3 _indices[3], glm::vec3 _per_vertex_normals[3])
+	Triangle(glm::vec3 _indices[3], glm::vec3 _per_vertex_normals[3], glm::vec2 _tex_coords[3])
 		: 
 		indices{ _indices[0], _indices[1], _indices[2] },
 		smooth_shading(true), 
@@ -40,7 +59,8 @@ public:
 			_per_vertex_normals[0], 
 			_per_vertex_normals[1],
 			_per_vertex_normals[2] 
-		}
+		},
+	tex_coords(_tex_coords[0], _tex_coords[1], _tex_coords[2])
 	{
 		glm::vec3 min = indices[0];
 		glm::vec3 max = indices[0];
@@ -59,6 +79,17 @@ public:
 		vec1 = glm::cross(vec1, vec2);
 		vec1 = glm::normalize(vec1);
 		this->normal = vec1;
+
+		auto v1_0 = indices[1] - indices[0];
+		auto v2_0 = indices[2] - indices[0];
+		auto a = tex_coords.uv1.x - tex_coords.uv0.x;
+		auto b = tex_coords.uv1.y - tex_coords.uv0.y;
+		auto c = tex_coords.uv2.x - tex_coords.uv0.x;
+		auto d = tex_coords.uv2.y - tex_coords.uv0.y;
+		float inv_det = 1 / (a * d - b * c);
+
+		tangents.u = glm::normalize(inv_det * (d * v1_0 - b * v2_0));
+		tangents.v = glm::normalize(inv_det * (-c * v1_0 + a * v2_0));
 	}
 
 
@@ -96,10 +127,23 @@ public:
 					per_vertex_normals[1] * barycentric_coords.y +
 					per_vertex_normals[2] * barycentric_coords.z;
 				rec.normal = glm::normalize(rec.normal);
+
+				rec.uv = tex_coords.uv0 * barycentric_coords.x +
+						tex_coords.uv1 * barycentric_coords.y +
+						tex_coords.uv2 * barycentric_coords.z;
+
+				rec.surface_tangents = tangents;
 			}
 			else
 			{
 				rec.normal = this->normal;
+
+				glm::vec3 barycentric_coords = barycentricCoefficients(rec.point);
+				rec.uv = tex_coords.uv0 * barycentric_coords.x +
+						tex_coords.uv1 * barycentric_coords.y +
+						tex_coords.uv2 * barycentric_coords.z;
+
+				rec.surface_tangents = tangents;
 			}
 
 			rec.set_front_face(ray);
@@ -121,11 +165,14 @@ public:
 	}
 
 private:
-	glm::vec3 normal;
-	glm::vec3 indices[3];
 	AABB bounding_box;
-	bool smooth_shading = false;
+	glm::vec3 indices[3];
 	glm::vec3 per_vertex_normals[3];
+	TexCoords tex_coords;
+	TangentVectors tangents;
+	glm::vec3 normal;
+	bool smooth_shading = false;
+
 
 	inline double det(const glm::vec3& c0, const glm::vec3& c1, const glm::vec3& c2) const
 	{

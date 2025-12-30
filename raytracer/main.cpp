@@ -13,6 +13,7 @@
 #include "objects/mesh.h"
 #include "objects/geometry.h"
 #include "render/raytracer.h"
+#include "texture_mapping/perlin.h"
 #include "texture_mapping/texture_data.h"
 
 int main(int argc, char* argv[])
@@ -27,8 +28,8 @@ int main(int argc, char* argv[])
   std::string scene_filename = argv[1];
 #else
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/dragon_dynamic.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/focusing_dragons.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/sphere_perlin_scale.json";
+  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/focusing_dragons.json";
+  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cube_waves.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/tunnel_of_doom/tunnel_of_doom_000.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
   //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/metal_glass_plates.json";
@@ -125,10 +126,33 @@ int main(int argc, char* argv[])
       transformations.emplace_back(std::nullopt);
     }
 
-    geometries.emplace_back(std::in_place_type<Triangle>, indices);
-    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_triangle.material_id], &transformations.back(), raw_triangle.motion_blur);
+    glm::vec2 tex_coords[3];
+    if (!raw_scene.tex_coord_data.empty())
+    {
+      tex_coords[0] = raw_scene.tex_coord_data[raw_triangle.v0_id];
+      tex_coords[1] = raw_scene.tex_coord_data[raw_triangle.v1_id];
+      tex_coords[2] = raw_scene.tex_coord_data[raw_triangle.v2_id];
+    }
+    else
+    {
+      tex_coords[0] = {0.f, 0.f};
+      tex_coords[1] = {0.f, 0.f};
+      tex_coords[2] = {0.f, 0.f};
+    }
+
+    geometries.emplace_back(std::in_place_type<Triangle>, indices, tex_coords);
+
+    std::vector<Texture*> tex;
+    for (int tex_id : raw_triangle.textures)
+    {
+      tex.emplace_back(&textures[tex_id]);
+    }
+
+    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_triangle.material_id],
+      &transformations.back(), raw_triangle.motion_blur, tex);
 
   }
+
   for (int i = 0; i < s_size; i++)
   {
     const auto& raw_sphere = raw_scene.spheres[i];
@@ -148,25 +172,28 @@ int main(int argc, char* argv[])
       transformations.emplace_back(std::nullopt);
     }
     geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius));
-    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_sphere.material_id], &transformations.back(), raw_sphere.motion_blur);
+
+    std::vector<Texture*> tex;
+    for (int tex_id : raw_sphere.textures)
+    {
+      tex.emplace_back(&textures[tex_id]);
+    }
+    tlas_boxes.emplace_back(&geometries.back(), &materials[raw_sphere.material_id],
+      &transformations.back(), raw_sphere.motion_blur, tex);
   }
+
   std::unordered_map<int, size_t> mesh_order;
   size_t index = 0;
   for (const auto& [key, val] : raw_scene.meshes)
   {
     mesh_order[key] = index++;
-    geometries.emplace_back(
-      std::in_place_type<Mesh>,
-      val.id, val.faces, vertex_data, val.vertex_offset, val.texture_offset, val.smooth_shading);
+    geometries.emplace_back(std::in_place_type<Mesh>,val.id, val.faces, vertex_data,
+      val.vertex_offset, val.texture_offset, val.smooth_shading, raw_scene.tex_coord_data);
   }
   index = 0;
   int base = t_size + s_size;
   for (const auto& [id, mi] : raw_scene.mesh_instances)
   {
-    std::optional<glm::mat4> inv_tr;
-    if (mi.transform_matrix.has_value())
-      inv_tr = glm::inverse(mi.transform_matrix.value());
-
     if (mi.transform_matrix.has_value())
     {
       transformations.emplace_back(
@@ -181,7 +208,13 @@ int main(int argc, char* argv[])
       transformations.emplace_back(std::nullopt);
     }
 
-    tlas_boxes.emplace_back(&geometries[base + mesh_order[mi.base_mesh_id]], &materials[mi.material_id], &transformations.back(), mi.motion_blur);
+    std::vector<Texture*> tex;
+    for (int tex_id : mi.textures)
+    {
+      tex.emplace_back(&textures[tex_id]);
+    }
+    tlas_boxes.emplace_back(&geometries[base + mesh_order[mi.base_mesh_id]], &materials[mi.material_id],
+      &transformations.back(), mi.motion_blur, tex);
     index++;
   }
   
@@ -202,6 +235,8 @@ int main(int argc, char* argv[])
     raw_scene.max_recursion_depth);
 
   Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes), render_context);
+
+  initPerlin();
 
   std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
