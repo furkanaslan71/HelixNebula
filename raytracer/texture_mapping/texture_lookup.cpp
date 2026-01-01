@@ -112,7 +112,7 @@ glm::vec3 lookupBumpMap(Texture* texture, const HitRecord& rec)
         glm::vec3 grad = h_u * rec.surface_tangents.u + h_v * rec.surface_tangents.v;
         return glm::normalize(rec.normal - grad);
     }
-    else if (texture->type == TextureType::perlin)
+    if (texture->type == TextureType::perlin)
     {
         float invEps = 1e3f;
         float eps = 1e-3f;
@@ -143,9 +143,25 @@ glm::vec3 lookupBumpMap(Texture* texture, const HitRecord& rec)
         glm::vec3 g_perp = g - g_parallel;
         return glm::normalize(rec.normal - (g_perp * texture->texture_data.bump_perlin.bump_factor));
     }
-    else
-    {
-        throw std::runtime_error("Unsupported texture type for bump mapping");
-    }
+    throw std::runtime_error("Unsupported texture type for bump mapping");
+}
+
+glm::vec3 lookupBackgroundTex(Texture* texture, const glm::vec3& dir, const CameraContext& cam_context)
+{
+    float cos_theta = glm::dot(dir, cam_context.forward);
+    if (cos_theta <= 0.0001f) return glm::vec3(0, 0, 0);
+
+    float x = glm::dot(dir, cam_context.right) / cos_theta;
+    float y = glm::dot(dir, cam_context.up) / cos_theta;
+
+    float u = (x / (2.0f * cam_context.tan_half_fov_x)) + 0.5f;
+    float v = (y / (2.0f * cam_context.tan_half_fov_y)) + 0.5f;
+
+    v = 1.0f - v;
+
+    u = glm::clamp(u, 0.0f, 1.0f);
+    v = glm::clamp(v, 0.0f, 1.0f);
+
+    return lookupImageTexture(texture, glm::vec2(u, v));
 }
 

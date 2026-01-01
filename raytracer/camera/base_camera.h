@@ -12,9 +12,6 @@
 #include "light/light.h"
 
 
-class Scene;
-class RenderingTechnique;
-
 class BaseCamera {
 public:
 	BaseCamera(
@@ -44,7 +41,7 @@ public:
 	int image_width, image_height;
 	int recursion_depth;
 	int num_area_lights;
-	BackgroundCameraData data;
+	CameraContext context;
 
 };
 

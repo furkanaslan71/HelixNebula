@@ -15,3 +15,11 @@
 #define FS std::filesystem
 
 #include "glm_config.h"
+
+struct CameraContext {
+    glm::vec3 forward;
+    glm::vec3 right;
+    glm::vec3 up;
+    float tan_half_fov_x;
+    float tan_half_fov_y;
+};

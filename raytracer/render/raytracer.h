@@ -10,18 +10,22 @@
 #include "texture_mapping/texture_lookup.h"
 
 
+enum class BackgroundType : bool {
+    Color,
+    Texture
+};
+
 struct RenderContext {
-    Color background_color;
+    union {
+        Color background_color;
+        Texture* background_tex;
+    }background_info;
     float shadow_ray_epsilon;
     float intersection_test_epsilon;
     int max_recursion_depth;
-    RenderContext(Color background_color, float s, float i, int d)
-    {
-        this->background_color = background_color;
-        shadow_ray_epsilon = s;
-        intersection_test_epsilon = i;
-        max_recursion_depth = d;
-    }
+    BackgroundType b_type;
+
+    RenderContext() = default;
 };
 
 struct SamplingContext {
@@ -37,11 +41,11 @@ public:
 private:
     void renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const;
 
-    Color traceRay(const Ray& ray, const SamplingContext& sampling_context) const ;
+    Color traceRay(const Ray& ray, const SamplingContext& sampling_context, const CameraContext& cam_context) const ;
 
-    Color computeColor(const Ray& ray, int depth, const SamplingContext& sampling_context) const;
+    Color computeColor(const Ray& ray, int depth, const SamplingContext& sampling_context, const CameraContext& cam_context) const;
 
-    Color applyShading(const Ray& ray, int depth, HitRecord& rec, const SamplingContext& sampling_context) const;
+    Color applyShading(const Ray& ray, int depth, HitRecord& rec, const SamplingContext& sampling_context, const CameraContext& cam_context) const;
 
     bool hitPlanes(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 

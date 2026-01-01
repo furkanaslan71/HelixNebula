@@ -8,14 +8,10 @@ class Color {
 public:
   double r, g, b;
 
-  Color() : r(0), g(0), b(0) {}
+  Color() = default;
+  ~Color() = default;
   Color(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
-  Color(const Color& other)
-  {
-    r = other.r;
-    g = other.g;
-    b = other.b;
-  }
+  Color(const Color& other) = default;
   Color(const glm::vec3& vec)
   {
     r = vec.x;

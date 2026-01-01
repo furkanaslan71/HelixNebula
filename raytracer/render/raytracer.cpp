@@ -127,7 +127,7 @@ void Raytracer::renderLoop(int threadId, int stride, std::shared_ptr<BaseCamera>
             {
                 sampling_context.sample_index = k;
                 Ray primary_ray(ray_samples[k].first, ray_samples[k].second, generateRandomFloat(0, 1));
-                pixel_color += traceRay(primary_ray, sampling_context);
+                pixel_color += traceRay(primary_ray, sampling_context, camera->context);
             }
 
             output[i][j] = (pixel_color / (float)camera->num_samples).clamp();
@@ -155,14 +155,14 @@ static inline double fresnelReflectance(double r_parallel, double r_perpendicula
     return (r_parallel * r_parallel + r_perpendicular * r_perpendicular) / 2.0;
 }
 
-Color Raytracer::traceRay(const Ray& ray, const SamplingContext& sampling_context) const
+Color Raytracer::traceRay(const Ray& ray, const SamplingContext& sampling_context, const CameraContext& cam_context) const
 {
 	// Placeholder implementation: return background color
 	double min_t = INFINITY;
-	return computeColor(ray, render_context.max_recursion_depth + 1, sampling_context);
+	return computeColor(ray, render_context.max_recursion_depth + 1, sampling_context, cam_context);
 }
 
-Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& sampling_context) const
+Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& sampling_context, const CameraContext& cam_context) const
 {
 	if (depth <= 0) return Color(0, 0, 0);
 
@@ -177,9 +177,15 @@ Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& 
 		if (!hit_plane)
 		{
 			if (depth == render_context.max_recursion_depth + 1)
-				return Color(render_context.background_color);
-			else
-				return Color(0, 0, 0);
+			{
+				if (render_context.b_type == BackgroundType::Color)
+					return Color(render_context.background_info.background_color);
+
+				return Color(lookupBackgroundTex(render_context.background_info.background_tex,
+					glm::normalize(ray.direction), cam_context));
+
+			}
+			return Color(0, 0, 0);
 		}
 	}
 #if BACKFACE_CULLING
@@ -187,10 +193,10 @@ Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& 
 		return Color(0, 0, 0);
 #endif
 
-	return applyShading(ray, depth, rec, sampling_context);
+	return applyShading(ray, depth, rec, sampling_context, cam_context);
 }
 
-Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const SamplingContext& sampling_context) const
+Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const SamplingContext& sampling_context, const CameraContext& cam_context) const
 {
 	Material mat = *rec.material;
 	Color color(0.0, 0.0, 0.0);
@@ -206,7 +212,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			reflectedRay.perturb(mat.roughness);
 		}
 
-		color += computeColor(reflectedRay, depth - 1, sampling_context) * Color(mat.mirror_reflectance);
+		color += computeColor(reflectedRay, depth - 1, sampling_context, cam_context) * Color(mat.mirror_reflectance);
 	}
 	else if ((mat.type) == "conductor")
 	{
@@ -243,7 +249,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			reflectedRay.perturb(mat.roughness);
 		}
 
-		color += computeColor(reflectedRay, depth - 1, sampling_context) * f_r * mat.mirror_reflectance;
+		color += computeColor(reflectedRay, depth - 1, sampling_context, cam_context) * f_r * mat.mirror_reflectance;
 	}
 	else if (mat.type == "dielectric")
 	{
@@ -306,10 +312,10 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 
 			if (mat.roughness != 0) refractedRay.perturb(mat.roughness);
 
-			refractedColor = computeColor(refractedRay, depth - 1, sampling_context);
+			refractedColor = computeColor(refractedRay, depth - 1, sampling_context, cam_context);
 		}
 
-		Color reflectedColor = computeColor(reflectedRay, depth - 1, sampling_context);
+		Color reflectedColor = computeColor(reflectedRay, depth - 1, sampling_context, cam_context);
 		Color L = reflectedColor * F_r + refractedColor * (1.0 - F_r);
 
 		if (ray.inside || !entering)

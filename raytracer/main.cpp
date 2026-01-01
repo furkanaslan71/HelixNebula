@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/dragon/";
-  std::string scene_filename = "dragon_new_ply";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/veach_ajar/";
+  std::string scene_filename = "scene";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
@@ -80,6 +80,16 @@ int main(int argc, char* argv[])
     else
     {
       throw std::runtime_error("Wrong parsing");
+    }
+  }
+
+  Texture* bg_tex = nullptr;
+  for (Texture& tex : textures)
+  {
+    if (tex.d_mode == DecalMode::replace_background)
+    {
+      bg_tex = &tex;
+      break;
     }
   }
 
@@ -227,11 +237,23 @@ int main(int argc, char* argv[])
 
   //Scene scene(raw_scene, tlas_boxes, planes);
 
+
   initPerlin();
-  RenderContext render_context(Color(raw_scene.background_color),
-    raw_scene.shadow_ray_epsilon,
-    raw_scene.intersection_test_epsilon, 
-    raw_scene.max_recursion_depth);
+  RenderContext render_context;
+  if (bg_tex != nullptr)
+  {
+    render_context.b_type = BackgroundType::Texture;
+    render_context.background_info.background_tex = bg_tex;
+  }
+  else
+  {
+    render_context.b_type = BackgroundType::Color;
+    render_context.background_info.background_color = raw_scene.background_color;
+  }
+  render_context.shadow_ray_epsilon = raw_scene.shadow_ray_epsilon;
+  render_context.intersection_test_epsilon = raw_scene.intersection_test_epsilon;
+  render_context.max_recursion_depth = raw_scene.max_recursion_depth;
+
 
   Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes), render_context);
 
