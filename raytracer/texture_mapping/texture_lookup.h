@@ -7,6 +7,7 @@
 
 #include <core/hittable.h>
 #include "texture_data.h"
+#include "perlin.h"
 
 
 glm::vec3 fetch_single_sample(Image* image, glm::vec2 uv);
@@ -15,7 +16,7 @@ glm::vec3 fetch_interpolated_sample(Image* image, glm::vec2 uv, Interpolation in
 
 glm::vec3 lookupImageTexture(Texture* texture, glm::vec2 uv);
 
-glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv);
+glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_point);
 
 glm::vec3 lookupNormalMap(Texture* texture, const HitRecord& rec);
 

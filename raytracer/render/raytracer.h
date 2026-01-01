@@ -7,6 +7,7 @@
 #include "scene/scene.h"
 #include <filesystem>
 #include "io/save_image.h"
+#include "texture_mapping/texture_lookup.h"
 
 
 struct RenderContext {

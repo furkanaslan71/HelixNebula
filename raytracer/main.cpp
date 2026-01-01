@@ -13,7 +13,6 @@
 #include "objects/mesh.h"
 #include "objects/geometry.h"
 #include "render/raytracer.h"
-#include "texture_mapping/perlin.h"
 #include "texture_mapping/texture_data.h"
 
 int main(int argc, char* argv[])
@@ -25,18 +24,16 @@ int main(int argc, char* argv[])
     std::cerr << "usage: " << argv[0] << " <scene_file.json>" << std::endl;
     return 1;
   }
-  std::string scene_filename = argv[1];
+  std::string scene_path = argv[1];
 #else
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/dragon_dynamic.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/focusing_dragons.json";
-  std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/cube_waves.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs/tunnel_of_doom/tunnel_of_doom_000.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/ramazan_tokay/chessboard_arealight_dof_glass_queen.json";
-  //std::string scene_filename = FS::absolute(__FILE__).parent_path() / "../inputs2/metal_glass_plates.json";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/dragon/";
+  std::string scene_filename = "dragon_new_ply";
+  scene_filename += ".json";
+  std::string scene_path = scene_folder + scene_filename;
 #endif
 
   Scene_ raw_scene;
-  parseScene(scene_filename, raw_scene);
+  parseScene(scene_path, raw_scene);
 
   std::vector<Geometry> geometries;
   std::vector<std::optional<Transformation>> transformations;
@@ -47,7 +44,7 @@ int main(int argc, char* argv[])
   images.resize(raw_scene.images.size());
   for (const auto& img : raw_scene.images)
   {
-    std::string absolute_path = FS::absolute(__FILE__).parent_path() / ("../inputs/" + img.data);
+    std::string absolute_path = scene_folder + img.data;
     images[img.id] = Image(absolute_path);
   }
 
@@ -60,10 +57,11 @@ int main(int argc, char* argv[])
     {
       if (texture.d_mode == DecalMode::bump_normal)
       {
-        texture.make_image(&images[tm.image_id], tm.normalizer);
+        texture.make_bump_image(&images[tm.image_id], tm.normalizer, tm.bump_factor);
         continue;
       }
-      texture.make_bump_image(&images[tm.image_id], tm.normalizer, tm.bump_factor);
+      texture.make_image(&images[tm.image_id], tm.normalizer);
+
     }
     else if (texture.type == TextureType::perlin)
     {
@@ -229,6 +227,7 @@ int main(int argc, char* argv[])
 
   //Scene scene(raw_scene, tlas_boxes, planes);
 
+  initPerlin();
   RenderContext render_context(Color(raw_scene.background_color),
     raw_scene.shadow_ray_epsilon,
     raw_scene.intersection_test_epsilon, 
@@ -236,9 +235,8 @@ int main(int argc, char* argv[])
 
   Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes), render_context);
 
-  initPerlin();
 
-  std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
+    std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
   auto start = std::chrono::high_resolution_clock::now();
 
   raytracer.renderScene();

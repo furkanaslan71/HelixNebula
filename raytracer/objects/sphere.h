@@ -49,13 +49,13 @@ public:
 
 			if (t1 >= 0 || t2 >= 0)
 			{
-				if constexpr (occlusion_only) return true;
 				double t = (t1 >= 0) ? t1 : t2;
+				rec.t = t;
+				if constexpr (occlusion_only) return true;
 
 				glm::vec3 hitPoint = ray.origin + ray.direction * (float)t;
 				glm::vec3 normal = glm::normalize((hitPoint - center));
 
-				rec.t = t;
 				rec.point = hitPoint;
 				rec.normal = normal;
 

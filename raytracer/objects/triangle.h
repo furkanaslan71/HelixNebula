@@ -114,11 +114,11 @@ public:
 		double t = det(c1, c2, c3) / detA;
 
 		if (t < ray_t.min + 0.00000001 || 0.00000001 + t > ray_t.max) return false;
-		if constexpr (occlusion_only) return true;
 
 		if (beta + gamma <= 1 && beta + 0.00000001 >= 0 && gamma + 0.00000001 >= 0)
 		{
 			rec.t = t;
+			if constexpr (occlusion_only) return true;
 			rec.point = ray.origin + ray.direction * (float)t;
 			if (this->smooth_shading)
 			{

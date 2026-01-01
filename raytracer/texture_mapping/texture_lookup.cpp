@@ -47,10 +47,10 @@ glm::vec3 lookupImageTexture(Texture* texture, glm::vec2 uv)
 {
     // returns 0 - 255
     glm::vec3 color = fetch_interpolated_sample(texture->texture_data.image.image, uv, texture->interp);
-    return color;
+    return glm::clamp(color, 0.0f, 255.0f);
 }
 
-glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv)
+glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_point)
 {
     switch (texture->type)
     {
@@ -63,8 +63,12 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv)
         }
         case (TextureType::perlin):
         {
-            return glm::vec3(0.0f);
-            break;
+            auto sample = glm::vec3(perlinNoise(hit_point,
+                texture->texture_data.perlin.noise_scale,
+                texture->texture_data.perlin.noise_conversion,
+                texture->texture_data.perlin.num_octaves));
+
+            return sample;
         }
         default:
         {
@@ -75,7 +79,7 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv)
 
 glm::vec3 lookupNormalMap(Texture* texture, const HitRecord& rec)
 {
-    glm::vec3 rgb_sample = lookupTexture(texture, rec.uv) * 255.0f;
+    glm::vec3 rgb_sample = lookupTexture(texture, rec.uv, rec.point) * 255.0f;
     glm::vec3 tangent_normal = rgb_sample / 127.5f - glm::vec3(1.0f);
     tangent_normal = glm::normalize(tangent_normal);
 
@@ -88,8 +92,60 @@ glm::vec3 lookupNormalMap(Texture* texture, const HitRecord& rec)
     return res;
 }
 
+float height_function(Texture* texture, glm::vec2 uv)
+{
+    const glm::vec3 rgb_sample = lookupImageTexture(texture, uv);
+    float grayscale = (rgb_sample.x + rgb_sample.y + rgb_sample.z) / 3.0f;
+    grayscale /= texture->texture_data.bump_image.normalizer;
+    return grayscale * texture->texture_data.bump_image.bump_factor;
+}
+
 glm::vec3 lookupBumpMap(Texture* texture, const HitRecord& rec)
 {
-    return glm::vec3(0.0f);
+    if (texture->type == TextureType::image)
+    {
+        float h = height_function(texture, rec.uv);
+        float delta_u = 1.0f / texture->texture_data.bump_image.image->width;
+        float delta_v = 1.0f / texture->texture_data.bump_image.image->height;
+        float h_u = height_function(texture, rec.uv + glm::vec2(delta_u, 0.0f)) - h;
+        float h_v = height_function(texture, rec.uv + glm::vec2(0.0f, delta_v)) - h;
+        glm::vec3 grad = h_u * rec.surface_tangents.u + h_v * rec.surface_tangents.v;
+        return glm::normalize(rec.normal - grad);
+    }
+    else if (texture->type == TextureType::perlin)
+    {
+        float invEps = 1e3f;
+        float eps = 1e-3f;
+
+        float h = perlinNoise(rec.point,
+            texture->texture_data.bump_perlin.noise_scale,
+            texture->texture_data.bump_perlin.noise_conversion,
+            texture->texture_data.bump_perlin.num_octaves);
+
+        float h_x = perlinNoise(rec.point + glm::vec3(eps, 0.0f, 0.0f),
+            texture->texture_data.bump_perlin.noise_scale,
+            texture->texture_data.bump_perlin.noise_conversion,
+            texture->texture_data.bump_perlin.num_octaves);
+
+        float h_y = perlinNoise(rec.point + glm::vec3(0.0f, eps, 0.0f),
+            texture->texture_data.bump_perlin.noise_scale,
+            texture->texture_data.bump_perlin.noise_conversion,
+            texture->texture_data.bump_perlin.num_octaves);
+
+        float h_z = perlinNoise(rec.point + glm::vec3(0.0f, 0.0f, eps),
+            texture->texture_data.bump_perlin.noise_scale,
+            texture->texture_data.bump_perlin.noise_conversion,
+            texture->texture_data.bump_perlin.num_octaves);
+
+        auto g = invEps * (glm::vec3(h_x, h_y, h_z) - glm::vec3(h, h, h));
+
+        glm::vec3 g_parallel = glm::dot(rec.normal, g) * rec.normal;
+        glm::vec3 g_perp = g - g_parallel;
+        return glm::normalize(rec.normal - (g_perp * texture->texture_data.bump_perlin.bump_factor));
+    }
+    else
+    {
+        throw std::runtime_error("Unsupported texture type for bump mapping");
+    }
 }
 

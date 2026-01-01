@@ -137,9 +137,9 @@ bool BVH<T>::intersect(const Ray& ray, Interval ray_t, HitRecord& rec) const
           // Check intersection
           if (primitives_[node->primitives_offset + i].template hit<occlusion_only>(ray, ray_t, rec))
           {
+            ray_t.max = rec.t;
             if constexpr (occlusion_only) return true;
             hit_anything = true;
-            ray_t.max = rec.t; // CRITICAL: Shrink the ray so we ignore farther objects!
           }
         }
         if (stack_ptr == 0) break;

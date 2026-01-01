@@ -3,35 +3,7 @@
 
 #include <string>
 #include "parser/parser.hpp"
-
-#define SET(x) x = tm.x
-
-enum class TextureType : int {
-	image = 0,
-	perlin = 1,
-	checkerboard = 2	
-};
-
-enum class Interpolation : int {
-	nearest,
-	bilinear,
-	trilinear
-};
-
-enum class DecalMode : int {
-	replace_kd,
-	blend_kd,
-	replace_ks,
-	replace_background,
-	replace_normal,
-	bump_normal,
-	replace_all
-};
-
-enum class NoiseConversion : bool {
-	linear,
-	absval
-};
+#include "type_structs.h"
 
 struct Image {
 	explicit Image(const std::string& absolute_path);
@@ -85,6 +57,7 @@ struct Texture {
 			glm::vec3 white_color;
 			float scale;
 			float offset;
+			float normalizer;
 		}checkerboard;
 	} texture_data;
 

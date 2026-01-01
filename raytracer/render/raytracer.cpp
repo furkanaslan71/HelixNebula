@@ -1,8 +1,6 @@
 #include "raytracer.h"
 #include <typeinfo>
 
-#include "texture_mapping/texture_lookup.h"
-
 
 void generateRaySamples(std::shared_ptr<BaseCamera> camera, int i, int j,
                         std::vector<std::pair<glm::vec3, glm::vec3>>& out_samples,
@@ -197,7 +195,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 	Material mat = *rec.material;
 	Color color(0.0, 0.0, 0.0);
 
-	if ((mat.type).compare("mirror") == 0)
+	if ((mat.type) == "mirror")
 	{
 		glm::vec3 wo = -ray.direction;
 		glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
@@ -210,7 +208,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 
 		color += computeColor(reflectedRay, depth - 1, sampling_context) * Color(mat.mirror_reflectance);
 	}
-	else if ((mat.type).compare("conductor") == 0)
+	else if ((mat.type) == "conductor")
 	{
 		glm::vec3 wo = -ray.direction;
 		glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
@@ -338,17 +336,17 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			{
 				case (DecalMode::replace_kd):
 				{
-					kd = lookupTexture(tex, rec.uv);
+					kd = lookupTexture(tex, rec.uv, rec.point);
 					break;
 				}
 				case (DecalMode::blend_kd):
 				{
-					kd = (lookupTexture(tex, rec.uv) + kd) / 2.0f;
+					kd = (lookupTexture(tex, rec.uv, rec.point) + kd) / 2.0f;
 					break;
 				}
 				case (DecalMode::replace_ks):
 				{
-					ks = lookupTexture(tex, rec.uv);
+					ks = lookupTexture(tex, rec.uv, rec.point);
 					break;
 				}
 				case (DecalMode::replace_normal):
@@ -361,10 +359,9 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 					rec.normal = lookupBumpMap(tex, rec);
 					break;
 				}
-
 				case (DecalMode::replace_all):
 				{
-					return lookupTexture(tex, rec.uv) * 255.0f;
+					return lookupTexture(tex, rec.uv, rec.point) * 255.0f;
 				}
 
 				default:
@@ -386,11 +383,10 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		Ray shadowRayPlane = Ray(rec.point
 			+ rec.normal
 			* static_cast<float>(render_context.shadow_ray_epsilon)
-			* 1e-2f
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
+		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 
@@ -419,11 +415,10 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		Ray shadowRayPlane = Ray(rec.point
 			+ rec.normal
 			* static_cast<float>(render_context.shadow_ray_epsilon)
-			* 1e-2f
 			, wi, ray.time);
 		HitRecord shadowRec;
 		HitRecord planeShadowRec;
-		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.intersection_test_epsilon, distance), shadowRec)
+		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
 			float area_of_light = light.edge * light.edge;

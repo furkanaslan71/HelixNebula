@@ -5,9 +5,10 @@
 #include <algorithm>  
 #include <random>     
 #include "glm_config.h"
+#include "type_structs.h"
 
 
-static glm::vec3 gradients[16] = {
+inline glm::vec3 gradients[16] = {
     glm::vec3(1, 1, 0),
     glm::vec3(-1, 1, 0),
     glm::vec3(1, -1, 0),
@@ -26,7 +27,7 @@ static glm::vec3 gradients[16] = {
     glm::vec3(0, -1, -1)
 };
 
-static int table[16] = {
+inline int table[16] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
 };
 
@@ -76,7 +77,7 @@ inline float calculate_c(int i, int j, int k, const glm::vec3& p)
 
 inline float perlinNoise(const glm::vec3& point,
                          float noise_scale,
-                         std::string noise_conversion,
+                         NoiseConversion noise_conversion,
                          int num_octaves)
 {
   float s = 0.0f;
@@ -102,7 +103,7 @@ inline float perlinNoise(const glm::vec3& point,
           int x = i + di;
           int y = j + dj;
           int z = k + dk;
-          c += calculate_c(x, y, z, p);
+          c += calculate_c(x, y, z, scaled_p);
         }
       }
     }
@@ -111,7 +112,7 @@ inline float perlinNoise(const glm::vec3& point,
 
   }
 
-  if (noise_conversion == "linear")
+  if (noise_conversion == NoiseConversion::linear)
   {
     s = (s + 1) / 2.0f;
   }
