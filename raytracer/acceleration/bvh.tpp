@@ -99,13 +99,21 @@ int BVH<T>::buildFlatBVH(TreeBVHNode* node, int& offset)
 template <GeometryConcept T>
 void BVH<T>::buildBVH()
 {
-  Expects(primitives_.size() > 0);
-  size_t size = primitives_.size();
-  TreeBVHNode* root = buildTreeRecursive(primitives_, 0, size);
-  linear_nodes_.resize(size * 2);
-  int offset = 0;
-  buildFlatBVH(root, offset);
-  linear_nodes_.resize(offset);
+  //Expects(primitives_.size() > 0);
+  if (primitives_.size() == 0)
+  {
+    linear_nodes_.clear();
+  }
+  else
+  {
+    Expects(primitives_.size() > 0);
+    size_t size = primitives_.size();
+    TreeBVHNode* root = buildTreeRecursive(primitives_, 0, size);
+    linear_nodes_.resize(size * 2);
+    int offset = 0;
+    buildFlatBVH(root, offset);
+    linear_nodes_.resize(offset);
+  }
 }
 
 template <GeometryConcept T>

@@ -1,15 +1,12 @@
 #include "plane.h"
 
-Plane::Plane()
-		: id(-1), material(nullptr), point(glm::vec3(0, 0, 0)), normal(glm::vec3(0, 1, 0))
-	{
-}
 
 Plane::Plane(
 	const Plane_& _plane,
 	const std::vector<glm::vec3>& _vertex_data,
 	glm::vec3 _motion_blur,
-	Material* _material
+	Material* _material,
+	std::vector<Texture>& _textures
 )
 	: id(_plane.id), material(_material),
 	point(glm::vec3(_vertex_data[_plane.point_vertex_id])),
@@ -33,7 +30,13 @@ Plane::Plane(
 		glm::vec4 transformed_normal = glm::transpose(glm::inverse(composite_transformation_matrix.value())) * glm_normal;
 		normal = glm::normalize(glm::vec3(transformed_normal));
 	}
-	
+
+	for (int tex_id : _plane.textures)
+	{
+		textures.emplace_back(&_textures[tex_id]);
+	}
+
+	createONB(this->normal, orthonormal_u, orthonormal_v);
 }
 bool Plane::hit(const Ray& ray, const Interval& interval, HitRecord& rec) const
 {
@@ -49,6 +52,13 @@ bool Plane::hit(const Ray& ray, const Interval& interval, HitRecord& rec) const
 			rec.normal = normal;
 			rec.material = material;
 			rec.set_front_face(ray);
+
+			glm::vec3 d = rec.point - this->point;
+			float u = glm::dot(d, orthonormal_u);
+			float v = glm::dot(d, orthonormal_v);
+			rec.textures = this->textures;
+			rec.uv = {u, v};
+			rec.surface_tangents = {orthonormal_u, orthonormal_v};
 			return true;
 		}
 	}

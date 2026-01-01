@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/veach_ajar/";
-  std::string scene_filename = "scene";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/mytap/";
+  std::string scene_filename = "mytap_final";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
@@ -232,7 +232,9 @@ int main(int argc, char* argv[])
   {
     //planes are transformed
     planes.push_back(
-            Plane(raw_plane, raw_scene.vertex_data,raw_plane.motion_blur, &materials[raw_plane.material_id]));
+            Plane(raw_plane, raw_scene.vertex_data,raw_plane.motion_blur,
+              &materials[raw_plane.material_id], textures)
+            );
   }
 
   //Scene scene(raw_scene, tlas_boxes, planes);

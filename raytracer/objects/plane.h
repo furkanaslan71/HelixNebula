@@ -12,19 +12,24 @@
 
 class Plane {
 public:
-	Plane();
+	Plane() = default;
 	Plane(
 		const Plane_& _plane,
 		const std::vector<glm::vec3>& _vertex_data,
 		glm::vec3 _motion_blur,
-		Material* _material
+		Material* _material,
+		std::vector<Texture>& _textures
 	);
 	bool hit(const Ray& ray, const Interval& interval, HitRecord& rec) const;
-	int id;
-	Material* material;
+
+	std::optional<glm::mat4> composite_transformation_matrix;
+	std::vector<Texture*> textures;
+	glm::vec3 orthonormal_u, orthonormal_v;
 	glm::vec3 point;
 	glm::vec3 normal;
 	glm::vec3 motion_blur;
-	std::optional<glm::mat4> composite_transformation_matrix;
+	Material* material;
+	int id;
+
 };
 #endif // PLANE_H

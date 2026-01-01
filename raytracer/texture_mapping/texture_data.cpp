@@ -66,7 +66,7 @@ Texture::Texture(const TextureMap_& tm)
     }
     else if (tm.interpolation == "trilinear") {
         //trilinear is not implemented, so we treat as bilinear
-        interp = Interpolation::bilinear; // fallback
+        interp = Interpolation::nearest;
     }
     else {
         throw std::runtime_error("Unknown interpolation: " + tm.interpolation);
