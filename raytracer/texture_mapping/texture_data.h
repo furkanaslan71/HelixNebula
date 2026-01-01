@@ -57,7 +57,6 @@ struct Texture {
 			glm::vec3 white_color;
 			float scale;
 			float offset;
-			float normalizer;
 		}checkerboard;
 	} texture_data;
 

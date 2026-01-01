@@ -70,6 +70,25 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_poi
 
             return sample;
         }
+        case (TextureType::checkerboard):
+        {
+            float scale = texture->texture_data.checkerboard.scale;
+            float offset = texture->texture_data.checkerboard.offset;
+            glm::vec3 black_color = texture->texture_data.checkerboard.black_color;
+            glm::vec3 white_color = texture->texture_data.checkerboard.white_color;
+
+            int x = static_cast<int>(std::floor((hit_point.x + offset) * scale));
+            int y = static_cast<int>(std::floor((hit_point.y + offset) * scale));
+            int z = static_cast<int>(std::floor((hit_point.z + offset) * scale));
+
+            bool is_x_even = (x % 2) == 0;
+            bool is_y_even = (y % 2) == 0;
+            bool is_z_even = (z % 2) == 0;
+
+            if ((is_x_even ^ is_y_even) ^ is_z_even)
+                return black_color;
+            return white_color;
+        }
         default:
         {
             throw std::runtime_error("Unknown texture type");
