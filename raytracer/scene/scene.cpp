@@ -48,7 +48,8 @@ Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::
 				raw_scene.rotations,
 				recursion_depth,
 				num_area_lights,
-				this->light_sources.area_lights
+				this->light_sources.area_lights,
+				raw_camera.tone_maps
 				));
 		}
 		else
@@ -59,7 +60,8 @@ Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::
 				raw_scene.rotations,
 				recursion_depth,
 				num_area_lights,
-				this->light_sources.area_lights));
+				this->light_sources.area_lights,
+				raw_camera.tone_maps));
 		}
 	}
 

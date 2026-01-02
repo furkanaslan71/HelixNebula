@@ -10,9 +10,14 @@
 #include <filesystem>
 #include <iostream>
 
-void saveImage(const std::string& outputDir,
-                            const std::string& fileName,
-                           std::vector<std::vector<Color>>& image);
+enum class ImageType : int {
+    SDR,
+    HDR
+};
+
+void saveImage(const std::string& outputDir, const std::string& fileName,
+    std::vector<std::vector<Color>>& image, ImageType img_type);
+
 
 
 #endif //SAVE_IMAGE_H

@@ -10,6 +10,14 @@
 #include "config.h"
 #include "glm_config.h"
 
+struct Tonemap_ {
+    std::string TMO;
+    glm::vec2 TMOOptions;
+    float saturation;
+    float gamma;
+    std::string extension;
+};
+
 typedef struct Camera_ {
     int id;
     glm::vec3 position;
@@ -25,6 +33,7 @@ typedef struct Camera_ {
     int num_samples;
     float aperture_size;
     float focus_distance;
+    std::vector<Tonemap_> tone_maps;
 } Camera_;
 
 typedef struct PointLight_ {
@@ -43,6 +52,28 @@ struct AreaLight_ {
   //std::vector<std::string> transformations;
 };
 
+struct DirectionalLight_ {
+    int id;
+    glm::vec3 direction;
+    glm::vec3 radiance;
+};
+
+struct SpotLight_ {
+    int id;
+    glm::vec3 position;
+    glm::vec3 direction;
+    glm::vec3 intensity;
+    float coverage_angle;
+    float falloff_angle;
+};
+
+struct SphericalDirectionalLight_ {
+    int id;
+    std::string type;
+    int image_id;
+    std::string sampler;
+};
+
 typedef struct Material_ {
     int id;
     std::string type;
@@ -55,6 +86,7 @@ typedef struct Material_ {
     glm::vec3 absorption_coefficient;
     float absorption_index;
     float roughness;
+    bool degamma;
 } Material_;
 
 typedef struct Triangle_ {
@@ -153,6 +185,9 @@ typedef struct Scene_ {
     glm::vec3 ambient_light;
     std::vector<PointLight_> point_lights;
     std::vector<AreaLight_> area_lights;
+    std::vector<DirectionalLight_> directional_lights;
+    std::vector<SphericalDirectionalLight_> spherical_directional_lights;
+    std::vector<SpotLight_> spot_lights;
     std::vector<Material_> materials;
     std::vector<glm::vec3> vertex_data;
 		std::vector<Translation_> translations;

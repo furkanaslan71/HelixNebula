@@ -44,12 +44,15 @@ add_executable (HelixNebula
         "raytracer/texture_mapping/perlin.h"
         raytracer/render/raytracer.h
         raytracer/render/raytracer.cpp
-        raytracer/io/save_image.h
-        raytracer/io/save_image.cpp
+        raytracer/io/image_io.h
+        raytracer/io/image_io.cpp
         raytracer/texture_mapping/texture_data.cpp
         raytracer/texture_mapping/texture_lookup.h
         raytracer/texture_mapping/texture_lookup.cpp
-        raytracer/texture_mapping/type_structs.h)
+        raytracer/texture_mapping/type_structs.h
+        raytracer/tonemapping/tonemapping.h
+        raytracer/tonemapping/tonemapping.cpp
+)
 
 
 # Important: Add include directories so your compiler can find your headers.

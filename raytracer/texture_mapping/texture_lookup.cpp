@@ -8,9 +8,9 @@
 glm::vec3 fetch_single_sample(Image* image, int x, int y)
 {
     int index = (y * image->width + x) * image->channels;
-    glm::vec3 result = { image->data[index + 0],
-        image->data[index + 1],
-        image->data[index + 2] };
+    glm::vec3 result = { image->data.sdr[index + 0],
+        image->data.sdr[index + 1],
+        image->data.sdr[index + 2] };
     return result;
 }
 

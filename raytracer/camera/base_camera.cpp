@@ -7,7 +7,8 @@ BaseCamera::BaseCamera(
 	const std::vector<Rotation_>& rotations,
 	int _recursion_depth,
 	int _num_area_lights,
-	std::vector<AreaLight>& _area_lights
+	std::vector<AreaLight>& _area_lights,
+	std::vector<Tonemap_>& _tonemaps
 ) : id(cam.id),
 		position(cam.position.x, cam.position.y, cam.position.z),
 		gaze(cam.gaze.x, cam.gaze.y, cam.gaze.z),
@@ -72,6 +73,11 @@ BaseCamera::BaseCamera(
 	this->context.up = this->v;
 	this->context.tan_half_fov_x = (float)((r - l) * 0.5 / near_distance);
 	this->context.tan_half_fov_y = (float)((t - b) * 0.5 / near_distance);
+
+	for (const auto& tm : _tonemaps)
+	{
+		tonemaps.emplace_back(tm);
+	}
 }
 
 void BaseCamera::generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const

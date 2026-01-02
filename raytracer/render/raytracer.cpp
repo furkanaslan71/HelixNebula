@@ -2,6 +2,59 @@
 #include <typeinfo>
 
 
+Raytracer::Raytracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context)
+    : render_context(_render_context)
+{
+    scene = std::move(_scene);
+}
+
+void Raytracer::renderScene() const
+{
+    std::string saveDir = FS::absolute(__FILE__).parent_path() / "../../outputs";
+    for (const auto& cam : scene->cameras)
+    {
+        std::vector<std::vector<Color>> image;
+        renderOneCamera(cam, image);
+    	std::string image_name = cam->image_name;
+    	std::string extension = getFileExtension(image_name);
+
+    	if (extension== "png" || extension == "jpg" || extension == ".jpeg")
+			saveImage(saveDir, image_name, image, ImageType::SDR);
+    	else if (extension == "exr" || extension == "hdr")
+    	{
+    		for (const Tonemap& tm : cam->tonemaps)
+    		{
+    			//tonemap
+    			std::vector<std::vector<Color>> tonemapped_image;
+    			tonemapped_image.resize(cam->image_height, std::vector<Color>(cam->image_width, Color(0, 0, 0)));
+    			tonemap(image, tonemapped_image, tm);
+    			saveImage(saveDir, image_name + tm.extension, tonemapped_image, ImageType::HDR);
+    		}
+    	}
+    	else
+    		throw std::runtime_error("Unsupported image type");
+    }
+}
+
+void Raytracer::renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const
+{
+    output.resize(camera->image_height, std::vector<Color>(camera->image_width, Color(0, 0, 0)));
+
+#if !MULTI_THREADING
+    // SINGLE THREADED VERSION
+    renderLoop(0, 1, camera, output);
+#else
+    // MULTI THREADED VERSION
+    const int numThreads = std::thread::hardware_concurrency();
+    std::vector<std::thread> threads(numThreads);
+    for (int threadId = 0; threadId < numThreads; threadId++)
+    {
+        threads[threadId] = std::thread(&Raytracer::renderLoop, this, threadId, numThreads, camera, std::ref(output));
+    }
+    for (auto& t : threads) t.join();
+#endif
+}
+
 void generateRaySamples(std::shared_ptr<BaseCamera> camera, int i, int j,
                         std::vector<std::pair<glm::vec3, glm::vec3>>& out_samples,
                         std::mt19937& rng)
@@ -48,41 +101,6 @@ void generateRaySamples(std::shared_ptr<BaseCamera> camera, int i, int j,
     }
 }
 
-Raytracer::Raytracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context)
-    : render_context(_render_context)
-{
-    scene = std::move(_scene);
-}
-
-void Raytracer::renderScene() const
-{
-    std::string saveDir = FS::absolute(__FILE__).parent_path() / "../../outputs";
-    for (const auto& cam : scene->cameras)
-    {
-        std::vector<std::vector<Color>> image;
-        renderOneCamera(cam, image);
-        saveImage(saveDir, cam->image_name, image);
-    }
-}
-
-void Raytracer::renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const
-{
-    output.resize(camera->image_height, std::vector<Color>(camera->image_width, Color(0, 0, 0)));
-
-#if !MULTI_THREADING
-    // SINGLE THREADED VERSION
-    renderLoop(0, 1, camera, output);
-#else
-    // MULTI THREADED VERSION
-    const int numThreads = std::thread::hardware_concurrency();
-    std::vector<std::thread> threads(numThreads);
-    for (int threadId = 0; threadId < numThreads; threadId++)
-    {
-        threads[threadId] = std::thread(&Raytracer::renderLoop, this, threadId, numThreads, camera, std::ref(output));
-    }
-    for (auto& t : threads) t.join();
-#endif
-}
 
 // Helper to keep the actual rendering logic in one place
 void Raytracer::renderLoop(int threadId, int stride, std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const
@@ -130,7 +148,7 @@ void Raytracer::renderLoop(int threadId, int stride, std::shared_ptr<BaseCamera>
                 pixel_color += traceRay(primary_ray, sampling_context, camera->context);
             }
 
-            output[i][j] = (pixel_color / (float)camera->num_samples).clamp();
+            output[i][j] = (pixel_color / (float)camera->num_samples);
         }
     }
 }

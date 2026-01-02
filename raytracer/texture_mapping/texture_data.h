@@ -4,15 +4,21 @@
 #include <string>
 #include "parser/parser.hpp"
 #include "type_structs.h"
+#include "io/image_io.h"
 
 struct Image {
-	explicit Image(const std::string& absolute_path);
+	Image(const std::string& absolute_path, ImageType _type);
 	Image() = default;
+	~Image();
 
-	unsigned char* data;
+	union {
+		unsigned char* sdr;
+		float** hdr;
+	}data;
 	int width;
 	int height;
 	int channels;
+	ImageType type;
 };
 
 struct Texture {

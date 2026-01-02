@@ -6,7 +6,7 @@
 #include "core/hittable.h"
 #include "scene/scene.h"
 #include <filesystem>
-#include "io/save_image.h"
+#include "io/image_io.h"
 #include "texture_mapping/texture_lookup.h"
 
 

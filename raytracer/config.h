@@ -14,6 +14,7 @@
 
 #define FS std::filesystem
 
+#include <string>
 #include "glm_config.h"
 
 struct CameraContext {
@@ -23,3 +24,14 @@ struct CameraContext {
     float tan_half_fov_x;
     float tan_half_fov_y;
 };
+
+
+inline std::string getFileExtension(const std::string& filename)
+{
+    size_t dotPosition = filename.rfind('.');
+
+    if (dotPosition != std::string::npos && dotPosition != 0)
+        return filename.substr(dotPosition + 1);
+
+    return "";
+}

@@ -19,6 +19,7 @@ public:
 	glm::vec3 absorption_coefficient;
 	float absorption_index;
 	float roughness;
+	bool degamma;
 };
 
 

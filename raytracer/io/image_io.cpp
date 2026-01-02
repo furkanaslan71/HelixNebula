@@ -2,14 +2,14 @@
 // Created by furkan on 12/29/25.
 //
 
-#include "save_image.h"
+#include "image_io.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../io/stb_image_write.h"
 
 void saveImage(const std::string& outputDir,
                             const std::string& fileName,
-                           std::vector<std::vector<Color>>& image)
+                           std::vector<std::vector<Color>>& image, ImageType img_type)
 {
     if (image.empty() || image[0].empty())
     {
@@ -47,8 +47,18 @@ void saveImage(const std::string& outputDir,
         }
     }
 
-    int success = stbi_write_png(fullPath.c_str(),
+    int success = 0;
+    if (img_type == ImageType::SDR)
+    {
+        success = stbi_write_png(fullPath.c_str(),
       width, height, channels, data.data(), width * channels);
+    }
+    else
+    {
+        // write hdr image
+        success = stbi_write_png(fullPath.c_str(),
+      width, height, channels, data.data(), width * channels);
+    }
 
     if (success)
     {

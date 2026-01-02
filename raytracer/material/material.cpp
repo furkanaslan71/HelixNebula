@@ -11,7 +11,8 @@ Material::Material()
 		refraction_index(1.0f),
 		absorption_coefficient(),
 	absorption_index(),
-	roughness()
+	roughness(),
+	degamma()
 {}
 
 Material::Material(const Material_& _material)
@@ -25,6 +26,7 @@ Material::Material(const Material_& _material)
 			refraction_index(_material.refraction_index),
 			absorption_coefficient(_material.absorption_coefficient),
 			absorption_index(_material.absorption_index),
-			roughness(_material.roughness)
+			roughness(_material.roughness),
+			degamma(_material.degamma)
 {
 }

@@ -23,6 +23,14 @@ enum class FieldRequirement {
 using json = nlohmann::json;
 
 // Helper functions
+
+glm::vec2 parseVec2(const std::string& str) {
+  glm::vec2 vec;
+  std::stringstream ss(str);
+  ss >> vec.x >> vec.y;
+  return vec;
+}
+
 glm::vec3 parseVec3(const std::string& str) {
     glm::vec3 vec;
     std::stringstream ss(str);
@@ -616,6 +624,28 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				cam.up = v;
       }
 
+      if (cam_json.contains("Tonemap"))
+      {
+        const auto& tms_json = cam_json["Tonemap"];
+        auto parse_tonemap = [&](const json& tm_json) {
+          Tonemap_ tm;
+          tm.TMO = tm_json["TMO"].get<std::string>();
+          tm.TMOOptions = parseVec2(tm_json["TMOOptions"].get<std::string>());
+          tm.saturation = std::stof(tm_json["Saturation"].get<std::string>());
+          tm.gamma = std::stof(tm_json["Gamma"].get<std::string>());
+          tm.extension = tm_json["Extension"].get<std::string>();
+          cam.tone_maps.push_back(tm);
+        };
+        if (tms_json.is_array())
+        {
+          for (const auto& tm_json : tms_json) parse_tonemap(tm_json);
+        }
+        else
+        {
+          parse_tonemap(tms_json);
+        }
+      }
+
       scene.cameras.push_back(cam);
       };
 
@@ -710,6 +740,73 @@ void parseScene(const std::string& filename, Scene_& scene) {
         }
     }
 
+    if (scene_json["Lights"].contains("DirectionalLight"))
+    {
+      const auto& directional_lights_json = scene_json["Lights"]["DirectionalLight"];
+      auto parse_directional_light = [&](const json& dl_json) {
+        DirectionalLight_ dl;
+        dl.id = std::stoi(dl_json["_id"].get<std::string>());
+        dl.direction = parseVec3(dl_json["Direction"].get<std::string>());
+        dl.radiance = parseVec3(dl_json["Radiance"].get<std::string>());
+        scene.directional_lights.push_back(dl);
+      };
+      if (directional_lights_json.is_array())
+      {
+        for (const auto& dl_json : directional_lights_json) parse_directional_light(dl_json);
+      }
+      else
+      {
+        parse_directional_light(directional_lights_json);
+      }
+    }
+
+    if (scene_json["Lights"].contains("SpotLight"))
+    {
+      const auto& spot_lights_json = scene_json["Lights"]["SpotLight"];
+      auto parse_spot_light = [&](const json& sl_json) {
+        SpotLight_ sl;
+        sl.id = std::stoi(sl_json["_id"].get<std::string>());
+        sl.position = parseVec3(sl_json["Position"].get<std::string>());
+        sl.direction = parseVec3(sl_json["Direction"].get<std::string>());
+        sl.intensity = parseVec3(sl_json["Intensity"].get<std::string>());
+        sl.coverage_angle = std::stof(sl_json["CoverageAngle"].get<std::string>());
+        sl.falloff_angle = std::stof(sl_json["FalloffAngle"].get<std::string>());
+        scene.spot_lights.push_back(sl);
+      };
+      if (spot_lights_json.is_array())
+      {
+        for (const auto& sl_json : spot_lights_json) parse_spot_light(sl_json);
+      }
+      else
+      {
+        parse_spot_light(spot_lights_json);
+      }
+    }
+
+    if (scene_json["Lights"].contains("SphericalDirectionalLight"))
+    {
+      const auto& spherical_directional_lights_json = scene_json["Lights"]["SphericalDirectionalLight"];
+      auto parse_spot_light = [&](const json& sdl_json) {
+        SphericalDirectionalLight_ sdl;
+        sdl.id = std::stoi(sdl_json["_id"].get<std::string>());
+        sdl.type = sdl_json["_type"].get<std::string>();
+        sdl.image_id = std::stoi(sdl_json["ImageId"].get<std::string>());
+        if (sdl_json.contains("Sampler"))
+          sdl.sampler = sdl_json["Sampler"].get<std::string>();
+        else
+          sdl.sampler = "cosine";
+        scene.spherical_directional_lights.push_back(sdl);
+      };
+      if (spherical_directional_lights_json.is_array())
+      {
+        for (const auto& sdl_json : spherical_directional_lights_json) parse_spot_light(sdl_json);
+      }
+      else
+      {
+        parse_spot_light(spherical_directional_lights_json);
+      }
+    }
+
     // --- Materials ---
     const auto& materials_json = scene_json["Materials"]["Material"];
     auto parse_material = [&](const json& mat_json) {
@@ -735,6 +832,8 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				else mat.absorption_index = 0.0f;
         if (mat_json.contains("Roughness")) mat.roughness = std::stof(mat_json["Roughness"].get<std::string>());
         else mat.roughness = 0.0f;
+        if (mat_json.contains("_degamma")) mat.degamma = mat_json["_degamma"].get<std::string>() == "true" ? true : false;
+        else mat.degamma = false;
         scene.materials.push_back(mat);
     };
     if (materials_json.is_array()) {
@@ -808,7 +907,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
             texture_map.interpolation = "nearest";
 
           if (texture_maps_json.contains("Normalizer"))
-            texture_map.normalizer = stof(texture_map_json["Normalizer"].get<std::string>());
+            texture_map.normalizer = std::stof(texture_map_json["Normalizer"].get<std::string>());
           else
             texture_map.normalizer = 255.f;
 

@@ -10,6 +10,7 @@
 #include "acceleration/bvh.h"
 #include "parser/parser.hpp"
 #include "light/light.h"
+#include "tonemapping/tonemapping.h"
 
 
 class BaseCamera {
@@ -21,19 +22,20 @@ public:
 		const std::vector<Rotation_>& rotations,
 		int _recursion_depth,
 		int _num_area_lights,
-		std::vector<AreaLight>& _area_lights
+		std::vector<AreaLight>& _area_lights,
+		std::vector<Tonemap_>& _tonemaps
 	);
 	virtual ~BaseCamera() = default;
+
+	void generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const;
 
 	std::string image_name;
 	int num_samples;
 	int id;
 
-
-	void generatePixelSamples(int i, int j, std::vector<glm::vec3>& out_samples) const;
-
 	std::vector<AreaLight>& area_lights;
-	
+	std::vector<Tonemap> tonemaps;
+
 	glm::vec3 w, u, v, q, su, sv, m;
 	glm::vec3 position, gaze, up;
 	double near_plane[4]; // l, r, b, t

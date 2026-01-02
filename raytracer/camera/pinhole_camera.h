@@ -12,9 +12,10 @@ public:
     const std::vector<Rotation_>& rotations,
     int _recursion_depth,
     int _num_area_lights,
-    std::vector<AreaLight>& _area_lights
+    std::vector<AreaLight>& _area_lights,
+    std::vector<Tonemap_> _tonemaps
   ) : BaseCamera(cam, translations, scalings, rotations, _recursion_depth,
-    _num_area_lights, _area_lights)
+    _num_area_lights, _area_lights, _tonemaps)
   {}
 
 };

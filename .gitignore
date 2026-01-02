@@ -1,8 +1,7 @@
 /.vs
 /out
 /outputs
-/inputs
-/inputs2
+/inputs*
 /.idea
 /cmake-build-debug
 /cmake-build-release

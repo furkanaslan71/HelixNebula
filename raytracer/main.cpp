@@ -2,6 +2,7 @@
 #include <memory>
 #include <chrono>
 #include <filesystem>
+#include <external/json.hpp>
 
 #include "parser/parser.hpp"
 #include "scene/scene.h"
@@ -26,8 +27,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs/mytap/";
-  std::string scene_filename = "mytap_final";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
+  std::string scene_filename = "cube_point_hdr";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
@@ -45,7 +46,11 @@ int main(int argc, char* argv[])
   for (const auto& img : raw_scene.images)
   {
     std::string absolute_path = scene_folder + img.data;
-    images[img.id] = Image(absolute_path);
+    std::string extension = getFileExtension(absolute_path);
+    if (extension == "hdr" || extension == "exr")
+      images[img.id] = Image(absolute_path, ImageType::HDR);
+    else
+      images[img.id] = Image(absolute_path, ImageType::SDR);
   }
 
   textures.resize(raw_scene.texture_maps.size());
@@ -79,7 +84,7 @@ int main(int argc, char* argv[])
     }
     else
     {
-      throw std::runtime_error("Wrong parsing");
+      throw std::runtime_error("Wrong texture parsing");
     }
   }
 
