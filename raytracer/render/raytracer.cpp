@@ -464,6 +464,97 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 				attenuation * pow(cosAlpha, mat.phong_exponent);
 		}
 	}
+	for (const auto& light : scene->light_sources.directional_lights)
+	{
+		glm::vec3 wi = -glm::normalize(light.direction);
+		Ray shadowRay = Ray(rec.point + rec.normal * render_context.shadow_ray_epsilon, wi, ray.time);
+		Ray shadowRayPlane = Ray(rec.point
+			+ rec.normal
+			* static_cast<float>(render_context.shadow_ray_epsilon)
+			, wi, ray.time);
+		HitRecord shadowRec;
+		HitRecord planeShadowRec;
+		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), shadowRec)
+			&& !hitPlanes(shadowRayPlane, Interval(0, INFINITY), planeShadowRec))
+		{
+			//diffuse
+			color += Color(kd * light.radiance * glm::max(0.0f, glm::dot(rec.normal, wi)));
+			//specular
+			glm::vec3 wo = (ray.origin - rec.point);
+			wo = glm::normalize(wo);
+
+			glm::vec3 h = glm::normalize(wi + wo);
+			float specular = std::pow(glm::max(0.0f, glm::dot(rec.normal, h)),
+									  mat.phong_exponent);
+			color += Color(ks * light.radiance * specular);
+		}
+	}
+	for (const auto& light : scene->light_sources.spot_lights)
+	{
+	    glm::vec3 wi = light.position - rec.point;
+	    double distance = glm::length(wi);
+	    wi = glm::normalize(wi);
+
+	    Ray shadowRay(
+	        rec.point + rec.normal * render_context.shadow_ray_epsilon,
+	        wi,
+	        ray.time
+	    );
+
+	    Ray shadowRayPlane(
+	        rec.point + rec.normal * render_context.shadow_ray_epsilon,
+	        wi,
+	        ray.time
+	    );
+
+	    HitRecord shadowRec;
+	    HitRecord planeShadowRec;
+
+	    if (!scene->world->intersect<true>(
+	            shadowRay,
+	            Interval(render_context.shadow_ray_epsilon, distance),
+	            shadowRec)
+	        && !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
+	    {
+	        glm::vec3 spotDir = glm::normalize(light.direction);
+	        double cosAlpha = glm::dot(-wi, spotDir);
+
+	        double cosCoverage = std::cos(glm::radians(light.coverage_angle * 0.5f));
+	        double cosFalloff  = std::cos(glm::radians(light.falloff_angle  * 0.5f));
+
+	        double spotFactor = 0.0;
+
+	        if (cosAlpha >= cosFalloff)
+	        {
+	            spotFactor = 1.0;
+	        }
+	        else if (cosAlpha >= cosCoverage)
+	        {
+	            double s = (cosAlpha - cosCoverage) /
+	                       (cosFalloff - cosCoverage);
+	            spotFactor = std::pow(s, 4.0);
+	        }
+	        else
+	        {
+	            continue;
+	        }
+
+	        double attenuation = spotFactor / (distance * distance);
+
+	        double NdotL = std::max(0.0f, glm::dot(rec.normal, wi));
+	        color += Color(kd) * Color(light.intensity) * attenuation * NdotL;
+
+	        glm::vec3 wo = glm::normalize(ray.origin - rec.point);
+	        glm::vec3 h  = glm::normalize(wi + wo);
+
+	        double spec = std::pow(
+	            std::max(0.0f, glm::dot(rec.normal, h)),
+	            mat.phong_exponent
+	        );
+
+	        color += Color(ks) * Color(light.intensity) * attenuation * spec;
+	    }
+	}
 	return color;
 }
 

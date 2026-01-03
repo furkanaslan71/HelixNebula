@@ -30,6 +30,14 @@ Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::
 			)
 		);
 	}
+	for (const auto& raw_light : raw_scene.directional_lights)
+	{
+		this->light_sources.directional_lights.emplace_back(raw_light);
+	}
+	for (const auto& raw_light : raw_scene.spot_lights)
+	{
+		this->light_sources.spot_lights.emplace_back(raw_light);
+	}
 	
 	light_sources.ambient_light = Color(raw_scene.ambient_light.x,
 		raw_scene.ambient_light.y,

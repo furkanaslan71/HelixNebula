@@ -36,9 +36,40 @@ struct AreaLight {
 	}
 };
 
+struct DirectionalLight {
+	DirectionalLight() = default;
+	explicit DirectionalLight(const DirectionalLight_& _dl)
+		: direction(_dl.direction), radiance(_dl.radiance), id(_dl.id){}
+
+	glm::vec3 direction;
+	glm::vec3 radiance;
+	int id;
+};
+
+struct SpotLight {
+	SpotLight()= default;
+	SpotLight(SpotLight_ _sl)
+		:
+	position(_sl.position),
+	direction(_sl.direction),
+	intensity(_sl.intensity),
+	coverage_angle(_sl.coverage_angle),
+	falloff_angle(_sl.falloff_angle)
+	{};
+
+	glm::vec3 position;
+	glm::vec3 direction;
+	glm::vec3 intensity;
+	float coverage_angle;
+	float falloff_angle;
+	int id;
+};
+
 struct LightSources {
 	std::vector<PointLight> point_lights;
 	std::vector<AreaLight> area_lights;
+	std::vector<DirectionalLight> directional_lights;
+	std::vector<SpotLight> spot_lights;
 	Color ambient_light;
 };
 
