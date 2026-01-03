@@ -4,8 +4,37 @@
 
 #include "image_io.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "io/stb_image.h"
+
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "../io/stb_image_write.h"
+
+#define TINYEXR_IMPLEMENTATION
+#include "external/tinyexr-release/tinyexr.h"
+
+unsigned char* readSDR(const std::string& file_path, int* width, int* height, int* channels)
+{
+    unsigned char* data = stbi_load(file_path.c_str(), width, height, channels, 0);
+    if (!data)
+    {
+        throw std::runtime_error("Error loading SDR image!!!");
+    }
+    return data;
+}
+
+void readHDR(float*& out_img, const std::string& file_path, int* width, int* height, int* channels)
+{
+    const char* err = nullptr;
+    int ret = LoadEXR(&out_img, width, height, file_path.c_str(), &err);
+    if (ret != TINYEXR_SUCCESS) {
+        if (err) {
+            fprintf(stderr, "ERR : %s\n", err);
+            FreeEXRErrorMessage(err); // release memory of error message.
+        }
+    }
+    *channels = 4;
+}
 
 void saveImage(const std::string& outputDir,
                             const std::string& fileName,
@@ -20,7 +49,9 @@ void saveImage(const std::string& outputDir,
 
     int height = image.size();
     int width = image[0].size();
-    int channels = 3; // RGB
+    int channels = 3;
+    if (img_type == ImageType::HDR)
+        channels = 3;
 
     std::filesystem::path outputPath =
       std::filesystem::path(outputDir) / fileName;

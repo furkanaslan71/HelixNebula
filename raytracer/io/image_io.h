@@ -15,6 +15,10 @@ enum class ImageType : int {
     HDR
 };
 
+unsigned char* readSDR(const std::string& file_path, int* width, int* height, int* channels);
+
+void readHDR(float*& out_img, const std::string& file_path, int* width, int* height, int* channels);
+
 void saveImage(const std::string& outputDir, const std::string& fileName,
     std::vector<std::vector<Color>>& image, ImageType img_type);
 

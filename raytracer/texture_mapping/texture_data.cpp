@@ -1,43 +1,19 @@
-//
-// Created by furkan on 12/30/25.
-//
-
 #include <filesystem>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "io/stb_image.h"
-
-#define TINYEXR_IMPLEMENTATION
-#include "external/tinyexr-release/tinyexr.h"
 
 #include "texture_data.h"
 
 Image::Image(const std::string& absolute_path, ImageType _type)
+    : type(_type)
 {
     if (_type == ImageType::SDR)
     {
-        data.sdr = stbi_load(absolute_path.c_str(), &width, &height, &channels, 0);
-        if (!data.sdr)
-        {
-            throw std::runtime_error("Error loading SDR image!!!");
-        }
+        data.sdr = readSDR(absolute_path, &width, &height, &channels);
     }
     else if (_type == ImageType::HDR)
     {
-        const char* err = nullptr;
-        int ret = LoadEXR(data.hdr, &width, &height, absolute_path.c_str(), &err);
-        if (ret != TINYEXR_SUCCESS) {
-            if (err) {
-                fprintf(stderr, "ERR : %s\n", err);
-                FreeEXRErrorMessage(err); // release memory of error message.
-            }
-        }
+        //data.hdr = nullptr;
+        readHDR(data.hdr, absolute_path, &width, &height, &channels);
     }
-}
-
-Image::~Image()
-{
-    free(data.hdr);
 }
 
 

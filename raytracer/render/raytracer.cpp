@@ -385,7 +385,8 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 				}
 				case (DecalMode::replace_all):
 				{
-					return lookupTexture(tex, rec.uv, rec.point) * 255.0f;
+					auto res = Color(lookupTexture(tex, rec.uv, rec.point, true));
+					return  res;
 				}
 
 				default:

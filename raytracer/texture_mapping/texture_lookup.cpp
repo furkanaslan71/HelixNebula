@@ -7,10 +7,22 @@
 
 glm::vec3 fetch_single_sample(Image* image, int x, int y)
 {
+    //x = glm::clamp(x, 0, image->width  - 1);
+    //y = glm::clamp(y, 0, image->height - 1);
     int index = (y * image->width + x) * image->channels;
-    glm::vec3 result = { image->data.sdr[index + 0],
+    glm::vec3 result;
+    if (image->type == ImageType::SDR)
+    {
+        result = { image->data.sdr[index + 0],
         image->data.sdr[index + 1],
         image->data.sdr[index + 2] };
+    }
+    else
+    {
+        result = { image->data.hdr[index + 0],
+        image->data.hdr[index + 1],
+        image->data.hdr[index + 2] };
+    }
     return result;
 }
 
@@ -45,12 +57,13 @@ glm::vec3 fetch_interpolated_sample(Image* image, glm::vec2 uv, Interpolation in
 
 glm::vec3 lookupImageTexture(Texture* texture, glm::vec2 uv)
 {
-    // returns 0 - 255
     glm::vec3 color = fetch_interpolated_sample(texture->texture_data.image.image, uv, texture->interp);
-    return glm::clamp(color, 0.0f, 255.0f);
+    if (texture->texture_data.image.image->type == ImageType::SDR)
+        color = glm::clamp(color, 0.0f, 255.0f);
+    return color;
 }
 
-glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_point)
+glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_point, bool replace_all)
 {
     switch (texture->type)
     {
@@ -58,7 +71,12 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_poi
         {
             // returns 0 - 1
             glm::vec3 sample = lookupImageTexture(texture, uv);
-            sample = glm::clamp(sample / texture->texture_data.image.normalizer, 0.0f, 1.0f);
+            if (texture->texture_data.image.image->type == ImageType::SDR)
+            {
+                sample = glm::clamp(sample / texture->texture_data.image.normalizer, 0.0f, 1.0f);
+                if (replace_all)
+                    sample = sample * 255.0f;
+            }
             return sample;
         }
         case (TextureType::perlin):
@@ -68,6 +86,8 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_poi
                 texture->texture_data.perlin.noise_conversion,
                 texture->texture_data.perlin.num_octaves));
 
+            if (replace_all)
+                sample *= 255.0f;
             return sample;
         }
         case (TextureType::checkerboard):
@@ -86,8 +106,15 @@ glm::vec3 lookupTexture(Texture* texture, glm::vec2 uv, const glm::vec3& hit_poi
             bool is_z_even = (z % 2) == 0;
 
             if ((is_x_even ^ is_y_even) ^ is_z_even)
-                return black_color;
-            return white_color;
+                if (replace_all)
+                    return black_color * 255.0f;
+                else
+                    return black_color;
+
+            if (replace_all)
+                return white_color * 255.0f;
+            else
+                return white_color;
         }
         default:
         {

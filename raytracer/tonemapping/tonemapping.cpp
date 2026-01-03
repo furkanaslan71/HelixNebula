@@ -30,7 +30,7 @@ Tonemap::Tonemap(const Tonemap_ &tm)
 float logAvgLuminance(const std::vector<std::vector<Color>>& image)
 {
     Expects(!image.empty());
-    constexpr float eps = 1e-3f;
+    constexpr float eps = 1e-4f;
     int N = image.size() * image[0].size();
     float power = 0.0f;
     for (const auto& v : image)
@@ -48,9 +48,11 @@ float scaledLuminance(float inv_log_avg, float key, const Color& color, float Yi
     return key * inv_log_avg * Yi;
 }
 
-float gammaCorrect(float inv_g, float color_channel)
+float gammaCorrect(float inv_g, float color_channel, bool degamma = false)
 {
-    return glm::pow(color_channel, inv_g) * 255.0f;
+    if (degamma)
+        return color_channel * 255.0f;
+    return glm::clamp(glm::pow(color_channel, inv_g), 0.0f, 1.0f) * 255.0f;
 }
 
 void reinhard(const std::vector<std::vector<Color>>& input_img,

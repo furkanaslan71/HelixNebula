@@ -9,11 +9,10 @@
 struct Image {
 	Image(const std::string& absolute_path, ImageType _type);
 	Image() = default;
-	~Image();
 
 	union {
 		unsigned char* sdr;
-		float** hdr;
+		float* hdr;
 	}data;
 	int width;
 	int height;
