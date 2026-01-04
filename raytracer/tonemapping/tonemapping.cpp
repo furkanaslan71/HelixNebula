@@ -6,6 +6,8 @@
 
 #define LUM(v) 0.2126 * v.r + 0.7152 * v.g + 0.0722 * v.b
 
+bool degamma = false;
+
 Tonemap::Tonemap(const Tonemap_ &tm)
     : TMOOptions(tm.TMOOptions), saturation(tm.saturation), gamma(tm.gamma), extension(tm.extension)
 {
@@ -48,10 +50,10 @@ float scaledLuminance(float inv_log_avg, float key, const Color& color, float Yi
     return key * inv_log_avg * Yi;
 }
 
-float gammaCorrect(float inv_g, float color_channel, bool degamma = false)
+float gammaCorrect(float inv_g, float color_channel)
 {
     if (degamma)
-        return color_channel * 255.0f;
+        return glm::clamp(color_channel, 0.0f, 1.0f) * 255.0f;
     return glm::clamp(glm::pow(color_channel, inv_g), 0.0f, 1.0f) * 255.0f;
 }
 

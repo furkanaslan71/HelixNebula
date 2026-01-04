@@ -8,6 +8,8 @@
 #include "parser/parser.hpp"
 #include "core/color.h"
 
+extern bool degamma;
+
 enum class TMO {
     Photographic,
     Filmic,
