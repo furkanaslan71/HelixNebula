@@ -221,7 +221,7 @@ glm::vec3 lookupEnvMap(const EnvironmentLight& env_map, const glm::vec3& dir)
     }
     else if (env_map.type == EnvMapType::probe)
     {
-        float r = (std::acos(-dir.z)) / (glm::pi<float>() * glm::sqrt(dir.x * dir.x + dir.y + dir.y));
+        float r = (std::acos(-dir.z)) / (glm::pi<float>() * glm::sqrt(dir.x * dir.x + dir.y * dir.y));
         u = (r * dir.x + 1.0f) / 2.0f;
         v = (-r * dir.y + 1.0f) / 2.0f;
     }
