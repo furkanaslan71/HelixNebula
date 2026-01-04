@@ -24,6 +24,7 @@ struct RenderContext {
     float intersection_test_epsilon;
     int max_recursion_depth;
     BackgroundType b_type;
+    Image* env_map;
 
     RenderContext() = default;
 };

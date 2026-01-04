@@ -5,6 +5,16 @@
 #include "math_core/math_core.h"
 #include "core/color.h"
 
+enum class EnvMapType {
+	latlong,
+	probe
+};
+
+enum class Sampler {
+	uniform,
+	cosine
+};
+
 struct PointLight {
 	int id;
 	glm::vec3 position;
@@ -48,13 +58,14 @@ struct DirectionalLight {
 
 struct SpotLight {
 	SpotLight()= default;
-	SpotLight(SpotLight_ _sl)
+	SpotLight(const SpotLight_& _sl)
 		:
 	position(_sl.position),
 	direction(_sl.direction),
 	intensity(_sl.intensity),
 	coverage_angle(_sl.coverage_angle),
-	falloff_angle(_sl.falloff_angle)
+	falloff_angle(_sl.falloff_angle),
+	id(_sl.id)
 	{};
 
 	glm::vec3 position;
@@ -65,11 +76,37 @@ struct SpotLight {
 	int id;
 };
 
+struct EnvironmentLight {
+	EnvironmentLight() = default;
+	EnvironmentLight(const SphericalDirectionalLight_& _sdl, Image* _img)
+		: id(_sdl.id), img(_img)
+	{
+		if (_sdl.sampler == "uniform")
+			sampler = Sampler::uniform;
+		else if (_sdl.sampler == "cosine")
+			sampler = Sampler::cosine;
+		else
+			throw std::runtime_error("Unknown sampler type");
+
+		if (_sdl.type == "latlong")
+			type = EnvMapType::latlong;
+		else if (_sdl.type == "probe")
+			type = EnvMapType::probe;
+		else
+			throw std::runtime_error("Unknown env_map type type");
+	}
+ 	Image* img;
+	EnvMapType type;
+	Sampler sampler;
+	int id;
+};
+
 struct LightSources {
 	std::vector<PointLight> point_lights;
 	std::vector<AreaLight> area_lights;
 	std::vector<DirectionalLight> directional_lights;
 	std::vector<SpotLight> spot_lights;
+	EnvironmentLight env_light;
 	Color ambient_light;
 };
 

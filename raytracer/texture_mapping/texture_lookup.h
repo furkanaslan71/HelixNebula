@@ -8,6 +8,7 @@
 #include <core/hittable.h>
 #include "texture_data.h"
 #include "perlin.h"
+#include "light/light.h"
 
 struct CameraContext;
 
@@ -24,6 +25,8 @@ glm::vec3 lookupNormalMap(Texture* texture, const HitRecord& rec);
 glm::vec3 lookupBumpMap(Texture* texture, const HitRecord& rec);
 
 glm::vec3 lookupBackgroundTex(Texture* texture, const glm::vec3& dir, const CameraContext& cam_context);
+
+glm::vec3 lookupEnvMap(const EnvironmentLight& env_map, const glm::vec3& dir);
 
 
 #endif //TEXTURE_LOOKUP_H

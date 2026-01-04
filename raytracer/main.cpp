@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
-  std::string scene_filename = "dragon_spot_light_msaa";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/akin_aydemir/teapot_roughness/";
+  std::string scene_filename = "teapot_roughness";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
@@ -245,6 +245,10 @@ int main(int argc, char* argv[])
   //Scene scene(raw_scene, tlas_boxes, planes);
 
 
+  Image* env_map = nullptr;
+  if (!raw_scene.spherical_directional_lights.empty())
+    env_map = &images[raw_scene.spherical_directional_lights[0].image_id];
+
   initPerlin();
   RenderContext render_context;
   if (bg_tex != nullptr)
@@ -260,9 +264,12 @@ int main(int argc, char* argv[])
   render_context.shadow_ray_epsilon = raw_scene.shadow_ray_epsilon;
   render_context.intersection_test_epsilon = raw_scene.intersection_test_epsilon;
   render_context.max_recursion_depth = raw_scene.max_recursion_depth;
+  render_context.env_map = env_map;
 
 
-  Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes), render_context);
+
+
+  Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes, env_map), render_context);
 
 
     std::cout << "Rendering started for scene file: " << scene_filename << std::endl;

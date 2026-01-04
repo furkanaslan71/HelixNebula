@@ -194,16 +194,20 @@ Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& 
 	{
 		if (!hit_plane)
 		{
-			if (depth == render_context.max_recursion_depth + 1)
+			// REMOVED: if (depth == render_context.max_recursion_depth + 1)
+			// Any ray (primary or reflected) that misses should check the sky.
+
+			if (render_context.env_map != nullptr)
 			{
-				if (render_context.b_type == BackgroundType::Color)
-					return Color(render_context.background_info.background_color);
-
-				return Color(lookupBackgroundTex(render_context.background_info.background_tex,
-					glm::normalize(ray.direction), cam_context));
-
+				return Color(lookupEnvMap(scene->light_sources.env_light,
+				   glm::normalize(ray.direction)));
 			}
-			return Color(0, 0, 0);
+
+			if (render_context.b_type == BackgroundType::Color)
+				return Color(render_context.background_info.background_color);
+
+			return Color(lookupBackgroundTex(render_context.background_info.background_tex,
+			   glm::normalize(ray.direction), cam_context));
 		}
 	}
 #if BACKFACE_CULLING
@@ -230,7 +234,9 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			reflectedRay.perturb(mat.roughness);
 		}
 
-		color += computeColor(reflectedRay, depth - 1, sampling_context, cam_context) * Color(mat.mirror_reflectance);
+		Color reflectedColor = computeColor(reflectedRay, depth - 1, sampling_context, cam_context);
+
+		color += reflectedColor * Color(mat.mirror_reflectance);
 	}
 	else if ((mat.type) == "conductor")
 	{
@@ -555,6 +561,62 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 	        color += Color(ks) * Color(light.intensity) * attenuation * spec;
 	    }
 	}
+
+	if (scene->light_sources.env_light.img != nullptr && mat.type != "mirror")
+	{
+		glm::vec3 n = rec.normal;
+		glm::vec3 u = rec.surface_tangents.u;
+		glm::vec3 v = rec.surface_tangents.v;
+		float pi = glm::pi<float>();
+
+		Color env_contribution(0, 0, 0);
+		int samples = 25;
+
+		for (int s = 0; s < samples; ++s)
+		{
+			float s1 = generateRandomFloat(0, 1);
+			float s2 = generateRandomFloat(0, 1);
+			glm::vec3 l;
+			Color sample_color(0, 0, 0);
+
+			if (scene->light_sources.env_light.sampler == Sampler::uniform)
+			{
+				l = u * glm::sqrt(1 - s1 * s1) * glm::cos(s2 * 2 * pi) +
+					v * glm::sqrt(1 - s1 * s1) * glm::sin(s2 * 2 * pi) + n * s1;
+
+				l = glm::normalize(l);
+
+				// Math: (Le * 2pi * cosTheta)
+				float cosTheta = std::max(0.0f, glm::dot(n, l));
+				sample_color = Color(lookupEnvMap(scene->light_sources.env_light, l)) * (2.0f * pi * cosTheta);
+			}
+			else if (scene->light_sources.env_light.sampler == Sampler::cosine)
+			{
+				l = u * glm::sqrt(s1) * glm::cos(s2 * 2 * pi) +
+					v * glm::sqrt(s1) * glm::sin(s2 * 2 * pi) + n * glm::sqrt(1 - s1);
+
+				l = glm::normalize(l);
+
+				float theta = glm::asin(glm::sqrt(s1));
+				// Keep your specific math: (sample * pi) / cos(theta)
+				sample_color = Color(lookupEnvMap(scene->light_sources.env_light, l) * pi / glm::cos(theta));
+			}
+
+			// --- SHADOW TEST ---
+			Ray envShadowRay(rec.point + n * (float)render_context.shadow_ray_epsilon, l, ray.time);
+			HitRecord envRec;
+
+			// Only add if the ray hits nothing (escapes to the environment)
+			if (!scene->world->intersect<true>(envShadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), envRec)
+				&& !hitPlanes(envShadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), envRec))
+			{
+				env_contribution += sample_color;
+			}
+		}
+
+		color += env_contribution / (float)samples;
+	}
+
 	return color;
 }
 

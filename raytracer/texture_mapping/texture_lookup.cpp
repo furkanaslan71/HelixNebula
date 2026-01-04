@@ -211,3 +211,23 @@ glm::vec3 lookupBackgroundTex(Texture* texture, const glm::vec3& dir, const Came
     return lookupImageTexture(texture, glm::vec2(u, v));
 }
 
+glm::vec3 lookupEnvMap(const EnvironmentLight& env_map, const glm::vec3& dir)
+{
+    float u, v;
+    if (env_map.type == EnvMapType::latlong)
+    {
+        u = (1.0f + std::atan2(dir.x, -dir.z) / glm::pi<float>()) / 2.0f;
+        v = std::acos(dir.y) / glm::pi<float>();
+    }
+    else if (env_map.type == EnvMapType::probe)
+    {
+        float r = (std::acos(-dir.z)) / (glm::pi<float>() * glm::sqrt(dir.x * dir.x + dir.y + dir.y));
+        u = (r * dir.x + 1.0f) / 2.0f;
+        v = (-r * dir.y + 1.0f) / 2.0f;
+    }
+    else
+        throw std::runtime_error("Unsupported environment map type");
+
+    return fetch_interpolated_sample(env_map.img, glm::vec2(u, v), Interpolation::nearest);
+}
+

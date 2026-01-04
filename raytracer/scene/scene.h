@@ -15,7 +15,7 @@
 class Scene{
 public:
 	Scene();
-	Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::vector<Plane>& _planes);
+	Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::vector<Plane>& _planes, Image* env_map = nullptr);
 	~Scene();
 
 	//std::vector<PinholeCamera> pinhole_cameras;

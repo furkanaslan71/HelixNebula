@@ -3,7 +3,7 @@
 
 Scene::Scene() {}
 
-Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::vector<Plane>& _planes)
+Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::vector<Plane>& _planes, Image* env_map)
 	: background_color(raw_scene.background_color.x, raw_scene.background_color.y, raw_scene.background_color.z)
 {
 	for (const auto& raw_light : raw_scene.point_lights) 
@@ -37,6 +37,12 @@ Scene::Scene(const Scene_& raw_scene, std::vector<TLASBox>& objects, const std::
 	for (const auto& raw_light : raw_scene.spot_lights)
 	{
 		this->light_sources.spot_lights.emplace_back(raw_light);
+	}
+
+	if (env_map != nullptr)
+	{
+		Expects(raw_scene.spherical_directional_lights.size() < 2);
+		this->light_sources.env_light = EnvironmentLight(raw_scene.spherical_directional_lights[0], env_map);
 	}
 	
 	light_sources.ambient_light = Color(raw_scene.ambient_light.x,

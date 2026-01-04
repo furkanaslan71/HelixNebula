@@ -790,7 +790,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         SphericalDirectionalLight_ sdl;
         sdl.id = std::stoi(sdl_json["_id"].get<std::string>());
         sdl.type = sdl_json["_type"].get<std::string>();
-        sdl.image_id = std::stoi(sdl_json["ImageId"].get<std::string>());
+        sdl.image_id = std::stoi(sdl_json["ImageId"].get<std::string>()) - 1;
         if (sdl_json.contains("Sampler"))
           sdl.sampler = sdl_json["Sampler"].get<std::string>();
         else
