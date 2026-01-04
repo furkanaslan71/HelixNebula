@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/akin_aydemir/teapot_roughness/";
-  std::string scene_filename = "teapot_roughness";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
+  std::string scene_filename = "mirror_sphere_env";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
