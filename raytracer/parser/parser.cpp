@@ -10,9 +10,10 @@
 #define COMPOSITE_TRANSFORM calculateCompositeTransformationMatrix( \
 transformations, \
 scene.translations, \
-scene.scalings,scene.rotations \
-) \
-
+scene.scalings, \
+scene.rotations, \
+scene.composite_matrices \
+)
 enum class FieldRequirement {
   MUST,
   DEFAULTABLE,
@@ -469,6 +470,29 @@ void parseScene(const std::string& filename, Scene_& scene) {
     if (scene_json.contains("Transformations"))
     {
       const auto& transformations_json = scene_json["Transformations"];
+      if (transformations_json.contains("Composite"))
+      {
+        const auto& composites_json = transformations_json["Composite"];
+        auto parse_composite = [&](const json& c_json) {
+          int id = std::stoi(c_json["_id"].get<std::string>());
+          if (id >= scene.composite_matrices.size())
+            scene.composite_matrices.resize(id + 1);
+
+          std::stringstream ss(c_json["_data"].get<std::string>());
+          glm::mat4 mat;
+          // Reading the 16 floats from the string
+          for (int i = 0; i < 4; ++i)
+            for (int k = 0; k < 4; ++k)
+              ss >> mat[k][i];
+
+          scene.composite_matrices[id] = mat;
+        };
+
+        if (composites_json.is_array())
+          for (const auto& c_json : composites_json) parse_composite(c_json);
+        else
+          parse_composite(composites_json);
+      }
       if (transformations_json.contains("Translation"))
       {
         const auto& translations_json = transformations_json["Translation"];

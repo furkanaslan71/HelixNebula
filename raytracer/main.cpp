@@ -27,8 +27,8 @@ int main(int argc, char* argv[])
   }
   std::string scene_path = argv[1];
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
-  std::string scene_filename = "cube_point_hdr";
+  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/veach_ajar/";
+  std::string scene_filename = "scene";
   scene_filename += ".json";
   std::string scene_path = scene_folder + scene_filename;
 #endif
@@ -107,6 +107,8 @@ int main(int argc, char* argv[])
     }
     materials.emplace_back(material);
   }
+
+  degamma = false;
 
   
   std::vector<TLASBox> tlas_boxes;

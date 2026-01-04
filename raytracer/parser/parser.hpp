@@ -194,6 +194,7 @@ typedef struct Scene_ {
 		std::vector<Translation_> translations;
 		std::vector<Scaling_> scalings;
 		std::vector<Rotation_> rotations;
+    std::vector<glm::mat4> composite_matrices;
     std::vector<Triangle_> triangles;
     std::vector<Sphere_> spheres;
     std::vector<Plane_> planes;
