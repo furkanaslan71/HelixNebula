@@ -18,10 +18,38 @@ void Raytracer::renderScene() const
     	std::string image_name = cam->image_name;
     	std::string extension = getFileExtension(image_name);
 
+    	if (cam->flip_x)
+    	{
+    		for (auto& row : image)
+    		{
+    			std::reverse(row.begin(), row.end());
+    		}
+    	}
+
     	if (extension== "png" || extension == "jpg" || extension == ".jpeg")
 			saveImage(saveDir, image_name, image, ImageType::SDR);
     	else if (extension == "exr" || extension == "hdr")
     	{
+
+    		// Check if we should save the raw EXR based on filename suffix
+    		bool shouldSaveRaw = false;
+    		if (image_name.length() >= 4) {
+    			std::string lower_name = image_name;
+    			// Simple suffix check
+    			if (lower_name.ends_with(".exr") || lower_name.ends_with(".hdr") ||
+					lower_name.ends_with("_exr") || lower_name.ends_with("_hdr")) {
+    				shouldSaveRaw = true;
+					}
+    		}
+
+    		if (shouldSaveRaw) {
+    			std::string raw_path = image_name;
+    			// Ensure it ends with .exr for the filesystem
+    			if (!raw_path.ends_with(".exr")) {
+    				raw_path += ".exr";
+    			}
+    			saveEXR(saveDir + "/" + raw_path, image);
+    		}
     		for (const Tonemap& tm : cam->tonemaps)
     		{
     			//tonemap
@@ -194,9 +222,6 @@ Color Raytracer::computeColor(const Ray& ray, int depth, const SamplingContext& 
 	{
 		if (!hit_plane)
 		{
-			// REMOVED: if (depth == render_context.max_recursion_depth + 1)
-			// Any ray (primary or reflected) that misses should check the sky.
-
 			if (render_context.env_map != nullptr)
 			{
 				return Color(lookupEnvMap(scene->light_sources.env_light,

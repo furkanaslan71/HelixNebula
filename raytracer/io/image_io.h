@@ -22,6 +22,6 @@ void readHDR(float*& out_img, const std::string& file_path, int* width, int* hei
 void saveImage(const std::string& outputDir, const std::string& fileName,
     std::vector<std::vector<Color>>& image, ImageType img_type);
 
-
+void saveEXR(const std::string& full_path, const std::vector<std::vector<Color>>& image);
 
 #endif //SAVE_IMAGE_H

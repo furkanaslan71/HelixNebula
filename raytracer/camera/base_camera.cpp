@@ -20,7 +20,8 @@ BaseCamera::BaseCamera(
 		num_samples(cam.num_samples),
 		recursion_depth(_recursion_depth),
 		num_area_lights(_num_area_lights),
-		area_lights(_area_lights)
+		area_lights(_area_lights),
+		flip_x(cam.flip_x)
 {
 
 	gaze = glm::normalize(gaze);

@@ -546,6 +546,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
       cam.image_name = cam_json["ImageName"];
       cam.num_samples = 1;
 
+      if (cam_json.contains("_handedness"))
+      {
+        cam.flip_x = cam_json["_handedness"].get<std::string>() == "left" ? true : false;
+      }
+      else
+      {
+        cam.flip_x = false;
+      }
+
       if (cam_json.contains("NumSamples"))
       {
         cam.num_samples = std::stoi(cam_json["NumSamples"].get<std::string>());

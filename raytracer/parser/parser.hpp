@@ -34,6 +34,7 @@ typedef struct Camera_ {
     float aperture_size;
     float focus_distance;
     std::vector<Tonemap_> tone_maps;
+    bool flip_x;
 } Camera_;
 
 typedef struct PointLight_ {

@@ -44,6 +44,7 @@ public:
 	int recursion_depth;
 	int num_area_lights;
 	CameraContext context;
+	bool flip_x;
 
 };
 

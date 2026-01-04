@@ -17,7 +17,8 @@ public:
 
 	Triangle(glm::vec3 _indices[3], glm::vec2 _tex_coords[3])
 		: indices{_indices[0], _indices[1], _indices[2]},
-	tex_coords(_tex_coords[0], _tex_coords[1], _tex_coords[2])
+	tex_coords(_tex_coords[0], _tex_coords[1], _tex_coords[2]),
+	smooth_shading(false)
 	{
 		glm::vec3 min = indices[0];
 		glm::vec3 max = indices[0];
@@ -171,7 +172,7 @@ private:
 	TexCoords tex_coords;
 	TangentVectors tangents;
 	glm::vec3 normal;
-	bool smooth_shading = false;
+	bool smooth_shading;
 
 
 	inline double det(const glm::vec3& c0, const glm::vec3& c1, const glm::vec3& c2) const
