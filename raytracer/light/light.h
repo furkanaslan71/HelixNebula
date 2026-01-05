@@ -95,7 +95,7 @@ struct EnvironmentLight {
 		else
 			throw std::runtime_error("Unknown env_map type type");
 	}
- 	Image* img;
+ 	Image* img = nullptr;
 	EnvMapType type;
 	Sampler sampler;
 	int id;

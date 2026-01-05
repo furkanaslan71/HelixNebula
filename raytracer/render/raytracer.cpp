@@ -428,6 +428,13 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		}
 	}
 
+	if (mat.degamma)
+	{
+		kd = glm::pow(kd, glm::vec3(2.2));
+		ks = glm::pow(ks, glm::vec3(2.2));
+		ka = glm::pow(ka, glm::vec3(2.2));
+	}
+
 	color += Color(ka)* Color(scene->light_sources.ambient_light);
 
 	for (const auto& light : scene->light_sources.point_lights)
@@ -611,7 +618,6 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 
 				l = glm::normalize(l);
 
-				// Math: (Le * 2pi * cosTheta)
 				float cosTheta = std::max(0.0f, glm::dot(n, l));
 				sample_color = Color(lookupEnvMap(scene->light_sources.env_light, l)) * (2.0f * pi * cosTheta);
 			}
@@ -623,15 +629,12 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 				l = glm::normalize(l);
 
 				float theta = glm::asin(glm::sqrt(s1));
-				// Keep your specific math: (sample * pi) / cos(theta)
 				sample_color = Color(lookupEnvMap(scene->light_sources.env_light, l) * pi / glm::cos(theta));
 			}
 
-			// --- SHADOW TEST ---
 			Ray envShadowRay(rec.point + n * (float)render_context.shadow_ray_epsilon, l, ray.time);
 			HitRecord envRec;
 
-			// Only add if the ray hits nothing (escapes to the environment)
 			if (!scene->world->intersect<true>(envShadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), envRec)
 				&& !hitPlanes(envShadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), envRec))
 			{

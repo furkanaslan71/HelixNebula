@@ -18,6 +18,10 @@
 
 int main(int argc, char* argv[])
 {
+  std::string scene_path;
+  std::string scene_folder;
+  std::string scene_filename;
+
 #if COMMAND_LINE_INPUT
   // Expect exactly one argument after the executable name
   if (argc != 2)
@@ -25,12 +29,20 @@ int main(int argc, char* argv[])
     std::cerr << "usage: " << argv[0] << " <scene_file.json>" << std::endl;
     return 1;
   }
-  std::string scene_path = argv[1];
+  scene_path = argv[1];
+
+  // Extract the folder path from the provided scene path
+  // This is crucial for loading textures and PLY files relative to the JSON
+  std::filesystem::path p(scene_path);
+  scene_folder = p.parent_path().string();
+  if (!scene_folder.empty()) {
+    scene_folder += "/";
+  }
+  scene_filename = p.filename().string();
 #else
-  std::string scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/veach_ajar/";
-  std::string scene_filename = "scene";
-  scene_filename += ".json";
-  std::string scene_path = scene_folder + scene_filename;
+  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
+  scene_filename = "sphere_env_light.json";
+  scene_path = scene_folder + scene_filename;
 #endif
 
   Scene_ raw_scene;

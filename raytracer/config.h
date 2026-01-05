@@ -6,6 +6,7 @@
 #define BACKFACE_CULLING 0
 #define COMMAND_LINE_INPUT 0
 
+
 #if DEBUG_PIXEL
 #define WIDTH 770
 #define HEIGHT 68

@@ -43,7 +43,7 @@ glm::mat4 calculateCompositeTransformationMatrix(
 				int index = std::stoi(transform.substr(1));
 				// Multiply the existing result by the pre-computed composite matrix
 				res = composites[index] * res;
-				return res;
+				break;
 			}
 
 			default:

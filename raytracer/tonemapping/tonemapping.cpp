@@ -4,9 +4,9 @@
 
 #include "tonemapping.h"
 
-#define LUM(v) 0.2126 * v.r + 0.7152 * v.g + 0.0722 * v.b
-
 bool degamma = false;
+
+#define LUM(v) 0.2126 * v.r + 0.7152 * v.g + 0.0722 * v.b
 
 Tonemap::Tonemap(const Tonemap_ &tm)
     : TMOOptions(tm.TMOOptions), saturation(tm.saturation), gamma(tm.gamma), extension(tm.extension)
@@ -98,11 +98,9 @@ void reinhard(const std::vector<std::vector<Color>>& input_img,
                 Yo = L_scaled / (1.0f + L_scaled);
             }
 
-            // Safe division for saturation logic
             float Yi_safe = std::max(Yi, 1e-6f);
             float ratio = Yo / Yi_safe;
 
-            // Apply saturation and gamma
             output_img[i][j].r = gammaCorrect(inv_g, glm::pow(input_img[i][j].r * ratio, tonemap.saturation));
             output_img[i][j].g = gammaCorrect(inv_g, glm::pow(input_img[i][j].g * ratio, tonemap.saturation));
             output_img[i][j].b = gammaCorrect(inv_g, glm::pow(input_img[i][j].b * ratio, tonemap.saturation));
@@ -110,14 +108,12 @@ void reinhard(const std::vector<std::vector<Color>>& input_img,
     }
 }
 
-
 void filmic(const std::vector<std::vector<Color>>& input_img,
     std::vector<std::vector<Color>>& output_img, const Tonemap& tonemap)
 {
     float log_avg_lum = logAvgLuminance(input_img);
     float inv_log_avg_lum = 1.0f / log_avg_lum;
 
-    // Helper for Filmic curve
     auto map_filmic = [](float L) {
         float a = 0.22f;
         float b = 0.30f;
@@ -128,7 +124,6 @@ void filmic(const std::vector<std::vector<Color>>& input_img,
         return ((L * (a * L + c * b) + d * e) / (L * (a * L + b) + d * f)) - (e / f);
     };
 
-    // Determine White Point scaling
     std::vector<float> luminances;
     for (const auto& row : input_img)
         for (const auto& col : row)
@@ -170,7 +165,6 @@ void aces(const std::vector<std::vector<Color>>& input_img,
     float log_avg_lum = logAvgLuminance(input_img);
     float inv_log_avg_lum = 1.0f / log_avg_lum;
 
-    // Helper for ACES curve
     auto map_aces = [](float L) {
         float A = 2.51f;
         float B = 0.03f;
@@ -180,7 +174,6 @@ void aces(const std::vector<std::vector<Color>>& input_img,
         return (L * (A * L + B)) / (L * (C * L + D) + E);
     };
 
-    // Determine White Point scaling
     std::vector<float> luminances;
     for (const auto& row : input_img)
         for (const auto& col : row)
@@ -203,7 +196,6 @@ void aces(const std::vector<std::vector<Color>>& input_img,
             float Yi = LUM(input_img[i][j]);
             float L_scaled = scaledLuminance(inv_log_avg_lum, tonemap.TMOOptions.x, input_img[i][j], Yi);
 
-            // Apply ACES and normalize by white point
             float Yo = map_aces(L_scaled) / map_W;
 
             Yi = std::max(Yi, 1e-6f);

@@ -1,5 +1,37 @@
 #include "mesh.h"
 
+bool isDegenerate(const glm::vec3 indices[3]) {
+	return false;
+	const float eps = 1e-6f;
+	const float epsSq = eps * eps;
+
+	// 1. Check for Coincident Vertices (points too close together)
+	// We calculate squared distance manually: dot(diff, diff)
+	glm::vec3 d01 = indices[1] - indices[0];
+	glm::vec3 d12 = indices[2] - indices[1];
+	glm::vec3 d20 = indices[0] - indices[2];
+
+	if (glm::dot(d01, d01) < epsSq ||
+		glm::dot(d12, d12) < epsSq ||
+		glm::dot(d20, d20) < epsSq)
+	{
+		return true;
+	}
+
+	// 2. Check for Collinearity (points forming a line, not a triangle)
+	// A triangle is degenerate if its area is zero.
+	// Area is proportional to the magnitude of the cross product of two edges.
+	glm::vec3 crossProd = glm::cross(d01, indices[2] - indices[0]);
+
+	// If squared magnitude of cross product is near zero, it's a line
+	if (glm::dot(crossProd, crossProd) < epsSq)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 template bool Mesh::hit<true>(const Ray&, Interval, HitRecord&) const;
 template bool Mesh::hit<false>(const Ray&, Interval, HitRecord&) const;
 
@@ -77,6 +109,8 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 				tex_coords[2] = {0.f, 0.f};
 			}
 
+			if (isDegenerate(indices))
+				continue;
 			faces.push_back(Triangle(indices, per_vertex_normals, tex_coords));
 		}
 	}
@@ -101,6 +135,8 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 				tex_coords[1] = {0.f, 0.f};
 				tex_coords[2] = {0.f, 0.f};
 			}
+			if (isDegenerate(indices))
+				continue;
 
 			faces.push_back(Triangle(indices, tex_coords));
 		}
