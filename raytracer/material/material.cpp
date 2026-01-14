@@ -27,6 +27,7 @@ Material::Material(const Material_& _material)
 			absorption_coefficient(_material.absorption_coefficient),
 			absorption_index(_material.absorption_index),
 			roughness(_material.roughness),
-			degamma(_material.degamma)
+			degamma(_material.degamma),
+			brdf_id(_material.brdf_id)
 {
 }

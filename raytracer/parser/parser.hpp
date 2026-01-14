@@ -18,6 +18,14 @@ struct Tonemap_ {
     std::string extension;
 };
 
+struct BRDF_ {
+    std::string type;
+    int id;
+    bool normalized = false;
+    float exponent;
+    bool kdfresnel = false;
+};
+
 typedef struct Camera_ {
     int id;
     glm::vec3 position;
@@ -35,6 +43,8 @@ typedef struct Camera_ {
     float focus_distance;
     std::vector<Tonemap_> tone_maps;
     bool flip_x;
+    std::string renderer;
+    std::vector<std::string> renderer_params;
 } Camera_;
 
 typedef struct PointLight_ {
@@ -88,6 +98,7 @@ typedef struct Material_ {
     float absorption_index;
     float roughness;
     bool degamma;
+    std::optional<int> brdf_id;
 } Material_;
 
 typedef struct Triangle_ {
@@ -96,6 +107,7 @@ typedef struct Triangle_ {
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
     std::vector<int> textures;
+    std::optional<glm::vec3> radiance;
 } Triangle_;
 
 typedef struct Mesh_ {
@@ -108,17 +120,19 @@ typedef struct Mesh_ {
     std::vector<int> textures;
     int vertex_offset;
     int texture_offset;
+    std::optional<glm::vec3> radiance;
 } Mesh_;
 
 typedef struct MeshInstance_ {
-  int id;
-  int base_mesh_id;
+    int id;
+    int base_mesh_id;
 	int material_id;
 	bool smooth_shading;
 	bool reset_transform;
-  std::optional<glm::mat4> transform_matrix;
-  glm::vec3 motion_blur;
-  std::vector<int> textures;
+    std::optional<glm::mat4> transform_matrix;
+    glm::vec3 motion_blur;
+    std::vector<int> textures;
+    std::optional<glm::vec3> radiance;
 }MeshInstance_;
 
 typedef struct Sphere_ {
@@ -129,6 +143,7 @@ typedef struct Sphere_ {
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
     std::vector<int> textures;
+    std::optional<glm::vec3> radiance;
 } Sphere_;
 
 typedef struct Plane_ {
@@ -139,6 +154,7 @@ typedef struct Plane_ {
     std::optional<glm::mat4> transform_matrix;
     glm::vec3 motion_blur;
     std::vector<int> textures;
+    std::optional<glm::vec3> radiance;
 } Plane_;
 
 typedef struct Translation_ {
@@ -205,6 +221,8 @@ typedef struct Scene_ {
     std::vector<glm::vec2> tex_coord_data;
     std::vector<Image_> images;
     std::vector<TextureMap_> texture_maps;
+
+    std::vector<BRDF_> brdfs;
 } Scene_;
 
 // --- Function Declaration ---

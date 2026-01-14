@@ -25,6 +25,8 @@ using json = nlohmann::json;
 
 // Helper functions
 
+bool zero_based_indexing = false;
+
 glm::vec2 parseVec2(const std::string& str) {
   glm::vec2 vec;
   std::stringstream ss(str);
@@ -441,7 +443,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
 
     json j;
     file >> j;
-    const auto& scene_json = j["Scene"];
+    auto& scene_json = j["Scene"];
 
     // --- Global Scene Settings ---
     if (scene_json.contains("BackgroundColor"))
@@ -465,6 +467,149 @@ void parseScene(const std::string& filename, Scene_& scene) {
     else
       scene.max_recursion_depth = 6;
 			//scene.max_recursion_depth = 0;
+
+  if (scene_json.contains("ZeroBasedIndexing"))
+    zero_based_indexing = scene_json["ZeroBasedIndexing"].get<std::string>() == "true";
+
+
+    if (scene_json.contains("BRDFs"))
+    {
+      const auto& brdfs_json = scene_json["BRDFs"];
+      if (brdfs_json.contains("OriginalBlinnPhong"))
+      {
+        const auto& obps_json = brdfs_json["OriginalBlinnPhong"];
+        auto parse_obp = [&](const json& obp_json) {
+          BRDF_ obp;
+          obp.type = "ModifiedBlinnPhong";
+          obp.id = std::stoi(obp_json["_id"].get<std::string>()) - 1;
+          if (obp_json.contains("Exponent"))
+            obp.exponent = std::stof(obp_json["Exponent"].get<std::string>());
+          else
+            obp.exponent = -1;
+
+          if (obp_json.contains("_normalized"))
+          {
+            obp.normalized = obp_json["_normalized"].get<std::string>() == "true";
+          }
+          scene.brdfs.push_back(obp);
+        };
+        if (obps_json.is_array())
+        {
+          for (const auto& obp_json : obps_json)
+            parse_obp(obp_json);
+        }
+        else
+          parse_obp(obps_json);
+      }
+
+      if (brdfs_json.contains("OriginalPhong"))
+      {
+        const auto& ops_json = brdfs_json["OriginalPhong"];
+        auto parse_op = [&](const json& op_json) {
+          BRDF_ op;
+          op.type = "ModifiedBlinnPhong";
+          op.id = std::stoi(op_json["_id"].get<std::string>()) - 1;
+          if (op_json.contains("Exponent"))
+            op.exponent = std::stof(op_json["Exponent"].get<std::string>());
+          else
+            op.exponent = -1;
+          if (op_json.contains("_normalized"))
+          {
+            op.normalized = op_json["_normalized"].get<std::string>() == "true";
+          }
+          scene.brdfs.push_back(op);
+        };
+        if (ops_json.is_array())
+        {
+          for (const auto& op_json : ops_json)
+            parse_op(op_json);
+        }
+        else
+          parse_op(ops_json);
+      }
+
+      if (brdfs_json.contains("ModifiedBlinnPhong"))
+      {
+        const auto& mbps_json = brdfs_json["ModifiedBlinnPhong"];
+        auto parse_mbp = [&](const json& mbp_json) {
+          BRDF_ mbp;
+          mbp.type = "ModifiedBlinnPhong";
+          mbp.id = std::stoi(mbp_json["_id"].get<std::string>()) - 1;
+          if (mbp_json.contains("Exponent"))
+            mbp.exponent = std::stof(mbp_json["Exponent"].get<std::string>());
+          else
+            mbp.exponent = -1;
+          if (mbp_json.contains("_normalized"))
+          {
+            mbp.normalized = mbp_json["_normalized"].get<std::string>() == "true";
+          }
+          scene.brdfs.push_back(mbp);
+        };
+        if (mbps_json.is_array())
+        {
+          for (const auto& mbp_json : mbps_json)
+            parse_mbp(mbp_json);
+        }
+        else
+          parse_mbp(mbps_json);
+      }
+
+      if (brdfs_json.contains("ModifiedPhong"))
+      {
+        const auto& mps_json = brdfs_json["ModifiedPhong"];
+        auto parse_mp = [&](const json& mp_json) {
+          BRDF_ mp;
+          mp.type = "ModifiedBlinnPhong";
+          mp.id = std::stoi(mp_json["_id"].get<std::string>()) - 1;
+          if (mp_json.contains("Exponent"))
+            mp.exponent = std::stof(mp_json["Exponent"].get<std::string>());
+          else
+            mp.exponent = -1;
+          if (mp_json.contains("_normalized"))
+          {
+            mp.normalized = mp_json["_normalized"].get<std::string>() == "true";
+          }
+          scene.brdfs.push_back(mp);
+        };
+        if (mps_json.is_array())
+        {
+          for (const auto& mp_json : mps_json)
+            parse_mp(mp_json);
+        }
+        else
+          parse_mp(mps_json);
+      }
+
+      if (brdfs_json.contains("TorranceSparrow"))
+      {
+        const auto& tss_json = brdfs_json["TorranceSparrow"];
+        auto parse_ts = [&](const json& ts_json) {
+          BRDF_ ts;
+          ts.type = "ModifiedBlinnPhong";
+          ts.id = std::stoi(ts_json["_id"].get<std::string>()) - 1;
+          if (ts_json.contains("Exponent"))
+            ts.exponent = std::stof(ts_json["Exponent"].get<std::string>());
+          else
+            ts.exponent = -1;
+          if (ts_json.contains("_normalized"))
+          {
+            ts.normalized = ts_json["_normalized"].get<std::string>() == "true";
+          }
+          if (ts_json.contains("_kdfresnel"))
+          {
+            ts.kdfresnel = ts_json["_kdfresnel"].get<std::string>() == "true";
+          }
+          scene.brdfs.push_back(ts);
+        };
+        if (tss_json.is_array())
+        {
+          for (const auto& ts_json : tss_json)
+            parse_ts(ts_json);
+        }
+        else
+          parse_ts(tss_json);
+      }
+    }
 
 
     if (scene_json.contains("Transformations"))
@@ -604,9 +749,15 @@ void parseScene(const std::string& filename, Scene_& scene) {
         cam.transform_matrix = COMPOSITE_TRANSFORM;
       }
 
-      if (cam_json.contains("GazePoint"))
+      if (cam_json.contains("FovY"))
       {
-        glm::vec3 gaze_point = parseVec3(cam_json["GazePoint"]);
+        glm::vec3 gaze_point;
+
+        if (cam_json.contains("GazePoint"))
+          gaze_point = parseVec3(cam_json["GazePoint"]);
+        else if (cam_json.contains("Gaze"))
+          gaze_point = parseVec3(cam_json["Gaze"]);
+
         glm::vec3 gaze_vec = {
             gaze_point.x - cam.position.x,
             gaze_point.y - cam.position.y,
@@ -679,6 +830,18 @@ void parseScene(const std::string& filename, Scene_& scene) {
         }
       }
 
+      if (cam_json.contains("Renderer"))
+      {
+        cam.renderer = cam_json["Renderer"].get<std::string>();
+      }
+      if (cam_json.contains("RendererParams"))
+      {
+        std::istringstream params(cam_json["RendererParams"].get<std::string>());
+        std::string param;
+        while (params >> param)
+          cam.renderer_params.push_back(param);
+      }
+
       scene.cameras.push_back(cam);
       };
 
@@ -692,13 +855,17 @@ void parseScene(const std::string& filename, Scene_& scene) {
     }
 
     // --- Lights ---
-    if (scene_json["Lights"].contains("AmbientLight"))
-      scene.ambient_light = parseVec3(scene_json["Lights"]["AmbientLight"]);
+    auto& lights_json = scene_json["Lights"];
+    if (lights_json.contains("AmbientLight"))
+    {
+      scene.ambient_light = parseVec3(lights_json["AmbientLight"]);
+    }
+
     else
       scene.ambient_light = glm::vec3(0.0, 0.0, 0.0);
-    if (scene_json["Lights"].contains("PointLight"))
+    if (lights_json.contains("PointLight"))
     {
-      const auto& point_lights_json = scene_json["Lights"]["PointLight"];
+      const auto& point_lights_json = lights_json["PointLight"];
       auto parse_point_light = [&](const json& pl_json) {
         PointLight_ pl;
         pl.id = std::stoi(pl_json["_id"].get<std::string>());
@@ -732,14 +899,18 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     }
 
-    if (scene_json["Lights"].contains("AreaLight"))
+    if (lights_json.contains("AreaLight"))
     {
-      const auto& area_lights_json = scene_json["Lights"]["AreaLight"];
+      const auto& area_lights_json = lights_json["AreaLight"];
       auto parse_area_light = [&](const json& al_json) {
         AreaLight_ al;
         al.id = std::stoi(al_json["_id"].get<std::string>()) - 1;
         al.position = parseVec3(al_json["Position"]);
-        al.radiance = parseVec3(al_json["Radiance"]);
+        if (al_json.contains("Radiance"))
+          al.radiance = parseVec3(al_json["Radiance"]);
+        else if (al_json.contains("Intensity"))
+          al.radiance = parseVec3(al_json["Intensity"]);
+
         al.normal = parseVec3(al_json["Normal"]);
         int size = std::stoi(al_json["Size"].get<std::string>());
         al.edge = static_cast<float>(size);
@@ -773,9 +944,9 @@ void parseScene(const std::string& filename, Scene_& scene) {
         }
     }
 
-    if (scene_json["Lights"].contains("DirectionalLight"))
+    if (lights_json.contains("DirectionalLight"))
     {
-      const auto& directional_lights_json = scene_json["Lights"]["DirectionalLight"];
+      const auto& directional_lights_json = lights_json["DirectionalLight"];
       auto parse_directional_light = [&](const json& dl_json) {
         DirectionalLight_ dl;
         dl.id = std::stoi(dl_json["_id"].get<std::string>());
@@ -793,9 +964,9 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     }
 
-    if (scene_json["Lights"].contains("SpotLight"))
+    if (lights_json.contains("SpotLight"))
     {
-      const auto& spot_lights_json = scene_json["Lights"]["SpotLight"];
+      const auto& spot_lights_json = lights_json["SpotLight"];
       auto parse_spot_light = [&](const json& sl_json) {
         SpotLight_ sl;
         sl.id = std::stoi(sl_json["_id"].get<std::string>());
@@ -816,9 +987,9 @@ void parseScene(const std::string& filename, Scene_& scene) {
       }
     }
 
-    if (scene_json["Lights"].contains("SphericalDirectionalLight"))
+    if (lights_json.contains("SphericalDirectionalLight"))
     {
-      const auto& spherical_directional_lights_json = scene_json["Lights"]["SphericalDirectionalLight"];
+      const auto& spherical_directional_lights_json = lights_json["SphericalDirectionalLight"];
       auto parse_spot_light = [&](const json& sdl_json) {
         SphericalDirectionalLight_ sdl;
         sdl.id = std::stoi(sdl_json["_id"].get<std::string>());
@@ -867,6 +1038,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         else mat.roughness = 0.0f;
         if (mat_json.contains("_degamma")) mat.degamma = mat_json["_degamma"].get<std::string>() == "true" ? true : false;
         else mat.degamma = false;
+        if (mat_json.contains("_BRDF")) mat.brdf_id = std::stoi(mat_json["_BRDF"].get<std::string>()) - 1;
         scene.materials.push_back(mat);
     };
     if (materials_json.is_array()) {
@@ -1059,13 +1231,6 @@ void parseScene(const std::string& filename, Scene_& scene) {
           mesh.motion_blur = glm::vec3(0.0, 0.0, 0.0);
         }
 
-        if(filename.find("dragon_metal.json") != std::string::npos)
-        {
-          mesh.smooth_shading = true;
-        }
-
-
-
         if (mesh_json.contains("Transformations"))
         {
           std::istringstream iss(mesh_json["Transformations"].get<std::string>());
@@ -1111,7 +1276,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
           int v0, v1, v2;
           while (faces_ss >> v0 >> v1 >> v2)
           {
-            mesh.faces.push_back({ mesh.material_id, v0 - 1, v1 - 1, v2 - 1 });
+            if (!zero_based_indexing)
+              mesh.faces.push_back({ mesh.material_id, v0 - 1, v1 - 1, v2 - 1 });
+            else
+              mesh.faces.push_back({ mesh.material_id, v0, v1, v2});
           }
         }
         else if (faces_json.contains("_plyFile"))
@@ -1314,7 +1482,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
             tri.material_id = std::stoi(tri_json["Material"].get<std::string>()) - 1;
              std::stringstream indices_ss(tri_json["Indices"].get<std::string>());
             indices_ss >> tri.v0_id >> tri.v1_id >> tri.v2_id;
-            tri.v0_id--; tri.v1_id--; tri.v2_id--;
+           if (!zero_based_indexing)
+           {
+             tri.v0_id--; tri.v1_id--; tri.v2_id--;
+           }
+
 
             if (tri_json.contains("Transformations"))
             {
@@ -1360,7 +1532,11 @@ void parseScene(const std::string& filename, Scene_& scene) {
             Sphere_ sphere;
             sphere.id = std::stoi(sphere_json["_id"].get<std::string>());
             sphere.material_id = std::stoi(sphere_json["Material"].get<std::string>()) - 1;
+          if (!zero_based_indexing)
+          {
             sphere.center_vertex_id = std::stoi(sphere_json["Center"].get<std::string>()) - 1;
+          }
+
             sphere.radius = std::stof(sphere_json["Radius"].get<std::string>());
 
             if (sphere_json.contains("MotionBlur"))
@@ -1406,7 +1582,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				Plane_ plane;
 				plane.id = std::stoi(plane_json["_id"].get<std::string>());
 				plane.material_id = std::stoi(plane_json["Material"].get<std::string>()) - 1;
-				plane.point_vertex_id = std::stoi(plane_json["Point"].get<std::string>()) - 1;
+        if (!zero_based_indexing)
+        {
+          plane.point_vertex_id = std::stoi(plane_json["Point"].get<std::string>()) - 1;
+        }
 				plane.normal = parseVec3(plane_json["Normal"]);
 
         if (plane_json.contains("MotionBlur"))
@@ -1445,6 +1624,176 @@ void parseScene(const std::string& filename, Scene_& scene) {
 				parse_plane(planes_json);
        }
      }
+
+
+  if (objects_json.contains("LightMesh"))
+    {
+      const auto& meshes_json = objects_json["LightMesh"];
+      auto parse_mesh = [&](const json& mesh_json) {
+        Mesh_ mesh;
+        mesh.id = std::stoi(mesh_json["_id"].get<std::string>());
+        mesh.material_id = std::stoi(mesh_json["Material"].get<std::string>()) - 1;
+        if(mesh_json.contains("_shadingMode"))
+          mesh.smooth_shading = (mesh_json["_shadingMode"].get<std::string>()).compare("smooth") == 0 ? true : false;
+        else
+					mesh.smooth_shading = false;
+
+        if (mesh_json.contains("Radiance"))
+        {
+          mesh.radiance = parseVec3(mesh_json["Radiance"].get<std::string>());
+        }
+
+        if (mesh_json.contains("MotionBlur"))
+        {
+          mesh.motion_blur = parseVec3(mesh_json["MotionBlur"]);
+        }
+        else
+        {
+          mesh.motion_blur = glm::vec3(0.0, 0.0, 0.0);
+        }
+
+        if (mesh_json.contains("Transformations"))
+        {
+          std::istringstream iss(mesh_json["Transformations"].get<std::string>());
+          std::string token;
+          std::vector<std::string> transformations;
+          while (iss >> token)
+            transformations.push_back(token);
+          mesh.transform_matrix = COMPOSITE_TRANSFORM;
+        }
+
+        if (mesh_json.contains("Textures"))
+        {
+          std::istringstream textures(mesh_json["Textures"].get<std::string>());
+          int texture;
+          while (textures >> texture)
+            mesh.textures.push_back(texture - 1);
+        }
+
+
+
+        const auto& faces_json = mesh_json["Faces"];
+
+        if (faces_json.contains("_vertexOffset"))
+        {
+          mesh.vertex_offset = std::stoi(faces_json["_vertexOffset"].get<std::string>());
+        }
+        else
+        {
+          mesh.vertex_offset = 0;
+        }
+        if (faces_json.contains("_textureOffset"))
+        {
+          mesh.texture_offset = std::stoi(faces_json["_textureOffset"].get<std::string>());
+        }
+        else
+        {
+          mesh.texture_offset = 0;
+        }
+
+        if (faces_json.contains("_data"))
+        {
+          std::stringstream faces_ss(faces_json["_data"].get<std::string>());
+          int v0, v1, v2;
+          while (faces_ss >> v0 >> v1 >> v2)
+          {
+            if (!zero_based_indexing)
+              mesh.faces.push_back({ mesh.material_id, v0 - 1, v1 - 1, v2 - 1 });
+            else
+              mesh.faces.push_back({ mesh.material_id, v0, v1, v2});
+          }
+        }
+        mesh.id--;
+        if (scene.meshes.find(mesh.id) != scene.meshes.end())
+        {
+          std::cout << "duplicate mesh id" << std::endl;
+        }
+        else
+        {
+          scene.meshes[mesh.id] = mesh;
+          if (scene.mesh_instances.find(mesh.id) != scene.mesh_instances.end())
+          {
+            std::cout << "a mesh_instance has the same id with a mesh" << std::endl;
+          }
+          else
+          {
+            scene.mesh_instances[mesh.id] = MeshInstance_{
+              mesh.id,
+              mesh.id,
+              mesh.material_id,
+              mesh.smooth_shading,
+              false,
+              mesh.transform_matrix,
+              mesh.motion_blur,
+              mesh.textures,
+              mesh.radiance
+            };
+          }
+        }
+      };
+
+      if (meshes_json.is_array())
+      {
+        for (const auto& mesh_json : meshes_json) parse_mesh(mesh_json);
+      }
+      else
+      {
+        parse_mesh(meshes_json);
+      }
+    }
+
+  if (objects_json.contains("LightSphere")) {
+    const auto& spheres_json = objects_json["LightSphere"];
+    auto parse_sphere = [&](const json& sphere_json) {
+      Sphere_ sphere;
+      sphere.id = std::stoi(sphere_json["_id"].get<std::string>());
+      sphere.material_id = std::stoi(sphere_json["Material"].get<std::string>()) - 1;
+      if (!zero_based_indexing)
+      {
+        sphere.center_vertex_id = std::stoi(sphere_json["Center"].get<std::string>()) - 1;
+      }
+
+      sphere.radius = std::stof(sphere_json["Radius"].get<std::string>());
+
+      if (sphere_json.contains("Radiance"))
+        sphere.radiance = parseVec3(sphere_json["Radiance"].get<std::string>());
+
+      if (sphere_json.contains("MotionBlur"))
+      {
+        sphere.motion_blur = parseVec3(sphere_json["MotionBlur"]);
+      }
+      else
+      {
+        sphere.motion_blur = glm::vec3(0.0, 0.0, 0.0);
+      }
+
+      if (sphere_json.contains("Transformations"))
+      {
+        std::istringstream iss(sphere_json["Transformations"].get<std::string>());
+        std::string token;
+        std::vector<std::string> transformations;
+        while (iss >> token)
+          transformations.push_back(token);
+
+        sphere.transform_matrix = COMPOSITE_TRANSFORM;
+      }
+
+      if (sphere_json.contains("Textures"))
+      {
+        std::istringstream textures(sphere_json["Textures"].get<std::string>());
+        int texture;
+        while (textures >> texture)
+          sphere.textures.push_back(texture - 1);
+      }
+
+      scene.spheres.push_back(sphere);
+    };
+    if (spheres_json.is_array()) {
+      for (const auto& sphere_json : spheres_json) parse_sphere(sphere_json);
+    } else {
+      parse_sphere(spheres_json);
+    }
+  }
 
 
 }

@@ -52,6 +52,9 @@ add_executable (HelixNebula
         raytracer/texture_mapping/type_structs.h
         raytracer/tonemapping/tonemapping.h
         raytracer/tonemapping/tonemapping.cpp
+        raytracer/render/rendercontext.h
+        raytracer/render/pathtracer.h
+        raytracer/render/pathtracer.cpp
 )
 
 

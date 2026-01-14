@@ -1,6 +1,26 @@
 #include "raytracer.h"
 #include <typeinfo>
 
+static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
+{
+	glm::vec3 wr = (n * (2 * (glm::dot(n, wo)))) - wo;
+	return wr;
+}
+
+static inline double r_parallel(double cosTheta, double cosPhi, double n1, double n2)
+{
+	return ((n2 * cosTheta) - (n1 * cosPhi)) / ((n2 * cosTheta) + (n1 * cosPhi));
+}
+
+static inline double r_perpendicular(double cosTheta, double cosPhi, double n1, double n2)
+{
+	return ((n1 * cosTheta) - (n2 * cosPhi)) / ((n1 * cosTheta) + (n2 * cosPhi));
+}
+
+static inline double fresnelReflectance(double r_parallel, double r_perpendicular)
+{
+	return (r_parallel * r_parallel + r_perpendicular * r_perpendicular) / 2.0;
+}
 
 Raytracer::Raytracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context)
     : render_context(_render_context)
@@ -8,7 +28,7 @@ Raytracer::Raytracer(std::unique_ptr<Scene> _scene, const RenderContext& _render
     scene = std::move(_scene);
 }
 
-void Raytracer::renderScene() const
+void Raytracer::renderScene()
 {
     std::string saveDir = FS::absolute(__FILE__).parent_path() / "../../outputs";
     for (const auto& cam : scene->cameras)
@@ -64,8 +84,9 @@ void Raytracer::renderScene() const
     }
 }
 
-void Raytracer::renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const
+void Raytracer::renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output)
 {
+	render_context.max_recursion_depth = camera->recursion_depth;
     output.resize(camera->image_height, std::vector<Color>(camera->image_width, Color(0, 0, 0)));
 
 #if !MULTI_THREADING
@@ -179,26 +200,6 @@ void Raytracer::renderLoop(int threadId, int stride, std::shared_ptr<BaseCamera>
             output[i][j] = (pixel_color / (float)camera->num_samples);
         }
     }
-}
-static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
-{
-    glm::vec3 wr = (n * (2 * (glm::dot(n, wo)))) - wo;
-    return wr;
-}
-
-static inline double r_parallel(double cosTheta, double cosPhi, double n1, double n2)
-{
-    return ((n2 * cosTheta) - (n1 * cosPhi)) / ((n2 * cosTheta) + (n1 * cosPhi));
-}
-
-static inline double r_perpendicular(double cosTheta, double cosPhi, double n1, double n2)
-{
-    return ((n1 * cosTheta) - (n2 * cosPhi)) / ((n1 * cosTheta) + (n2 * cosPhi));
-}
-
-static inline double fresnelReflectance(double r_parallel, double r_perpendicular)
-{
-    return (r_parallel * r_parallel + r_perpendicular * r_perpendicular) / 2.0;
 }
 
 Color Raytracer::traceRay(const Ray& ray, const SamplingContext& sampling_context, const CameraContext& cam_context) const

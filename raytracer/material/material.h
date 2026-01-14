@@ -20,6 +20,7 @@ public:
 	float absorption_index;
 	float roughness;
 	bool degamma;
+	std::optional<int> brdf_id;
 };
 
 

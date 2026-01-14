@@ -14,6 +14,7 @@ public:
   bool operator==(const Color & color) const = default;
 
   Color(double _r, double _g, double _b) : r(_r), g(_g), b(_b) {}
+  Color(double _c) : r(_c), g(_c), b(_c){}
   Color(const Color& other) = default;
   Color(const glm::vec3& vec)
   {

@@ -8,26 +8,9 @@
 #include <filesystem>
 #include "io/image_io.h"
 #include "texture_mapping/texture_lookup.h"
+#include "rendercontext.h"
 
 
-enum class BackgroundType : bool {
-    Color,
-    Texture
-};
-
-struct RenderContext {
-    union {
-        Color background_color;
-        Texture* background_tex;
-    }background_info;
-    float shadow_ray_epsilon;
-    float intersection_test_epsilon;
-    int max_recursion_depth;
-    BackgroundType b_type;
-    Image* env_map;
-
-    RenderContext() = default;
-};
 
 struct SamplingContext {
     const std::vector<std::vector<std::vector<glm::vec3>>>* area_light_samples;
@@ -38,9 +21,9 @@ class Raytracer {
 public:
     Raytracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context);
 
-    void renderScene() const;
+    void renderScene();
 private:
-    void renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output) const;
+    void renderOneCamera(std::shared_ptr<BaseCamera> camera, std::vector<std::vector<Color>>& output);
 
     Color traceRay(const Ray& ray, const SamplingContext& sampling_context, const CameraContext& cam_context) const ;
 

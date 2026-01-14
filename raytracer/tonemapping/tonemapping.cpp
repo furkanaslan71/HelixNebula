@@ -4,7 +4,6 @@
 
 #include "tonemapping.h"
 
-bool degamma = false;
 
 #define LUM(v) 0.2126 * v.r + 0.7152 * v.g + 0.0722 * v.b
 
@@ -52,8 +51,6 @@ float scaledLuminance(float inv_log_avg, float key, const Color& color, float Yi
 
 float gammaCorrect(float inv_g, float color_channel)
 {
-    if (degamma)
-        return glm::clamp(color_channel, 0.0f, 1.0f) * 255.0f;
     return glm::clamp(glm::pow(color_channel, inv_g), 0.0f, 1.0f) * 255.0f;
 }
 

@@ -13,6 +13,7 @@
 #include "objects/tlas_box.h"
 #include "objects/mesh.h"
 #include "objects/geometry.h"
+#include "render/pathtracer.h"
 #include "render/raytracer.h"
 #include "texture_mapping/texture_data.h"
 
@@ -40,8 +41,10 @@ int main(int argc, char* argv[])
   }
   scene_filename = p.filename().string();
 #else
-  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs5/";
-  scene_filename = "sphere_env_light.json";
+  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/directLighting/inputs/";
+  //scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs3/";
+  scene_filename = "cornellbox_jaroslav_diffuse.json";
+  //scene_filename = "dragon_dynamic.json";
   scene_path = scene_folder + scene_filename;
 #endif
 
@@ -113,14 +116,9 @@ int main(int argc, char* argv[])
   materials.reserve(raw_scene.materials.size());
   for (auto& material : raw_scene.materials)
   {
-    if (material.degamma)
-    {
-      degamma = true;
-    }
     materials.emplace_back(material);
   }
 
-  degamma = false;
 
   
   std::vector<TLASBox> tlas_boxes;
@@ -290,7 +288,8 @@ int main(int argc, char* argv[])
 
 
 
-  Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes, env_map), render_context);
+  //Raytracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes, env_map), render_context);
+  PathTracer raytracer(std::make_unique<Scene>(raw_scene, tlas_boxes, planes, env_map), render_context);
 
 
     std::cout << "Rendering started for scene file: " << scene_filename << std::endl;
