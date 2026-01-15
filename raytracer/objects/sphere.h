@@ -10,11 +10,13 @@ class Sphere{
 public:
 	glm::vec3 center;
 	double radius;
+	std::optional<glm::vec3> radiance;
 
-	Sphere(glm::vec3 _center, double _radius)
+	Sphere(glm::vec3 _center, double _radius,  std::optional<glm::vec3> _radiance)
 		: 
 		center(_center), 
-		radius(_radius)
+		radius(_radius),
+		radiance(_radiance)
 	{
 		bounding_box = AABB(center - glm::vec3(radius, radius, radius),
 														center + glm::vec3(radius, radius, radius));
@@ -78,6 +80,7 @@ public:
 
 				rec.surface_tangents = {T, B};
 				rec.set_front_face(ray);
+				rec.radiance = radiance;
 				return true;
 			}
 		}

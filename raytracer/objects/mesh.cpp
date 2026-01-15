@@ -38,8 +38,9 @@ template bool Mesh::hit<false>(const Ray&, Interval, HitRecord&) const;
 Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 	const std::vector<glm::vec3>& vertex_data,
 	int vertex_offset, int texture_offset, bool is_smooth,
-	const std::vector<glm::vec2>& tex_data)
-	: id(_id)
+	const std::vector<glm::vec2>& tex_data,
+	 std::optional<glm::vec3> _radiance)
+	: id(_id), radiance(_radiance)
 {
 	if (is_smooth)
 	{
@@ -148,7 +149,12 @@ Mesh::Mesh(int _id, const std::vector<Triangle_>& _faces,
 template <bool occlusion_only>
 bool Mesh::hit(const Ray& ray, Interval ray_t, HitRecord& rec) const
 {
-	return bvh->intersect<occlusion_only>(ray, ray_t, rec);
+	bool res = bvh->intersect<occlusion_only>(ray, ray_t, rec);
+	if (res)
+	{
+		rec.radiance = radiance;
+	}
+	return res;
 }
 
 AABB Mesh::getAABB() const

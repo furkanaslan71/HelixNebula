@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
   }
   scene_filename = p.filename().string();
 #else
-  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/directLighting/inputs/";
+  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/pathTracing/inputs/";
   //scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs3/";
-  scene_filename = "cornellbox_jaroslav_diffuse.json";
+  scene_filename = "cornellbox_sphere_light.json";
   //scene_filename = "dragon_dynamic.json";
   scene_path = scene_folder + scene_filename;
 #endif
@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
   std::vector<Geometry> geometries;
   std::vector<std::optional<Transformation>> transformations;
   std::vector<Material> materials;
+  std::vector<BRDF> brdfs;
   std::vector<Texture> textures;
   std::vector<Image> images;
 
@@ -113,10 +114,23 @@ int main(int argc, char* argv[])
     }
   }
 
+  brdfs.resize(raw_scene.brdfs.size());
+  for (auto& brdf : raw_scene.brdfs)
+  {
+    brdfs[brdf.id] = BRDF(brdf);
+  }
+
   materials.reserve(raw_scene.materials.size());
   for (auto& material : raw_scene.materials)
   {
-    materials.emplace_back(material);
+    if (material.brdf_id.has_value())
+    {
+      materials.emplace_back(material, &brdfs[material.brdf_id.value()]);
+    }
+    else
+    {
+      materials.emplace_back(material, nullptr);
+    }
   }
 
 
@@ -203,7 +217,7 @@ int main(int argc, char* argv[])
     {
       transformations.emplace_back(std::nullopt);
     }
-    geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius));
+    geometries.emplace_back(std::in_place_type<Sphere>, center, static_cast<double>(raw_sphere.radius), raw_sphere.radiance);
 
     std::vector<Texture*> tex;
     for (int tex_id : raw_sphere.textures)
@@ -220,7 +234,7 @@ int main(int argc, char* argv[])
   {
     mesh_order[key] = index++;
     geometries.emplace_back(std::in_place_type<Mesh>,val.id, val.faces, vertex_data,
-      val.vertex_offset, val.texture_offset, val.smooth_shading, raw_scene.tex_coord_data);
+      val.vertex_offset, val.texture_offset, val.smooth_shading, raw_scene.tex_coord_data, val.radiance);
   }
   index = 0;
   int base = t_size + s_size;

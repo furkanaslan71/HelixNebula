@@ -7,6 +7,7 @@
 #include "rendercontext.h"
 #include "scene/scene.h"
 #include "camera/base_camera.h"
+#include "texture_mapping/texture_lookup.h"
 
 class PathTracer {
 public:
@@ -20,7 +21,7 @@ private:
                                    std::vector<std::pair<glm::vec3, glm::vec3>>& out_samples,
                                    std::mt19937& rng) const;
 
-    Color tracePath(const Ray& ray, const CameraContext& cam_context) const;
+    Color tracePath(const Ray& initial_ray, const CameraContext& cam_context) const;
 
     bool hitPlanes(const Ray& ray, Interval ray_t, HitRecord& rec) const;
 

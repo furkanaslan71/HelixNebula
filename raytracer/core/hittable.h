@@ -22,6 +22,7 @@ typedef struct HitRecord{
   glm::vec2 uv;
   double t;
 	bool front_face;
+  std::optional<glm::vec3> radiance;
   
   void set_front_face(const Ray& r)
   {
