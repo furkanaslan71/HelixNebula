@@ -43,6 +43,7 @@ struct CameraContext {
         {RendererParams::RussianRoulette,    false},
     };
     int splitting_factor;
+    int min_recursion_depth = -1;
 };
 
 

@@ -45,6 +45,7 @@ public:
 	int num_area_lights;
 	CameraContext context;
 	bool flip_x;
+	int min_recursion_depth;
 
 };
 

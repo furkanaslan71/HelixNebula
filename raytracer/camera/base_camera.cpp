@@ -21,9 +21,13 @@ BaseCamera::BaseCamera(
 		recursion_depth(_recursion_depth),
 		num_area_lights(_num_area_lights),
 		area_lights(_area_lights),
-		flip_x(cam.flip_x)
+		flip_x(cam.flip_x),
+		min_recursion_depth(cam.min_recursion_depth)
 {
-
+	if (cam.max_recursion_depth != -1)
+	{
+		this->recursion_depth = cam.max_recursion_depth;
+	}
 	gaze = glm::normalize(gaze);
 
 	if (cam.transform_matrix.has_value())
@@ -76,6 +80,7 @@ BaseCamera::BaseCamera(
 	this->context.tan_half_fov_y = (float)((t - b) * 0.5 / near_distance);
 
 	this->context.splitting_factor = cam.splitting_factor;
+	this->context.min_recursion_depth = cam.min_recursion_depth;
 	for (const auto& rend_param : cam.renderer_params)
 	{
 		if (rend_param == "ImportanceSampling")

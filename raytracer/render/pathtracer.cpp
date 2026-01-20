@@ -24,7 +24,6 @@ static inline double fresnelReflectance(double r_parallel, double r_perpendicula
     return (r_parallel * r_parallel + r_perpendicular * r_perpendicular) / 2.0;
 }
 
-
 PathTracer::PathTracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context)
     : render_context(_render_context)
 {
@@ -34,13 +33,14 @@ PathTracer::PathTracer(std::unique_ptr<Scene> _scene, const RenderContext& _rend
 Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_context) const
 {
     Color accumulated_light(0.0f);
-
+    int max_rec_depth = render_context.max_recursion_depth;
     std::vector<PathState> stack;
-    stack.reserve(cam_context.splitting_factor * 2 + render_context.max_recursion_depth);
+    stack.reserve(cam_context.splitting_factor * 2 + max_rec_depth);
     stack.push_back({initial_ray, Color(1.0f), 0});
 
-    //Color throughput(1.0f);
-    //Ray ray = initial_ray;
+    bool russian_roulette = cam_context.options.at(RendererParams::RussianRoulette);
+    float survival_rate;
+    if (russian_roulette)  max_rec_depth = 128;
 
     while (!stack.empty())
     {
@@ -48,7 +48,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
         stack.pop_back();
 
         // Check recursion limit
-        if (state.depth > render_context.max_recursion_depth) continue;
+        if (state.depth > max_rec_depth) continue;
 
         Ray ray = state.ray;
         Color throughput = state.throughput;
@@ -164,6 +164,18 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
         {
             Color next_throughput = throughput;
             Ray next_ray;
+
+            if (russian_roulette && state.depth >= cam_context.min_recursion_depth)
+            {
+                survival_rate = std::clamp(next_throughput.max(), 1e-7, 0.99);
+
+                float bullet_to_the_head = generateRandomFloat(0, 1);
+                if (bullet_to_the_head > survival_rate)
+                    continue;
+
+                next_throughput *= 1.0f / survival_rate;
+            }
+
             if ((mat.type) == "mirror")
             {
                 glm::vec3 wo = -ray.direction;
@@ -355,7 +367,6 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
     return accumulated_light;
 }
 
-
 void PathTracer::renderScene()
 {
     std::string saveDir = FS::absolute(__FILE__).parent_path() / "../../outputs";
@@ -409,7 +420,7 @@ void PathTracer::renderScene()
         }
         else
             throw std::runtime_error("Unsupported image type");
-        //break;
+        break;
     }
 }
 

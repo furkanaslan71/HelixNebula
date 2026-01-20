@@ -76,6 +76,11 @@ public:
     Expects(s != 0);
     return Color(r / s, g / s, b / s);
   }
+
+  inline double max() const
+  {
+    return std::max(r, std::max(g, b));
+  }
 };
 
 #endif // COLOR_H
