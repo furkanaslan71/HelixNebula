@@ -18,12 +18,31 @@
 #include <string>
 #include "glm_config.h"
 
+enum class RendererParams : int {
+    ImportanceSampling,
+    NEE,
+    MIS_BALANCE,
+    MIS_POWER,
+    MIS_01,
+    RussianRoulette
+};
+
 struct CameraContext {
     glm::vec3 forward;
     glm::vec3 right;
     glm::vec3 up;
     float tan_half_fov_x;
     float tan_half_fov_y;
+
+    std::unordered_map<RendererParams, bool> options = {
+        {RendererParams::ImportanceSampling, false},
+        {RendererParams::NEE,                false},
+        {RendererParams::MIS_BALANCE,        false},
+        {RendererParams::MIS_POWER,          false},
+        {RendererParams::MIS_01,             false},
+        {RendererParams::RussianRoulette,    false},
+    };
+    int splitting_factor;
 };
 
 

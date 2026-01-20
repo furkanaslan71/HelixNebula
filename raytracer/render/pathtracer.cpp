@@ -34,11 +34,25 @@ PathTracer::PathTracer(std::unique_ptr<Scene> _scene, const RenderContext& _rend
 Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_context) const
 {
     Color accumulated_light(0.0f);
-    Color throughput(1.0f);
-    Ray ray = initial_ray;
 
-    for (int depth = 0; depth <= render_context.max_recursion_depth; ++depth)
+    std::vector<PathState> stack;
+    stack.reserve(cam_context.splitting_factor * 2 + render_context.max_recursion_depth);
+    stack.push_back({initial_ray, Color(1.0f), 0});
+
+    //Color throughput(1.0f);
+    //Ray ray = initial_ray;
+
+    while (!stack.empty())
     {
+        PathState state = stack.back();
+        stack.pop_back();
+
+        // Check recursion limit
+        if (state.depth > render_context.max_recursion_depth) continue;
+
+        Ray ray = state.ray;
+        Color throughput = state.throughput;
+
         HitRecord rec;
         bool hit_plane = false;
         hit_plane = this->hitPlanes(ray, Interval(render_context.intersection_test_epsilon, INFINITY), rec);
@@ -64,7 +78,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     accumulated_light += throughput * lookupBackgroundTex(render_context.background_info.background_tex,
                    glm::normalize(ray.direction), cam_context);
                 }
-                break;
+                continue;
             }
         }
 
@@ -76,7 +90,8 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
             }
             else
             {
-                ray = Ray(rec.point + ray.direction * (float)render_context.shadow_ray_epsilon, ray.direction, ray.time);
+                Ray pass_ray(rec.point + ray.direction * (float)render_context.shadow_ray_epsilon, ray.direction, ray.time);
+                stack.push_back({pass_ray, throughput, state.depth}); // Same depth, effectively skipping the object
                 continue;
             }
         }
@@ -120,8 +135,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     }
                     case (DecalMode::replace_all):
                     {
-                        auto res = Color(lookupTexture(tex, rec.uv, rec.point, true));
-                        return  res;
+                        return Color(lookupTexture(tex, rec.uv, rec.point, true));
                     }
 
                     default:
@@ -139,183 +153,204 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
             ka = glm::pow(ka, glm::vec3(2.2));
         }
 
-        Ray next_ray;
-        if ((mat.type) == "mirror")
-	    {
-		    glm::vec3 wo = -ray.direction;
-		    glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
-		    next_ray = Ray(rec.point + rec.normal * render_context.shadow_ray_epsilon, wr, ray.time);
-
-		    if (mat.roughness != 0)
-		    {
-			    next_ray.perturb(mat.roughness);
-		    }
-
-		    throughput *= Color(mat.mirror_reflectance);
-	    }
-	    else if ((mat.type) == "conductor")
-	    {
-		    glm::vec3 wo = -ray.direction;
-		    glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
-		    wr = glm::normalize(wr);
-		    //wo = glm::normalize(wo);
-		    double cos_theta = glm::dot(wo, rec.normal);
-		    double cos2 = cos_theta * cos_theta;
-
-		    double k = mat.absorption_index; // Assuming k is the same for r, g, b
-		    double k2 = k * k;
-
-		    double n = static_cast<double>(mat.refraction_index);
-		    double n2 = n * n;
-
-		    double two_n_cos = 2.0 * n * cos_theta;
-
-		    double n2_k2 = n2 + k2;
-
-		    double rs_num = n2_k2 - two_n_cos + cos2;
-		    double rs_den = n2_k2 + two_n_cos + cos2;
-		    double rs = rs_num / rs_den;
-
-		    double rp_num = n2_k2 * cos2 - two_n_cos + 1.0;
-		    double rp_den = n2_k2 * cos2 + two_n_cos + 1.0;
-		    double rp = rp_num / rp_den;
-
-		    double f_r = (rs + rp) * 0.5;
-
-		    next_ray = Ray(rec.point + rec.normal * render_context.shadow_ray_epsilon, wr, ray.time);
-		    if (mat.roughness != 0)
-		    {
-			    next_ray.perturb(mat.roughness);
-		    }
-
-		    throughput *= Color((float)f_r * mat.mirror_reflectance);
-	    }
-	    else if (mat.type == "dielectric")
+        int num_splits = 1;
+        if (state.depth == 0 && cam_context.splitting_factor > 1)
         {
-            glm::vec3 wo = -ray.direction;
-            glm::vec3 geometric_normal = rec.normal;
-            bool entering = glm::dot(ray.direction, geometric_normal) < 0;
+            num_splits = cam_context.splitting_factor;
+        }
 
-            double n1, n2;
-            glm::vec3 normal;
-            double current_ior = (double)mat.refraction_index;
 
-            if (entering) { n1 = 1.0; n2 = current_ior; normal = geometric_normal; }
-            else { n1 = current_ior; n2 = 1.0; normal = -geometric_normal; }
-
-            double eta = n1 / n2;
-            double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
-            double sin2ThetaT = eta * eta * (1.0 - cosTheta * cosTheta);
-
-            double F_r = 1.0;
-            bool can_refract = sin2ThetaT <= 1.0;
-
-            if (can_refract)
+        for (int i = 0; i < num_splits; ++i)
+        {
+            Color next_throughput = throughput;
+            Ray next_ray;
+            if ((mat.type) == "mirror")
             {
-                double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
-                double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);
-                double r_perp = r_perpendicular(cosTheta, cosThetaT, n1, n2);
-                F_r = fresnelReflectance(r_par, r_perp);
+                glm::vec3 wo = -ray.direction;
+                glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
+                next_ray = Ray(rec.point + rec.normal * render_context.shadow_ray_epsilon, wr, ray.time);
+
+                if (mat.roughness != 0)
+                {
+                    next_ray.perturb(mat.roughness);
+                }
+
+                next_throughput *= Color(mat.mirror_reflectance);
             }
-
-            // Monte Carlo Path Selection: Reflect or Refract?
-            float rnd = generateRandomFloat(0, 1);
-
-            if (rnd < F_r)
+            else if ((mat.type) == "conductor")
             {
-                // -- REFLECTION --
-                glm::vec3 wr = reflect(wo, normal);
-                next_ray = Ray(rec.point + normal * (float)render_context.shadow_ray_epsilon, wr, ray.time);
+                glm::vec3 wo = -ray.direction;
+                glm::vec3 wr = (rec.normal * (2 * (glm::dot(rec.normal, wo)))) - wo;
+                wr = glm::normalize(wr);
+                //wo = glm::normalize(wo);
+                double cos_theta = glm::dot(wo, rec.normal);
+                double cos2 = cos_theta * cos_theta;
 
-                // Maintain previous inside state
-                next_ray.inside = ray.inside;
+                double k = mat.absorption_index; // Assuming k is the same for r, g, b
+                double k2 = k * k;
 
-                if (mat.roughness != 0) next_ray.perturb(mat.roughness);
+                double n = static_cast<double>(mat.refraction_index);
+                double n2 = n * n;
 
-                // Throughput logic: multiply by F_r / P_reflect.
-                // Since P_reflect = F_r, they cancel out. throughput *= 1.0;
+                double two_n_cos = 2.0 * n * cos_theta;
+
+                double n2_k2 = n2 + k2;
+
+                double rs_num = n2_k2 - two_n_cos + cos2;
+                double rs_den = n2_k2 + two_n_cos + cos2;
+                double rs = rs_num / rs_den;
+
+                double rp_num = n2_k2 * cos2 - two_n_cos + 1.0;
+                double rp_den = n2_k2 * cos2 + two_n_cos + 1.0;
+                double rp = rp_num / rp_den;
+
+                double f_r = (rs + rp) * 0.5;
+
+                next_ray = Ray(rec.point + rec.normal * render_context.shadow_ray_epsilon, wr, ray.time);
+                if (mat.roughness != 0)
+                {
+                    next_ray.perturb(mat.roughness);
+                }
+
+                next_throughput *= Color((float)f_r * mat.mirror_reflectance);
+            }
+            else if (mat.type == "dielectric")
+            {
+                glm::vec3 wo = -ray.direction;
+                glm::vec3 geometric_normal = rec.normal;
+                bool entering = glm::dot(ray.direction, geometric_normal) < 0;
+
+                double n1, n2;
+                glm::vec3 normal;
+                double current_ior = (double)mat.refraction_index;
+
+                if (entering) { n1 = 1.0; n2 = current_ior; normal = geometric_normal; }
+                else { n1 = current_ior; n2 = 1.0; normal = -geometric_normal; }
+
+                double eta = n1 / n2;
+                double cosTheta = std::clamp(glm::dot(wo, normal), -1.0f, 1.0f);
+                double sin2ThetaT = eta * eta * (1.0 - cosTheta * cosTheta);
+
+                double F_r = 1.0;
+                bool can_refract = sin2ThetaT <= 1.0;
+
+                if (can_refract)
+                {
+                    double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
+                    double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);
+                    double r_perp = r_perpendicular(cosTheta, cosThetaT, n1, n2);
+                    F_r = fresnelReflectance(r_par, r_perp);
+                }
+
+                // Monte Carlo Path Selection: Reflect or Refract?
+                float rnd = generateRandomFloat(0, 1);
+
+                if (rnd < F_r)
+                {
+                    // -- REFLECTION --
+                    glm::vec3 wr = reflect(wo, normal);
+                    next_ray = Ray(rec.point + normal * (float)render_context.shadow_ray_epsilon, wr, ray.time);
+
+                    // Maintain previous inside state
+                    next_ray.inside = ray.inside;
+
+                    if (mat.roughness != 0) next_ray.perturb(mat.roughness);
+
+                    // Throughput logic: multiply by F_r / P_reflect.
+                    // Since P_reflect = F_r, they cancel out. throughput *= 1.0;
+                }
+                else
+                {
+                    // -- REFRACTION --
+                    double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
+                    glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - cosThetaT);
+                    wt = glm::normalize(wt);
+
+                    next_ray = Ray(rec.point - normal * (float)render_context.shadow_ray_epsilon, wt, ray.time);
+
+                    // Update inside state
+                    next_ray.inside = entering;
+
+                    if (mat.roughness != 0) next_ray.perturb(mat.roughness);
+
+                    // Beer's Law Absorption (if ray was traveling inside the medium)
+                    if (!entering)
+                    {
+                        double dist = rec.t;
+                        glm::vec3 absorb;
+                        absorb.x = std::exp(-mat.absorption_coefficient.x * dist);
+                        absorb.y = std::exp(-mat.absorption_coefficient.y * dist);
+                        absorb.z = std::exp(-mat.absorption_coefficient.z * dist);
+                        next_throughput *= Color(absorb);
+                    }
+
+                    // Throughput logic: multiply by (1-F_r) / P_refract.
+                    // Since P_refract = (1-F_r), they cancel out. throughput *= 1.0;
+                }
             }
             else
             {
-                // -- REFRACTION --
-                double cosThetaT = std::sqrt(std::max(0.0, 1.0 - sin2ThetaT));
-                glm::vec3 wt = -wo * (float)eta + normal * (float)(eta * cosTheta - cosThetaT);
-                wt = glm::normalize(wt);
+                glm::vec3 w = glm::normalize(rec.normal);
+                glm::vec3 a = (std::abs(w.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+                glm::vec3 v = glm::normalize(glm::cross(w, a));
+                glm::vec3 u = glm::cross(v, w);
 
-                next_ray = Ray(rec.point - normal * (float)render_context.shadow_ray_epsilon, wt, ray.time);
+                glm::vec3 next_dir;
+                float r1 = generateRandomFloat(0, 1);
+                float r2 = generateRandomFloat(0, 1);
+                float theta = 2.0f * M_PI * r2;
+                float r, x, y, z;
+                float invPDF_cosTheta;
 
-                // Update inside state
-                next_ray.inside = entering;
-
-                if (mat.roughness != 0) next_ray.perturb(mat.roughness);
-
-                // Beer's Law Absorption (if ray was traveling inside the medium)
-                if (!entering)
+                if (cam_context.options.at(RendererParams::ImportanceSampling))
                 {
-                     double dist = rec.t;
-                     glm::vec3 absorb;
-                     absorb.x = std::exp(-mat.absorption_coefficient.x * dist);
-                     absorb.y = std::exp(-mat.absorption_coefficient.y * dist);
-                     absorb.z = std::exp(-mat.absorption_coefficient.z * dist);
-                     throughput *= Color(absorb);
+                    r = std::sqrt(r1);
+                    x = r * std::cos(theta);
+                    y = r * std::sin(theta);
+                    z = std::sqrt(std::max(0.0f, 1.0f - r1)); // z is cosTheta
+                    next_dir = glm::normalize(x * u + y * v + z * w);
+
+                    invPDF_cosTheta = M_PI;
+                }
+                else
+                {
+                    z = r1;
+                    r = std::sqrt(std::max(0.0f, 1.0f - z * z));
+                    x = r * std::cos(theta);
+                    y = r * std::sin(theta);
+                    next_dir = glm::normalize(x * u + y * v + z * w);
+
+                    float cosTheta = std::max(0.0f, glm::dot(rec.normal, next_dir));
+                    invPDF_cosTheta = cosTheta * 2.0f * M_PI;
                 }
 
-                // Throughput logic: multiply by (1-F_r) / P_refract.
-                // Since P_refract = (1-F_r), they cancel out. throughput *= 1.0;
+                next_ray = Ray(rec.point + next_dir * (float)render_context.shadow_ray_epsilon, next_dir, ray.time);
+                glm::vec3 wo = -glm::normalize(ray.direction);
+
+                Color brdf_val(0.0f);
+                if (rec.material->brdf)
+                {
+                    brdf_val = Color(rec.material->brdf->Evaluate(next_dir, wo, rec.normal, kd, ks));
+                }
+                else
+                {
+                    // Fallback to Lambertian Diffuse if no specific BRDF is set
+                    // f = kd / PI
+                    brdf_val = Color(kd * (float)(1.0 / M_PI));
+                }
+                next_throughput *= brdf_val * invPDF_cosTheta;
+            }
+
+            if (num_splits > 1)
+            {
+                next_throughput = next_throughput / num_splits;
+            }
+
+            if (next_throughput.r > 1e-5 || next_throughput.g > 1e-5 || next_throughput.b > 1e-5)
+            {
+                stack.push_back({next_ray, next_throughput, state.depth + 1});
             }
         }
-	    else
-	    {
-	        // 1. Build Local Coordinate System (ONB)
-	        glm::vec3 w = glm::normalize(rec.normal);
-	        glm::vec3 a = (std::abs(w.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
-	        glm::vec3 v = glm::normalize(glm::cross(w, a));
-	        glm::vec3 u = glm::cross(v, w);
-
-	        // 2. Cosine Weighted Hemisphere Sampling (Samples wi)
-	        float r1 = generateRandomFloat(0, 1);
-	        float r2 = generateRandomFloat(0, 1);
-	        float r = std::sqrt(r1);
-	        float theta = 2.0f * M_PI * r2;
-
-	        float x = r * std::cos(theta);
-	        float y = r * std::sin(theta);
-	        float z = std::sqrt(std::max(0.0f, 1.0f - r1)); // z is cosTheta
-
-	        glm::vec3 local_dir(x, y, z);
-	        glm::vec3 next_dir = glm::normalize(x * u + y * v + z * w);
-
-	        next_ray = Ray(rec.point + next_dir * (float)render_context.shadow_ray_epsilon, next_dir, ray.time);
-
-	        // 3. Evaluate BRDF
-	        // wo = -ray.direction (Unit vector towards eye)
-	        // wi = next_dir (Unit vector towards light/next bounce)
-	        glm::vec3 wo = -glm::normalize(ray.direction);
-
-	        Color brdf_val(0.0f);
-
-	        // Check if material has a specific BRDF definition
-	        if (rec.material->brdf) {
-	            // Pass kd and ks from material (which might have been texturized above)
-	            brdf_val = Color(rec.material->brdf->Evaluate(next_dir, wo, rec.normal, kd, ks));
-	        }
-	        else {
-	            // Fallback to Lambertian Diffuse if no specific BRDF is set
-	            // f = kd / PI
-	            brdf_val = Color(kd * (float)(1.0 / M_PI));
-	        }
-
-	        // 4. Update Throughput
-	        // Formula: throughput * (BRDF * cosTheta) / PDF
-	        // PDF (Cosine Sampling) = cosTheta / PI
-	        // Factor = BRDF * PI
-
-	        throughput *= brdf_val * (float)M_PI;
-	    }
-        ray = next_ray;
-
-        // Terminate if throughput is black to save performance
-        if (throughput.r <= 1e-5 && throughput.g <= 1e-5 && throughput.b <= 1e-5) break;
     }
     return accumulated_light;
 }
@@ -374,6 +409,7 @@ void PathTracer::renderScene()
         }
         else
             throw std::runtime_error("Unsupported image type");
+        //break;
     }
 }
 

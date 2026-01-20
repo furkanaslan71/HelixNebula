@@ -9,6 +9,12 @@
 #include "camera/base_camera.h"
 #include "texture_mapping/texture_lookup.h"
 
+struct PathState {
+    Ray ray;
+    Color throughput;
+    int depth;
+};
+
 class PathTracer {
 public:
     PathTracer(std::unique_ptr<Scene> _scene, const RenderContext& _render_context);

@@ -45,6 +45,9 @@ typedef struct Camera_ {
     bool flip_x;
     std::string renderer;
     std::vector<std::string> renderer_params;
+    int splitting_factor;
+    int max_recursion_depth;
+    int min_recursion_depth;
 } Camera_;
 
 typedef struct PointLight_ {

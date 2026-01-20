@@ -75,6 +75,39 @@ BaseCamera::BaseCamera(
 	this->context.tan_half_fov_x = (float)((r - l) * 0.5 / near_distance);
 	this->context.tan_half_fov_y = (float)((t - b) * 0.5 / near_distance);
 
+	this->context.splitting_factor = cam.splitting_factor;
+	for (const auto& rend_param : cam.renderer_params)
+	{
+		if (rend_param == "ImportanceSampling")
+		{
+			this->context.options[RendererParams::ImportanceSampling] = true;
+		}
+		else if (rend_param == "NextEventEstimation")
+		{
+			this->context.options[RendererParams::NEE] = true;
+		}
+		else if (rend_param == "MIS_BALANCE")
+		{
+			this->context.options[RendererParams::MIS_BALANCE] = true;
+		}
+		else if (rend_param == "MIS_POWER")
+		{
+			this->context.options[RendererParams::MIS_POWER] = true;
+		}
+		else if (rend_param == "MIS_01")
+		{
+			this->context.options[RendererParams::MIS_01] = true;
+		}
+		else if (rend_param == "RussianRoulette")
+		{
+			this->context.options[RendererParams::RussianRoulette] = true;
+		}
+		else
+		{
+			throw std::runtime_error("Unknown renderer param");
+		}
+	}
+
 	for (const auto& tm : _tonemaps)
 	{
 		tonemaps.emplace_back(tm);

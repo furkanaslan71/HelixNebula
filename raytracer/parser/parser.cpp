@@ -841,6 +841,30 @@ void parseScene(const std::string& filename, Scene_& scene) {
         while (params >> param)
           cam.renderer_params.push_back(param);
       }
+      if (cam_json.contains("SplittingFactor"))
+      {
+        cam.splitting_factor = std::stoi(cam_json["SplittingFactor"].get<std::string>());
+      }
+      else
+      {
+        cam.splitting_factor = 1;
+      }
+      if (cam_json.contains("MinRecursionDepth"))
+      {
+        cam.min_recursion_depth = std::stoi(cam_json["MinRecursionDepth"].get<std::string>());
+      }
+      else
+      {
+        cam.min_recursion_depth = -1;
+      }
+      if (cam_json.contains("MaxRecursionDepth"))
+      {
+        cam.max_recursion_depth = std::stoi(cam_json["MaxRecursionDepth"].get<std::string>());
+      }
+      else
+      {
+        cam.max_recursion_depth = -1;
+      }
 
       scene.cameras.push_back(cam);
       };
