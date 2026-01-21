@@ -81,6 +81,7 @@ public:
 				rec.surface_tangents = {T, B};
 				rec.set_front_face(ray);
 				rec.radiance = radiance;
+				rec.type = "sphere";
 				return true;
 			}
 		}

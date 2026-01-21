@@ -1063,6 +1063,10 @@ void parseScene(const std::string& filename, Scene_& scene) {
         if (mat_json.contains("_degamma")) mat.degamma = mat_json["_degamma"].get<std::string>() == "true" ? true : false;
         else mat.degamma = false;
         if (mat_json.contains("_BRDF")) mat.brdf_id = std::stoi(mat_json["_BRDF"].get<std::string>()) - 1;
+        if (mat_json.contains("ScatteringCoefficient")) mat.scattering_coefficient = parseVec3(mat_json["ScatteringCoefficient"]);
+        else mat.scattering_coefficient = { 0.0f, 0.0f, 0.0f };
+        if (mat_json.contains("Anisotropy")) mat.anisotropy = std::stof(mat_json["Anisotropy"].get<std::string>());
+        else mat.anisotropy = 0.0f;
         scene.materials.push_back(mat);
     };
     if (materials_json.is_array()) {

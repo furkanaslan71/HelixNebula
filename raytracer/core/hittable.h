@@ -23,6 +23,7 @@ typedef struct HitRecord{
   double t;
 	bool front_face;
   std::optional<glm::vec3> radiance;
+  std::string type;
   
   void set_front_face(const Ray& r)
   {

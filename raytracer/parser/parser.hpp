@@ -102,6 +102,8 @@ typedef struct Material_ {
     float roughness;
     bool degamma;
     std::optional<int> brdf_id;
+    glm::vec3 scattering_coefficient;
+    float anisotropy;
 } Material_;
 
 typedef struct Triangle_ {

@@ -167,7 +167,9 @@ Material::Material()
 		absorption_coefficient(),
 	absorption_index(),
 	roughness(),
-	degamma()
+	degamma(),
+	scattering_coefficient(),
+	anisotropy()
 {}
 
 Material::Material(const Material_& _material, BRDF* brdf)
@@ -183,6 +185,8 @@ Material::Material(const Material_& _material, BRDF* brdf)
 			absorption_index(_material.absorption_index),
 			roughness(_material.roughness),
 			degamma(_material.degamma),
-			brdf(brdf)
+			brdf(brdf),
+			scattering_coefficient(_material.scattering_coefficient),
+			anisotropy(_material.anisotropy)
 {
 }

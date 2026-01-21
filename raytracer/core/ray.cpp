@@ -4,10 +4,11 @@ Ray::Ray() {}
 
 Ray::~Ray() {}
 
-Ray::Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time)
+Ray::Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time, int8_t _inside)
   : origin(_origin), 
   direction(_direction),
-	time(_time)
+	time(_time),
+	inside(_inside)
 {
     //direction = glm::normalize(direction);
 		inv_direction = 1.0f / direction;

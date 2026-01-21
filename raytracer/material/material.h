@@ -41,6 +41,8 @@ public:
 	float roughness;
 	bool degamma;
 	BRDF* brdf;
+	glm::vec3 scattering_coefficient;
+	float anisotropy;
 };
 
 

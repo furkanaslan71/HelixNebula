@@ -146,7 +146,7 @@ public:
 
 				rec.surface_tangents = tangents;
 			}
-
+			rec.type = "triangle";
 			rec.set_front_face(ray);
 			return true;
 		}

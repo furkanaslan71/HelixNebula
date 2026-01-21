@@ -11,9 +11,10 @@ public:
     double time;
     int8_t sign[3];
     int8_t inside = 0;
+    int bounce_count = 0;
     Ray();
     ~Ray();
-    Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time);
+    Ray(const  glm::vec3& _origin, const  glm::vec3& _direction, double _time, int8_t _inside = 0);
 
     void perturb(float roughness);
 };

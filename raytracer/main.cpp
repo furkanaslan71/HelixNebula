@@ -41,9 +41,10 @@ int main(int argc, char* argv[])
   }
   scene_filename = p.filename().string();
 #else
-  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/pathTracing/inputs/";
+  //scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/pathTracing/inputs/";
+  scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs6/";
   //scene_folder = FS::absolute(__FILE__).parent_path() / "../inputs3/";
-  scene_filename = "cornell_diffuse.json";
+  scene_filename = "sss_lucy.json";
   //scene_filename = "dragon_dynamic.json";
   scene_path = scene_folder + scene_filename;
 #endif

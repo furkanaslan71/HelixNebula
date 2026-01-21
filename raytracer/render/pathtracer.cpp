@@ -3,6 +3,40 @@
 //
 #include "pathtracer.h"
 
+glm::vec3 isotropicSample(float r1, float r2)
+{
+    float phi = 2.0f * M_PI * r1;
+    float cosTheta = 1.0f - 2.0f * r2;
+    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
+    return glm::vec3(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+}
+
+glm::vec3 sampleHenyeyGreenstein(glm::vec3 incoming_dir, float g, float r1, float r2)
+{
+    // If g is very small, treat as isotropic to avoid division by zero
+    if (std::abs(g) < 1e-3)
+    {
+        return isotropicSample(r1, r2);
+    }
+
+    // 1. Sample cosTheta using the HG formula
+    float sqrTerm = (1.0f - g * g) / (1.0f - g + 2.0f * g * r1);
+    float cosTheta = (1.0f + g * g - sqrTerm * sqrTerm) / (2.0f * g);
+    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
+    float phi = 2.0f * M_PI * r2;
+
+    // 2. Create local direction (z-axis is the "forward" incoming direction)
+    glm::vec3 local_dir(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+
+    // 3. Align local_dir to the incoming_dir (World Space transformation)
+    glm::vec3 w = incoming_dir; // This is our 'z'
+    glm::vec3 a = (std::abs(w.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+    glm::vec3 v = glm::normalize(glm::cross(w, a));
+    glm::vec3 u = glm::cross(v, w);
+
+    return glm::normalize(local_dir.x * u + local_dir.y * v + local_dir.z * w);
+}
+
 static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
     glm::vec3 wr = (n * (2 * (glm::dot(n, wo)))) - wo;
@@ -40,7 +74,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
 
     bool russian_roulette = cam_context.options.at(RendererParams::RussianRoulette);
     float survival_rate;
-    if (russian_roulette)  max_rec_depth = 128;
+    if (russian_roulette)  max_rec_depth = 16;
 
     while (!stack.empty())
     {
@@ -52,6 +86,17 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
 
         Ray ray = state.ray;
         Color throughput = state.throughput;
+
+        if (russian_roulette && state.depth >= cam_context.min_recursion_depth)
+        {
+            survival_rate = std::clamp(throughput.max(), 1e-7, 0.99);
+
+            float bullet_to_the_head = generateRandomFloat(0, 1);
+            if (bullet_to_the_head > survival_rate)
+                continue;
+
+            throughput *= 1.0f / survival_rate;
+        }
 
         HitRecord rec;
         bool hit_plane = false;
@@ -78,6 +123,56 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     accumulated_light += throughput * lookupBackgroundTex(render_context.background_info.background_tex,
                    glm::normalize(ray.direction), cam_context);
                 }
+                continue;
+            }
+        }
+
+        if (ray.inside)
+        {
+            Material mat = *rec.material;
+            glm::vec3 sigma_s = mat.scattering_coefficient;
+            glm::vec3 sigma_a = mat.absorption_coefficient;
+            glm::vec3 sigma_t = sigma_a + sigma_s;
+            //float max_sigma_t = std::max({sigma_t.x, sigma_t.y, sigma_t.z});
+            auto luminance = [](const glm::vec3& a)
+            {
+                return 0.2126 * a.r + 0.7152 * a.g + 0.0722 * a.b;
+            };
+            float lum_sigma_t = std::max(1e-6, luminance(sigma_t));
+
+            if (lum_sigma_t < 0)
+                throw std::runtime_error("no absorption and scattering values");
+
+            float distance = -std::log(1 - generateRandomFloat(0, 1)) / lum_sigma_t;
+            if (distance > rec.t)
+            {
+                float d = rec.t;
+                glm::vec3 Tr = glm::exp(-sigma_t * d);
+                //float pdf = lum_sigma_t * std::exp(-lum_sigma_t * d);
+                float pdf = std::exp(-lum_sigma_t * d);
+                //pdf = 1.0;
+                throughput *= Tr / pdf;
+                ray.origin += d * ray.direction;
+                ray.inside = false;
+                rec.material->type = "none";
+            }
+            else
+            {
+                ray.origin += distance * ray.direction;
+                float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
+
+                throughput *= sigma_s * glm::exp(-sigma_t * distance) / pdf;
+
+                float scatter_prob = luminance(sigma_s) / lum_sigma_t;
+                if (generateRandomFloat(0, 1) > scatter_prob)
+                    continue;
+
+                ray.direction = glm::normalize(isotropicSample(generateRandomFloat(0, 1),
+                    generateRandomFloat(0, 1)));
+
+                throughput *= 1.0f / scatter_prob;
+
+                stack.push_back({ray, throughput, state.depth + 1});
                 continue;
             }
         }
@@ -165,17 +260,6 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
             Color next_throughput = throughput;
             Ray next_ray;
 
-            if (russian_roulette && state.depth >= cam_context.min_recursion_depth)
-            {
-                survival_rate = std::clamp(next_throughput.max(), 1e-7, 0.99);
-
-                float bullet_to_the_head = generateRandomFloat(0, 1);
-                if (bullet_to_the_head > survival_rate)
-                    continue;
-
-                next_throughput *= 1.0f / survival_rate;
-            }
-
             if ((mat.type) == "mirror")
             {
                 glm::vec3 wo = -ray.direction;
@@ -252,6 +336,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     double r_par = r_parallel(cosTheta, cosThetaT, n1, n2);
                     double r_perp = r_perpendicular(cosTheta, cosThetaT, n1, n2);
                     F_r = fresnelReflectance(r_par, r_perp);
+                    //std::cout << F_r << std::endl;
                 }
 
                 // Monte Carlo Path Selection: Reflect or Refract?
@@ -286,7 +371,7 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     if (mat.roughness != 0) next_ray.perturb(mat.roughness);
 
                     // Beer's Law Absorption (if ray was traveling inside the medium)
-                    if (!entering)
+                    if (false && !entering)
                     {
                         double dist = rec.t;
                         glm::vec3 absorb;
@@ -420,7 +505,7 @@ void PathTracer::renderScene()
         }
         else
             throw std::runtime_error("Unsupported image type");
-        break;
+        //break;
     }
 }
 

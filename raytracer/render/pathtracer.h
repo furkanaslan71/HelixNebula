@@ -8,6 +8,7 @@
 #include "scene/scene.h"
 #include "camera/base_camera.h"
 #include "texture_mapping/texture_lookup.h"
+#include <syncstream>
 
 struct PathState {
     Ray ray;

@@ -59,6 +59,7 @@ bool Plane::hit(const Ray& ray, const Interval& interval, HitRecord& rec) const
 			rec.textures = this->textures;
 			rec.uv = {u, v};
 			rec.surface_tangents = {orthonormal_u, orthonormal_v};
+			rec.type = "plane";
 			return true;
 		}
 	}
