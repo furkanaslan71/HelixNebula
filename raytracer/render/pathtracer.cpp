@@ -149,16 +149,17 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                 float d = rec.t;
                 glm::vec3 Tr = glm::exp(-sigma_t * d);
                 //float pdf = lum_sigma_t * std::exp(-lum_sigma_t * d);
-                float pdf = std::exp(-lum_sigma_t * d);
+                float escape_prob = std::exp(-lum_sigma_t * d);
                 //pdf = 1.0;
-                throughput *= Tr / pdf;
+                throughput *= Tr / escape_prob;
                 ray.origin += d * ray.direction;
-                ray.inside = false;
-                rec.material->type = "none";
+                //ray.inside = false;
+                //rec.material->type = "none";
             }
             else
             {
                 ray.origin += distance * ray.direction;
+                /*
                 float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
 
                 throughput *= sigma_s * glm::exp(-sigma_t * distance) / pdf;
@@ -166,11 +167,17 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                 float scatter_prob = luminance(sigma_s) / lum_sigma_t;
                 if (generateRandomFloat(0, 1) > scatter_prob)
                     continue;
+                */
+                // Soft Kill Logic (Stabler than Hard Kill for dark scenes)
+                glm::vec3 Tr = glm::exp(-sigma_t * distance);
+                float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
+
+                throughput *= Color((Tr * sigma_s) / pdf);
 
                 ray.direction = glm::normalize(isotropicSample(generateRandomFloat(0, 1),
                     generateRandomFloat(0, 1)));
 
-                throughput *= 1.0f / scatter_prob;
+                //throughput *= 1.0f / scatter_prob;
 
                 stack.push_back({ray, throughput, state.depth + 1});
                 continue;
