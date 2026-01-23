@@ -453,7 +453,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
-
+			/*
 			// Diffuse
 			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
 			color += Color(kd) * Color(light.intensity) * (cosTheta / (distance * distance));
@@ -465,10 +465,27 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			h = glm::normalize(h);
 			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
 			color += Color(ks) * Color(light.intensity) * (pow(cosAlpha, mat.phong_exponent) / (distance * distance));
+			*/
+			glm::vec3 wo = glm::normalize(ray.origin - rec.point);
+			float cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
+
+			if (cosTheta > 0.0f)
+			{
+				Color fr = rec.material->brdf
+					? Color(rec.material->brdf->Evaluate(wi, wo, rec.normal, kd, ks, rec.material->refraction_index))
+					: Color(kd * (float)(1.0 / M_PI));
+
+				//if (rec.material->brdf == nullptr)
+				//	std::cout << "zort" << std::endl;
+
+				color += fr * Color(light.intensity)
+					   * (cosTheta / (distance * distance));
+			}
 		}
 	}
 	for (const auto& light : scene->light_sources.area_lights)
 	{
+
 		glm::vec3 light_sample_point = (*sampling_context.area_light_samples)[depth - 1][light.id][sampling_context.sample_index];
 
 		// Calculate Shadow Ray towards this specific random point
@@ -485,10 +502,12 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, distance), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, distance), planeShadowRec))
 		{
+			/*
 			float area_of_light = light.edge * light.edge;
 			double cos_alpha_light = std::abs(glm::dot(-wi, light.normal));
 			float distance2 = distance * distance;
 			float attenuation = area_of_light * cos_alpha_light / distance2;
+
 			// Diffuse
 			double cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
 			color += Color(kd) * Color(light.radiance) * attenuation * cosTheta;
@@ -501,6 +520,30 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			double cosAlpha = std::max(0.0f, glm::dot(rec.normal, h));
 			color += Color(ks) * Color(light.radiance) *
 				attenuation * pow(cosAlpha, mat.phong_exponent);
+			*/
+			// 1. Calculate directions and angles
+			glm::vec3 wo = glm::normalize(ray.origin - rec.point);
+			float cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
+			double cos_alpha_light = std::max(0.0, (double)glm::dot(-wi, light.normal));
+
+			// 2. Calculate Area Light Geometry Term (attenuation)
+			float area_of_light = light.edge * light.edge;
+			float distance2 = (float)(distance * distance);
+			float attenuation = (float)(cos_alpha_light * area_of_light / distance2);
+
+			// 3. Evaluate the BRDF
+			// Note: Evaluate returns the f_r term.
+			// For Torrance-Sparrow/Blinn-Phong, this includes the specular + diffuse.
+			Color fr = rec.material->brdf
+			   ? Color(rec.material->brdf->Evaluate(wi, wo, rec.normal, kd, ks))
+			   : Color(kd * (float)(1.0 / M_PI));
+
+			// 4. Combine into the Rendering Equation: L = fr * Li * cos(theta_i) * (Geometry / PDF)
+			int nLightSamples = (*sampling_context.area_light_samples)[depth - 1][light.id].size();
+
+			// We multiply by cosTheta here because the Rendering Equation requires it,
+			// but your BRDF Evaluate returns only the f_r ratio.
+			color += (fr * Color(light.radiance) * cosTheta * attenuation) / (float)nLightSamples;
 		}
 	}
 	for (const auto& light : scene->light_sources.directional_lights)
@@ -516,6 +559,7 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 		if (!scene->world->intersect<true>(shadowRay, Interval(render_context.shadow_ray_epsilon, INFINITY), shadowRec)
 			&& !hitPlanes(shadowRayPlane, Interval(0, INFINITY), planeShadowRec))
 		{
+			/*
 			//diffuse
 			color += Color(kd * light.radiance * glm::max(0.0f, glm::dot(rec.normal, wi)));
 			//specular
@@ -526,6 +570,19 @@ Color Raytracer::applyShading(const Ray& ray, int depth, HitRecord& rec, const S
 			float specular = std::pow(glm::max(0.0f, glm::dot(rec.normal, h)),
 									  mat.phong_exponent);
 			color += Color(ks * light.radiance * specular);
+			*/
+			glm::vec3 wo = glm::normalize(ray.origin - rec.point);
+			float cosTheta = std::max(0.0f, glm::dot(rec.normal, wi));
+
+			if (cosTheta > 0.0f)
+			{
+				Color fr = rec.material->brdf
+					? Color(rec.material->brdf->Evaluate(wi, wo, rec.normal, kd, ks, rec.material->refraction_index))
+					: Color(kd * (float)(1.0 / M_PI));
+
+				color += fr * Color(light.radiance) * cosTheta;
+			}
+
 		}
 	}
 	for (const auto& light : scene->light_sources.spot_lights)

@@ -21,7 +21,7 @@ struct BRDF {
 	float exponent;
 	bool kdfresnel;
 	glm::vec3 Evaluate(const glm::vec3& wi, const glm::vec3& wo, const glm::vec3& n,
-					   const glm::vec3& kd, const glm::vec3& ks) const;
+					   const glm::vec3& kd, const glm::vec3& ks, float refraction = 0.0f) const;
 };
 
 class Material {

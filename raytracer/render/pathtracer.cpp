@@ -11,31 +11,26 @@ glm::vec3 isotropicSample(float r1, float r2)
     return glm::vec3(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
 }
 
-glm::vec3 sampleHenyeyGreenstein(glm::vec3 incoming_dir, float g, float r1, float r2)
+glm::vec3 sampleHG(const glm::vec3& wo, float g, float xi1, float xi2)
 {
-    // If g is very small, treat as isotropic to avoid division by zero
-    if (std::abs(g) < 1e-3)
-    {
-        return isotropicSample(r1, r2);
-    }
+    float cosTheta;
+    if (std::abs(g) < 1e-3f)
+        cosTheta = 1.0f - 2.0f * xi1; // isotropic
+    else
+        cosTheta = (1.0f + g*g - powf((1.0f - g*g)/(1.0f - g + 2*g*xi1), 2.0f)) / (2.0f * g);
 
-    // 1. Sample cosTheta using the HG formula
-    float sqrTerm = (1.0f - g * g) / (1.0f - g + 2.0f * g * r1);
-    float cosTheta = (1.0f + g * g - sqrTerm * sqrTerm) / (2.0f * g);
-    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta * cosTheta));
-    float phi = 2.0f * M_PI * r2;
+    float sinTheta = std::sqrt(std::max(0.0f, 1.0f - cosTheta*cosTheta));
+    float phi = 2.0f * M_PI * xi2;
 
-    // 2. Create local direction (z-axis is the "forward" incoming direction)
-    glm::vec3 local_dir(sinTheta * std::cos(phi), sinTheta * std::sin(phi), cosTheta);
+    // Build local coordinate frame around wo
+    glm::vec3 w = glm::normalize(wo);
+    glm::vec3 u = glm::normalize(glm::cross((std::abs(w.x) > 0.1f ? glm::vec3(0,1,0) : glm::vec3(1,0,0)), w));
+    glm::vec3 v = glm::cross(w, u);
 
-    // 3. Align local_dir to the incoming_dir (World Space transformation)
-    glm::vec3 w = incoming_dir; // This is our 'z'
-    glm::vec3 a = (std::abs(w.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
-    glm::vec3 v = glm::normalize(glm::cross(w, a));
-    glm::vec3 u = glm::cross(v, w);
-
-    return glm::normalize(local_dir.x * u + local_dir.y * v + local_dir.z * w);
+    glm::vec3 newDir = sinTheta * cosf(phi) * u + sinTheta * sinf(phi) * v + cosTheta * w;
+    return glm::normalize(newDir);
 }
+
 
 static inline glm::vec3 reflect(glm::vec3 wo, glm::vec3 n)
 {
@@ -81,7 +76,6 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
         PathState state = stack.back();
         stack.pop_back();
 
-        // Check recursion limit
         if (state.depth > max_rec_depth) continue;
 
         Ray ray = state.ray;
@@ -127,60 +121,79 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
             }
         }
 
-        if (ray.inside)
+        if (false && ray.inside)
         {
             Material mat = *rec.material;
             glm::vec3 sigma_s = mat.scattering_coefficient;
             glm::vec3 sigma_a = mat.absorption_coefficient;
             glm::vec3 sigma_t = sigma_a + sigma_s;
-            //float max_sigma_t = std::max({sigma_t.x, sigma_t.y, sigma_t.z});
+            float max_sigma_t = std::max({sigma_t.x, sigma_t.y, sigma_t.z});
+            max_sigma_t = std::max(1e-6f, max_sigma_t);
             auto luminance = [](const glm::vec3& a)
             {
                 return 0.2126 * a.r + 0.7152 * a.g + 0.0722 * a.b;
             };
-            float lum_sigma_t = std::max(1e-6, luminance(sigma_t));
+            //float lum_sigma_t = std::max(1e-6, luminance(sigma_t));
 
-            if (lum_sigma_t < 0)
+            if (max_sigma_t < 0)
                 throw std::runtime_error("no absorption and scattering values");
 
-            float distance = -std::log(1 - generateRandomFloat(0, 1)) / lum_sigma_t;
+            float distance = -std::log(1 - generateRandomFloat(0, 1)) / max_sigma_t;
             if (distance > rec.t)
             {
                 float d = rec.t;
-                glm::vec3 Tr = glm::exp(-sigma_t * d);
-                //float pdf = lum_sigma_t * std::exp(-lum_sigma_t * d);
-                float escape_prob = std::exp(-lum_sigma_t * d);
-                //pdf = 1.0;
-                throughput *= Tr / escape_prob;
+                //glm::vec3 Tr = glm::exp(-sigma_t * d);
+                //float escape_prob = std::exp(-lum_sigma_t * d);
+                //throughput *= Tr / escape_prob;
                 ray.origin += d * ray.direction;
-                //ray.inside = false;
-                //rec.material->type = "none";
             }
             else
             {
                 ray.origin += distance * ray.direction;
-                /*
-                float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
 
-                throughput *= sigma_s * glm::exp(-sigma_t * distance) / pdf;
+                int channel = std::floor(generateRandomFloat(0, 3));
+                float sigma_tc = sigma_t[channel];
 
-                float scatter_prob = luminance(sigma_s) / lum_sigma_t;
-                if (generateRandomFloat(0, 1) > scatter_prob)
+                if (generateRandomFloat(0, 1) < sigma_tc / max_sigma_t)
+                {
+                    float sigma_sc = sigma_s[channel];
+
+                    if (sigma_sc <= 0.0f)
+                        continue; // absorption handled implicitly
+
+                    throughput *= sigma_s / sigma_t;  // per-channel
+                    constexpr bool isotropic = false;
+                    if constexpr (isotropic)
+                    {
+                        ray.direction = glm::normalize(isotropicSample(generateRandomFloat(0, 1),
+                        generateRandomFloat(0, 1)));
+                    }
+                    else
+                    {
+                        float g = mat.anisotropy;
+                        ray.direction = sampleHG(ray.direction,
+                            g, generateRandomFloat(0,1),
+                            generateRandomFloat(0,1));
+                    }
+
+                    stack.push_back({ray, throughput, state.depth + 1});
                     continue;
-                */
-                // Soft Kill Logic (Stabler than Hard Kill for dark scenes)
-                glm::vec3 Tr = glm::exp(-sigma_t * distance);
-                float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
+                }
+                else
+                {
+                    stack.push_back({ray, throughput, state.depth});
+                    continue;
+                }
 
-                throughput *= Color((Tr * sigma_s) / pdf);
+                //glm::vec3 Tr = glm::exp(-sigma_t * distance);
+                //float pdf = lum_sigma_t * std::exp(-lum_sigma_t * distance);
+                //throughput *= Color((Tr * sigma_s) / pdf);
 
-                ray.direction = glm::normalize(isotropicSample(generateRandomFloat(0, 1),
-                    generateRandomFloat(0, 1)));
+                //ray.direction = glm::normalize(isotropicSample(generateRandomFloat(0, 1),
+                //  generateRandomFloat(0, 1)));
 
-                //throughput *= 1.0f / scatter_prob;
-
-                stack.push_back({ray, throughput, state.depth + 1});
-                continue;
+                //stack.push_back({ray, throughput, state.depth + 1});
+                //continue;
             }
         }
 
@@ -355,13 +368,9 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                     glm::vec3 wr = reflect(wo, normal);
                     next_ray = Ray(rec.point + normal * (float)render_context.shadow_ray_epsilon, wr, ray.time);
 
-                    // Maintain previous inside state
                     next_ray.inside = ray.inside;
 
                     if (mat.roughness != 0) next_ray.perturb(mat.roughness);
-
-                    // Throughput logic: multiply by F_r / P_reflect.
-                    // Since P_reflect = F_r, they cancel out. throughput *= 1.0;
                 }
                 else
                 {
@@ -372,13 +381,11 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
 
                     next_ray = Ray(rec.point - normal * (float)render_context.shadow_ray_epsilon, wt, ray.time);
 
-                    // Update inside state
                     next_ray.inside = entering;
 
                     if (mat.roughness != 0) next_ray.perturb(mat.roughness);
 
-                    // Beer's Law Absorption (if ray was traveling inside the medium)
-                    if (false && !entering)
+                    if (!entering)
                     {
                         double dist = rec.t;
                         glm::vec3 absorb;
@@ -388,8 +395,6 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                         next_throughput *= Color(absorb);
                     }
 
-                    // Throughput logic: multiply by (1-F_r) / P_refract.
-                    // Since P_refract = (1-F_r), they cancel out. throughput *= 1.0;
                 }
             }
             else
@@ -438,8 +443,6 @@ Color PathTracer::tracePath(const Ray &initial_ray, const CameraContext &cam_con
                 }
                 else
                 {
-                    // Fallback to Lambertian Diffuse if no specific BRDF is set
-                    // f = kd / PI
                     brdf_val = Color(kd * (float)(1.0 / M_PI));
                 }
                 next_throughput *= brdf_val * invPDF_cosTheta;

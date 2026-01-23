@@ -480,7 +480,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         const auto& obps_json = brdfs_json["OriginalBlinnPhong"];
         auto parse_obp = [&](const json& obp_json) {
           BRDF_ obp;
-          obp.type = "ModifiedBlinnPhong";
+          obp.type = "OriginalBlinnPhong";
           obp.id = std::stoi(obp_json["_id"].get<std::string>()) - 1;
           if (obp_json.contains("Exponent"))
             obp.exponent = std::stof(obp_json["Exponent"].get<std::string>());
@@ -507,7 +507,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         const auto& ops_json = brdfs_json["OriginalPhong"];
         auto parse_op = [&](const json& op_json) {
           BRDF_ op;
-          op.type = "ModifiedBlinnPhong";
+          op.type = "OriginalPhong";
           op.id = std::stoi(op_json["_id"].get<std::string>()) - 1;
           if (op_json.contains("Exponent"))
             op.exponent = std::stof(op_json["Exponent"].get<std::string>());
@@ -559,7 +559,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         const auto& mps_json = brdfs_json["ModifiedPhong"];
         auto parse_mp = [&](const json& mp_json) {
           BRDF_ mp;
-          mp.type = "ModifiedBlinnPhong";
+          mp.type = "ModifiedPhong";
           mp.id = std::stoi(mp_json["_id"].get<std::string>()) - 1;
           if (mp_json.contains("Exponent"))
             mp.exponent = std::stof(mp_json["Exponent"].get<std::string>());
@@ -585,7 +585,7 @@ void parseScene(const std::string& filename, Scene_& scene) {
         const auto& tss_json = brdfs_json["TorranceSparrow"];
         auto parse_ts = [&](const json& ts_json) {
           BRDF_ ts;
-          ts.type = "ModifiedBlinnPhong";
+          ts.type = "TorranceSparrow";
           ts.id = std::stoi(ts_json["_id"].get<std::string>()) - 1;
           if (ts_json.contains("Exponent"))
             ts.exponent = std::stof(ts_json["Exponent"].get<std::string>());
@@ -1730,6 +1730,22 @@ void parseScene(const std::string& filename, Scene_& scene) {
             else
               mesh.faces.push_back({ mesh.material_id, v0, v1, v2});
           }
+        }
+        else if (faces_json.contains("_plyFile"))
+        {
+          std::string ply_filename = faces_json["_plyFile"];
+
+          std::string scene_dir = "";
+          auto pos = filename.find_last_of("/\\");
+          if (pos != std::string::npos)
+          {
+            scene_dir = filename.substr(0, pos + 1); // Keep the slash
+          }
+          std::string full_ply_path = scene_dir + ply_filename;
+
+          // --- THE FIX ---
+          // Call the corrected helper, passing the main scene object
+          parsePlyFile(full_ply_path, mesh, scene);
         }
         mesh.id--;
         if (scene.meshes.find(mesh.id) != scene.meshes.end())
